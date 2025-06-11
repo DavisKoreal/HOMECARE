@@ -1,0 +1,82 @@
+[  +22 ms] executing: uname -m
+[   +9 ms] Exit code 0 from: uname -m
+[        ] x86_64
+[ +736 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[   +3 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[ +125 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[   +4 ms] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[  +65 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[   +1 ms] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[ +145 ms] Skipping pub get: version match.
+[ +283 ms] Generating /home/davis/Desktop/flutter_apps/homecare0x1/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+[ +985 ms] Launching lib/main.dart on Chrome in debug mode...
+[ +444 ms] Initializing file store
+[  +25 ms] Skipping target: gen_localizations
+[  +16 ms] Skipping target: gen_dart_plugin_registrant
+[   +2 ms] _composite: Starting due to {}
+[        ] _composite: Complete
+[   +4 ms] complete
+[   +1 ms] Updating assets
+[ +355 ms] Waiting for connection from debug service on Chrome...
+[ +324 ms] shaderc command: [/home/davis/snap/flutter/common/flutter/bin/cache/artifacts/engine/linux-x64/impellerc, --sksl, --iplr, --json, --sl=build/flutter_assets/shaders/ink_sparkle.frag, --spirv=build/flutter_assets/shaders/ink_sparkle.frag.spirv, --input=/home/davis/snap/flutter/common/flutter/packages/flutter/lib/src/material/shaders/ink_sparkle.frag, --input-type=frag, --include=/home/davis/snap/flutter/common/flutter/packages/flutter/lib/src/material/shaders, --include=/home/davis/snap/flutter/common/flutter/bin/cache/artifacts/engine/linux-x64/shader_lib]
+[+1171 ms] <- reset
+[   +9 ms] /home/davis/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dartaotruntime --disable-dart-dev /home/davis/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /home/davis/snap/flutter/common/flutter/bin/cache/flutter_web_sdk/ --incremental --target=dartdevc --experimental-emit-debug-metadata --output-dill /tmp/flutter_tools.JHDUFZ/flutter_tool.BDYSRN/app.dill --packages /home/davis/Desktop/flutter_apps/homecare0x1/.dart_tool/package_config.json -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --filesystem-root /tmp/flutter_tools.JHDUFZ/flutter_tools.CZLNZB --filesystem-scheme org-dartlang-app --initialize-from-dill build/80b1a4cf4e7b90e1ab5f72022a0bc624.cache.dill.track.dill --platform file:///home/davis/snap/flutter/common/flutter/bin/cache/flutter_web_sdk/kernel/ddc_outline_sound.dill --verbosity=error --sound-null-safety
+[  +34 ms] <- compile org-dartlang-app:/web_entrypoint.dart
+[+4956 ms] lib/screens/login_screen.dart:45:70: Error: The method 'getLastRoute' isn't defined for the class 'UserProvider'.
+[   +2 ms]  - 'UserProvider' is from 'package:homecare0x1/user_provider.dart' ('lib/user_provider.dart').
+[        ] Try correcting the name to the name of an existing method, or defining a method named 'getLastRoute'.
+[        ]                 Navigator.pushReplacementNamed(context, userProvider.getLastRoute());
+[        ]                                                                      ^^^^^^^^^^^^
+[        ] lib/screens/user_profile_screen.dart:26:74: Error: The method 'getLastRoute' isn't defined for the class 'UserProvider'.
+[        ]  - 'UserProvider' is from 'package:homecare0x1/user_provider.dart' ('lib/user_provider.dart').
+[        ] Try correcting the name to the name of an existing method, or defining a method named 'getLastRoute'.
+[        ]               onPressed: () => Navigator.pushNamed(context, userProvider.getLastRoute()),
+[        ]                                                                          ^^^^^^^^^^^^
+[+26420 ms] Waiting for connection from debug service on Chrome... (completed in 32.0s)
+[ +138 ms] Synced 0.0MB.
+[        ] Failed to compile application.
+[+1695 ms] "flutter run" took 35,686ms.
+[ +482 ms] 
+           #0      throwToolExit (package:flutter_tools/src/base/common.dart:10:3)
+           #1      RunCommand.runCommand (package:flutter_tools/src/commands/run.dart:874:9)
+           <asynchronous suspension>
+           #2      FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1408:27)
+           <asynchronous suspension>
+           #3      AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:153:19)
+           <asynchronous suspension>
+           #4      CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+           <asynchronous suspension>
+           #5      FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:420:9)
+           <asynchronous suspension>
+           #6      AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:153:19)
+           <asynchronous suspension>
+           #7      FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:364:5)
+           <asynchronous suspension>
+           #8      run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:130:9)
+           <asynchronous suspension>
+           #9      AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:153:19)
+           <asynchronous suspension>
+           #10     main (package:flutter_tools/executable.dart:93:3)
+           <asynchronous suspension>
+
+
+[ +255 ms] ensureAnalyticsSent: 250ms
+[        ] Running 2 shutdown hooks
+[ +469 ms] Shutdown hooks complete
+[   +2 ms] exiting with code 1
