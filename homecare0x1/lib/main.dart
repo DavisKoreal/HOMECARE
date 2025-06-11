@@ -41,6 +41,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Homecare Management',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
@@ -59,7 +60,8 @@ class MyApp extends StatelessWidget {
         Routes.payrollProcessing: (context) => const PayrollProcessingScreen(),
         Routes.reportsDashboard: (context) => const ReportsDashboardScreen(),
         Routes.auditLog: (context) => const AuditLogScreen(),
-        Routes.caregiverDashboard: (context) => const CaregiverDashboardScreen(),
+        Routes.caregiverDashboard: (context) =>
+            const CaregiverDashboardScreen(),
         Routes.scheduleOverview: (context) => const ScheduleOverviewScreen(),
         Routes.visitCheckIn: (context) => const VisitCheckInScreen(),
         Routes.taskList: (context) => const TaskListScreen(),
