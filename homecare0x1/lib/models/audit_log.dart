@@ -4,6 +4,8 @@ class AuditLog {
   final String action;
   final DateTime timestamp;
   final String details;
+  final String actionType;
+  final String severity;
 
   AuditLog({
     required this.id,
@@ -11,5 +13,7 @@ class AuditLog {
     required this.action,
     required this.timestamp,
     required this.details,
+    required this.actionType,
+    required this.severity,
   });
 }
