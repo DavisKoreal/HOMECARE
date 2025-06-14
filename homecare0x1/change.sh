@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to fix test error and WillPopScope deprecation in homecare0x1
+# Script to fix Chrome web run, onPopInvoked deprecation, and critical lints in homecare0x1
 # Run in the project's root folder
 
 # Exit on any error
@@ -13,38 +13,14 @@ if [ ! -d "lib" ] || [ ! -d "test" ]; then
 fi
 
 # Create backups of files to be modified
-for file in test/widget_test.dart lib/screens/admin_dashboard.dart lib/screens/audit_log_screen.dart lib/screens/care_notes_screen.dart; do
+for file in lib/screens/admin_dashboard.dart lib/screens/login_screen.dart lib/screens/caregiver_dashboard.dart lib/screens/family_portal_screen.dart pubspec.yaml; do
   if [ -f "$file" ]; then
     cp "$file" "${file}.bak"
     echo "Backup created: ${file}.bak"
   fi
 done
 
-# Update widget_test.dart
-cat > test/widget_test.dart << 'EOF'
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:homecare0x1/main.dart';
-import 'package:homecare0x1/screens/login_screen.dart';
-
-void main() {
-  testWidgets('HomecareApp renders LoginScreen', (WidgetTester tester) async {
-    // Build the app and trigger a frame.
-    await tester.pumpWidget(const HomecareApp());
-
-    // Verify that the LoginScreen is displayed.
-    expect(find.byType(LoginScreen), findsOneWidget);
-    expect(find.text('Welcome to Homecare Management'), findsOneWidget);
-
-    // Verify the email and password fields exist.
-    expect(find.byType(TextFormField), findsNWidgets(2));
-    expect(find.text('Email'), findsOneWidget);
-    expect(find.text('Password'), findsOneWidget);
-  });
-}
-EOF
-
-# Update admin_dashboard.dart to replace WillPopScope with PopScope
+# Update admin_dashboard.dart to use onPopInvokedWithResult
 cat > lib/screens/admin_dashboard.dart << 'EOF'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -154,7 +130,7 @@ class AdminDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         bool? shouldExit = await showDialog<bool>(
           context: context,
@@ -282,94 +258,139 @@ class AdminDashboardScreen extends StatelessWidget {
 }
 EOF
 
-# Update audit_log_screen.dart to remove unused import
-cat > lib/screens/audit_log_screen.dart << 'EOF'
+# Update login_screen.dart to fix use_build_context_synchronously
+cat > lib/screens/login_screen.dart << 'EOF'
 import 'package:flutter/material.dart';
-import 'package:homecare0x1/models/audit_log.dart';
-import 'package:homecare0x1/theme/app_theme.dart';
-import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
+import 'package:homecare0x1/services/auth_service.dart';
+import 'package:homecare0x1/user_provider.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
-import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
-class AuditLogScreen extends StatelessWidget {
-  AuditLogScreen({super.key});
+// ignore: library_private_types_in_public_api
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
-  // Mock audit logs
-  final List<AuditLog> _logs = [
-    AuditLog(
-      id: '1',
-      userId: 'admin1',
-      action: 'Client Profile Updated',
-      timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-      details: 'Updated care plan for John Doe',
-    ),
-    AuditLog(
-      id: '2',
-      userId: 'caregiver1',
-      action: 'Medication Logged',
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      details: 'Logged Aspirin for John Doe',
-    ),
-    AuditLog(
-      id: '3',
-      userId: 'admin1',
-      action: 'Shift Assigned',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      details: 'Assigned caregiver to Jane Smith',
-    ),
-  ];
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+      final authService = AuthService();
+      final user = await authService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      setState(() => _isLoading = false);
+      if (user != null && context.mounted) {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        userProvider.setUser(user);
+        Navigator.pushReplacementNamed(context, userProvider.getInitialRoute());
+      } else {
+        setState(() {
+          _errorMessage = 'Invalid email or password';
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ModernScreenLayout(
-      title: 'Audit Log',
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Audit Log',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'View system actions for compliance',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: _logs.isEmpty
-                  ? const Center(child: Text('No logs found'))
-                  : ListView.builder(
-                      itemCount: _logs.length,
-                      itemBuilder: (context, index) {
-                        final log = _logs[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: ListTile(
-                            title: Text(log.action),
-                            subtitle: Text(
-                              'By: ${log.userId}\nTime: ${DateFormat('MMM d, h:mm a').format(log.timestamp)}\nDetails: ${log.details}',
-                            ),
-                            leading: Icon(
-                              Icons.history,
-                              color: AppTheme.neutral600,
-                            ),
-                          ),
-                        );
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 40),
+              Text(
+                'Welcome to Homecare Management',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Login to access your dashboard',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 32),
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.email),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
                       },
                     ),
-            ),
-            const SizedBox(height: 16),
-            ModernButton(
-              text: 'Back to Reports',
-              icon: Icons.arrow_back,
-              isOutlined: true,
-              width: double.infinity,
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _passwordController,
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.lock),
+                      ),
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    _isLoading
+                        ? const CircularProgressIndicator()
+                        : ModernButton(
+                            text: 'Login',
+                            icon: Icons.login,
+                            width: double.infinity,
+                            onPressed: _login,
+                          ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -377,166 +398,122 @@ class AuditLogScreen extends StatelessWidget {
 }
 EOF
 
-# Update care_notes_screen.dart to suppress private type warning
-cat > lib/screens/care_notes_screen.dart << 'EOF'
+# Update caregiver_dashboard.dart to fix use_build_context_synchronously
+cat > lib/screens/caregiver_dashboard.dart << 'EOF'
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
-import 'package:homecare0x1/models/care_note.dart';
-import 'package:homecare0x1/theme/app_theme.dart';
+import 'package:homecare0x1/user_provider.dart';
+import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
+import 'package:homecare0x1/widgets/cards/stats_card.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
-import 'package:homecare0x1/widgets/common/modern_button.dart';
-import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
-// ignore: library_private_types_in_public_api
-class CareNotesScreen extends StatefulWidget {
-  const CareNotesScreen({super.key});
+class CaregiverDashboardScreen extends StatelessWidget {
+  const CaregiverDashboardScreen({super.key});
 
-  @override
-  _CareNotesScreenState createState() => _CareNotesScreenState();
-}
-
-class _CareNotesScreenState extends State<CareNotesScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _noteController = TextEditingController();
-  bool _isAdding = false;
-
-  // Mock care notes
-  List<CareNote> _notes = [
-    CareNote(
-      id: '1',
-      clientId: '1',
-      caregiverId: 'caregiver1',
-      note: 'Client was in good spirits, assisted with mobility.',
-      timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-    ),
-    CareNote(
-      id: '2',
-      clientId: '1',
-      caregiverId: 'caregiver1',
-      note: 'Noticed slight fatigue, recommended rest.',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-  ];
-
-  void _toggleAddForm() {
-    setState(() {
-      _isAdding = !_isAdding;
-      if (!_isAdding) {
-        _noteController.clear();
-      }
-    });
-  }
-
-  void _addNote() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _notes.insert(
-          0,
-          CareNote(
-            id: (_notes.length + 1).toString(),
-            clientId: '1',
-            caregiverId: 'caregiver1',
-            note: _noteController.text,
-            timestamp: DateTime.now(),
+  Future<bool> _confirmLogout(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Logout'),
+            content: const Text('Are you sure you want to log out?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Logout'),
+              ),
+            ],
           ),
-        );
-        _toggleAddForm();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _noteController.dispose();
-    super.dispose();
+        ) ??
+        false;
   }
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final userName = userProvider.user?.name ?? 'Caregiver';
+
     return ModernScreenLayout(
-      title: 'Care Notes',
+      title: 'Caregiver Dashboard',
+      showBackButton: true,
+      onBackPressed: () async {
+        final shouldLogout = await _confirmLogout(context);
+        if (shouldLogout && context.mounted) {
+          userProvider.clearUser();
+          Navigator.pushReplacementNamed(context, Routes.login);
+        }
+      },
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Care Notes',
+              'Welcome, $userName',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'Record and view notes about client care',
+              'Your caregiving tasks for today',
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
-            ModernButton(
-              text: _isAdding ? 'Cancel' : 'Add Note',
-              icon: _isAdding ? Icons.cancel : Icons.add,
-              width: double.infinity,
-              isOutlined: _isAdding,
-              onPressed: _toggleAddForm,
+            StatsCard(
+              title: 'Tasks Completed',
+              value: '8',
+              change: '+2',
+              isPositive: true,
+              icon: Icons.check_circle,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            if (_isAdding) ...[
-              const SizedBox(height: 16),
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _noteController,
-                      decoration: const InputDecoration(
-                        labelText: 'Note',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 5,
-                      validator: (value) =>
-                          value!.isEmpty ? 'Please enter a note' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    ModernButton(
-                      text: 'Save Note',
-                      icon: Icons.save,
-                      width: double.infinity,
-                      onPressed: _addNote,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            StatsCard(
+              title: 'Upcoming Tasks',
+              value: '3',
+              change: '0',
+              isPositive: true,
+              icon: Icons.schedule,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+            StatsCard(
+              title: 'Clients Assigned',
+              value: '5',
+              change: '+1',
+              isPositive: true,
+              icon: Icons.people,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(height: 24),
-            Text(
-              'Note History',
-              style: Theme.of(context).textTheme.titleLarge,
+            DashboardCard(
+              title: 'Client List',
+              subtitle: 'View clients',
+              icon: Icons.person,
+              iconColor: Theme.of(context).colorScheme.primary,
+              onTap: () => Navigator.pushNamed(context, Routes.clientList),
             ),
-            const SizedBox(height: 16),
-            _notes.isEmpty
-                ? const Center(child: Text('No notes found'))
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _notes.length,
-                    itemBuilder: (context, index) {
-                      final note = _notes[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        child: ListTile(
-                          title: Text(note.note),
-                          subtitle: Text(
-                            'Time: ${DateFormat('MMM d, h:mm a').format(note.timestamp)}',
-                          ),
-                          leading: Icon(Icons.note, color: AppTheme.primaryBlue),
-                        ),
-                      );
-                    },
-                  ),
-            const SizedBox(height: 16),
-            ModernButton(
-              text: 'Back to Check-In',
-              icon: Icons.arrow_back,
-              isOutlined: true,
-              width: double.infinity,
-              onPressed: () => Navigator.pop(context),
+            DashboardCard(
+              title: 'Task List',
+              subtitle: 'View tasks',
+              icon: Icons.task,
+              iconColor: Theme.of(context).colorScheme.secondary,
+              onTap: () => Navigator.pushNamed(context, Routes.taskList),
+            ),
+            DashboardCard(
+              title: 'Messages',
+              subtitle: 'View messages',
+              icon: Icons.message,
+              iconColor: Theme.of(context).colorScheme.primary,
+              onTap: () => Navigator.pushNamed(context, Routes.messages),
+            ),
+            DashboardCard(
+              title: 'Check-In',
+              subtitle: 'Start visit',
+              icon: Icons.login,
+              iconColor: Theme.of(context).colorScheme.secondary,
+              onTap: () => Navigator.pushNamed(context, Routes.visitCheckIn),
             ),
           ],
         ),
@@ -546,11 +523,167 @@ class _CareNotesScreenState extends State<CareNotesScreen> {
 }
 EOF
 
+# Update family_portal_screen.dart to fix use_build_context_synchronously
+cat > lib/screens/family_portal_screen.dart << 'EOF'
+import 'package:flutter/material.dart';
+import 'package:homecare0x1/constants.dart';
+import 'package:homecare0x1/user_provider.dart';
+import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
+import 'package:homecare0x1/widgets/cards/stats_card.dart';
+import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
+import 'package:provider/provider.dart';
+
+class FamilyPortalScreen extends StatelessWidget {
+  const FamilyPortalScreen({super.key});
+
+  Future<bool> _confirmLogout(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Logout'),
+            content: const Text('Are you sure you want to log out?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Logout'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final userName = userProvider.user?.name ?? 'Family Member';
+
+    return ModernScreenLayout(
+      title: 'Family Portal',
+      showBackButton: true,
+      onBackPressed: () async {
+        final shouldLogout = await _confirmLogout(context);
+        if (shouldLogout && context.mounted) {
+          userProvider.clearUser();
+          Navigator.pushReplacementNamed(context, Routes.login);
+        }
+      },
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Welcome, $userName',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Stay updated with caregiving services',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 24),
+            StatsCard(
+              title: 'Recent Visits',
+              value: '4',
+              change: '+1',
+              isPositive: true,
+              icon: Icons.event,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            StatsCard(
+              title: 'Care Notes',
+              value: '12',
+              change: '+3',
+              isPositive: true,
+              icon: Icons.note,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+            StatsCard(
+              title: 'Messages',
+              value: '5',
+              change: '+2',
+              isPositive: true,
+              icon: Icons.message,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 24),
+            DashboardCard(
+              title: 'Client Profile',
+              subtitle: 'View profile',
+              icon: Icons.person,
+              iconColor: Theme.of(context).colorScheme.primary,
+              onTap: () => Navigator.pushNamed(context, Routes.clientProfile),
+            ),
+            DashboardCard(
+              title: 'Messages',
+              subtitle: 'View messages',
+              icon: Icons.message,
+              iconColor: Theme.of(context).colorScheme.secondary,
+              onTap: () => Navigator.pushNamed(context, Routes.messages),
+            ),
+            DashboardCard(
+              title: 'Care Notes',
+              subtitle: 'View notes',
+              icon: Icons.note,
+              iconColor: Theme.of(context).colorScheme.primary,
+              onTap: () => Navigator.pushNamed(context, Routes.careNotes),
+            ),
+            DashboardCard(
+              title: 'Payment Status',
+              subtitle: 'View payments',
+              icon: Icons.payment,
+              iconColor: Theme.of(context).colorScheme.secondary,
+              onTap: () => Navigator.pushNamed(context, Routes.paymentStatus),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+EOF
+
+# Update pubspec.yaml to remove unnecessary dev dependency
+cat > pubspec.yaml << 'EOF'
+name: homecare0x1
+description: A new Flutter project.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.0
+  intl: ^0.18.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+EOF
+
+# Clean Flutter cache to fix canvaskit.js issue
+echo "Cleaning Flutter cache..."
+flutter clean
+flutter pub cache repair
+
 # Set file permissions
-chmod 644 test/widget_test.dart
 chmod 644 lib/screens/admin_dashboard.dart
-chmod 644 lib/screens/audit_log_screen.dart
-chmod 644 lib/screens/care_notes_screen.dart
+chmod 644 lib/screens/login_screen.dart
+chmod 644 lib/screens/caregiver_dashboard.dart
+chmod 644 lib/screens/family_portal_screen.dart
+chmod 644 pubspec.yaml
 
 # Run flutter analyze to check for issues
 echo "Running flutter analyze..."
@@ -562,18 +695,21 @@ flutter pub get
 
 echo "Changes applied successfully!"
 echo "Updated files:"
-echo "- test/widget_test.dart"
 echo "- lib/screens/admin_dashboard.dart"
-echo "- lib/screens/audit_log_screen.dart"
-echo "- lib/screens/care_notes_screen.dart"
+echo "- lib/screens/login_screen.dart"
+echo "- lib/screens/caregiver_dashboard.dart"
+echo "- lib/screens/family_portal_screen.dart"
+echo "- pubspec.yaml"
 echo "Backups created:"
-echo "- test/widget_test.dart.bak"
 echo "- lib/screens/admin_dashboard.dart.bak"
-echo "- lib/screens/audit_log_screen.dart.bak"
-echo "- lib/screens/care_notes_screen.dart.bak"
+echo "- lib/screens/login_screen.dart.bak"
+echo "- lib/screens/caregiver_dashboard.dart.bak"
+echo "- lib/screens/family_portal_screen.dart.bak"
+echo "- pubspec.yaml.bak"
 echo "Next steps:"
-echo "- Run 'flutter run -d chrome' to test the updated app."
-echo "- Log in as a caregiver (e.g., caregiver@example.com, password: care123) and a family member (e.g., family@example.com, password: fam123)."
-echo "- Verify that the Caregiver Dashboard and Family Portal load without errors."
-echo "- Check that the Admin Dashboard back button works correctly."
+echo "- Run 'flutter run -d chrome --web-renderer html' to test the updated app on Chrome."
+echo "- If Chrome fails, run 'flutter run -d linux' and verify the app."
+echo "- Log in as a caregiver (e.g., caregiver@example.com, password: care123), family member (e.g., family@example.com, password: fam123), and admin (e.g., admin@example.com, password: admin123)."
+echo "- Verify that the Caregiver Dashboard, Family Portal, and Admin Dashboard load without errors."
+echo "- Check that back buttons prompt logout (Caregiver, Family) or exit (Admin)."
 echo "- If issues persist, share the output of 'flutter run' or describe the error."

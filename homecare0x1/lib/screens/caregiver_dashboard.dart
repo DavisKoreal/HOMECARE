@@ -39,7 +39,8 @@ class CaregiverDashboardScreen extends StatelessWidget {
       title: 'Caregiver Dashboard',
       showBackButton: true,
       onBackPressed: () async {
-        if (await _confirmLogout(context)) {
+        final shouldLogout = await _confirmLogout(context);
+        if (shouldLogout && context.mounted) {
           userProvider.clearUser();
           Navigator.pushReplacementNamed(context, Routes.login);
         }

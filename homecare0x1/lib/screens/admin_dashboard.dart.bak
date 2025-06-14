@@ -104,8 +104,10 @@ class AdminDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
         bool? shouldExit = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -122,7 +124,6 @@ class AdminDashboardScreen extends StatelessWidget {
           ),
         );
         if (shouldExit ?? false) SystemNavigator.pop();
-        return false;
       },
       child: ModernScreenLayout(
         title: '',

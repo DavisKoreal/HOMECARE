@@ -39,7 +39,8 @@ class FamilyPortalScreen extends StatelessWidget {
       title: 'Family Portal',
       showBackButton: true,
       onBackPressed: () async {
-        if (await _confirmLogout(context)) {
+        final shouldLogout = await _confirmLogout(context);
+        if (shouldLogout && context.mounted) {
           userProvider.clearUser();
           Navigator.pushReplacementNamed(context, Routes.login);
         }

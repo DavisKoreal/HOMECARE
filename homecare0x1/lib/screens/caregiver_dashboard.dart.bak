@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/user_provider.dart';
-import 'package:homecare0x1/widgets/common/dashboard_card.dart';
+import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
+import 'package:homecare0x1/widgets/cards/stats_card.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
-import 'package:homecare0x1/widgets/common/stats_card.dart';
 import 'package:provider/provider.dart';
 
 class CaregiverDashboardScreen extends StatelessWidget {
@@ -39,7 +39,8 @@ class CaregiverDashboardScreen extends StatelessWidget {
       title: 'Caregiver Dashboard',
       showBackButton: true,
       onBackPressed: () async {
-        if (await _confirmLogout(context)) {
+        final shouldLogout = await _confirmLogout(context);
+        if (shouldLogout && context.mounted) {
           userProvider.clearUser();
           Navigator.pushReplacementNamed(context, Routes.login);
         }
@@ -59,40 +60,57 @@ class CaregiverDashboardScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
-            const StatsCard(
+            StatsCard(
               title: 'Tasks Completed',
               value: '8',
+              change: '+2',
+              isPositive: true,
               icon: Icons.check_circle,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            const StatsCard(
+            StatsCard(
               title: 'Upcoming Tasks',
               value: '3',
+              change: '0',
+              isPositive: true,
               icon: Icons.schedule,
+              color: Theme.of(context).colorScheme.secondary,
             ),
-            const StatsCard(
+            StatsCard(
               title: 'Clients Assigned',
               value: '5',
+              change: '+1',
+              isPositive: true,
               icon: Icons.people,
+              color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 24),
             DashboardCard(
               title: 'Client List',
+              subtitle: 'View clients',
               icon: Icons.person,
+              iconColor: Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.pushNamed(context, Routes.clientList),
             ),
             DashboardCard(
               title: 'Task List',
+              subtitle: 'View tasks',
               icon: Icons.task,
+              iconColor: Theme.of(context).colorScheme.secondary,
               onTap: () => Navigator.pushNamed(context, Routes.taskList),
             ),
             DashboardCard(
               title: 'Messages',
+              subtitle: 'View messages',
               icon: Icons.message,
+              iconColor: Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.pushNamed(context, Routes.messages),
             ),
             DashboardCard(
               title: 'Check-In',
+              subtitle: 'Start visit',
               icon: Icons.login,
+              iconColor: Theme.of(context).colorScheme.secondary,
               onTap: () => Navigator.pushNamed(context, Routes.visitCheckIn),
             ),
           ],
