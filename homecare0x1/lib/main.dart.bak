@@ -39,7 +39,8 @@ class HomecareApp extends StatelessWidget {
       create: (_) => UserProvider(),
       child: MaterialApp(
         title: 'Homecare App',
-        theme: AppTheme.theme,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
         initialRoute: Routes.login,
         onGenerateRoute: (settings) {
@@ -53,7 +54,7 @@ class HomecareApp extends StatelessWidget {
             case Routes.familyPortal:
               return MaterialPageRoute(builder: (_) => const FamilyPortalScreen());
             case Routes.clientList:
-              return MaterialPageRoute(builder: (_) => ClientListScreen());
+              return MaterialPageRoute(builder: (_) => const ClientListScreen());
             case Routes.clientProfile:
               return MaterialPageRoute(builder: (_) => const ClientProfileScreen());
             case Routes.taskList:
@@ -73,7 +74,7 @@ class HomecareApp extends StatelessWidget {
             case Routes.reportsDashboard:
               return MaterialPageRoute(builder: (_) => const ReportsDashboardScreen());
             case Routes.auditLog:
-              return MaterialPageRoute(builder: (_) => AuditLogScreen());
+              return MaterialPageRoute(builder: (_) => const AuditLogScreen());
             case Routes.shiftAssignment:
               return MaterialPageRoute(builder: (_) => const ShiftAssignmentScreen());
             case Routes.payrollProcessing:

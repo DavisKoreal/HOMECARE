@@ -22,15 +22,15 @@ class ModernButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: width ?? 120.0, // Default finite width to avoid infinite width error
+      width: width ?? double.infinity,
       height: 48,
       child: isOutlined
           ? OutlinedButton.icon(
               onPressed: isLoading ? null : onPressed,
-              icon: icon != null && !isLoading ? Icon(icon, color: AppTheme.primaryBlue) : const SizedBox(),
+              icon: icon != null && !isLoading ? Icon(icon) : const SizedBox(),
               label: isLoading
                   ? const CircularProgressIndicator()
-                  : Text(text, style: const TextStyle(color: AppTheme.primaryBlue)),
+                  : Text(text),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppTheme.primaryBlue),
                 shape: RoundedRectangleBorder(
@@ -40,7 +40,7 @@ class ModernButton extends StatelessWidget {
             )
           : ElevatedButton.icon(
               onPressed: isLoading ? null : onPressed,
-              icon: icon != null && !isLoading ? Icon(icon, color: Colors.white) : const SizedBox(),
+              icon: icon != null && !isLoading ? Icon(icon) : const SizedBox(),
               label: isLoading
                   ? const CircularProgressIndicator()
                   : Text(text),

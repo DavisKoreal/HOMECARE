@@ -67,17 +67,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final currentUserId = userProvider.user?.id ?? 'unknown';
-    final isFamilyMember = currentUserId.startsWith('family');
 
     return ModernScreenLayout(
       title: 'Messages',
-      showBackButton: !isFamilyMember, // Hide default back button for family members
-      leading: isFamilyMember
-          ? IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.pushReplacementNamed(context, Routes.familyPortal),
-            )
-          : null,
       body: Column(
         children: [
           Expanded(
@@ -174,25 +166,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   ModernButton(
                     text: 'Send',
                     icon: Icons.send,
-                    width: 100.0, // Explicit width to avoid layout issues
                     onPressed: () => _sendMessage(currentUserId),
                   ),
                 ],
               ),
             ),
           ),
-          if (isFamilyMember) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: ModernButton(
-                text: 'Back to Family Portal',
-                icon: Icons.arrow_back,
-                isOutlined: true,
-                width: double.infinity,
-                onPressed: () => Navigator.pushReplacementNamed(context, Routes.familyPortal),
-              ),
-            ),
-          ],
         ],
       ),
     );

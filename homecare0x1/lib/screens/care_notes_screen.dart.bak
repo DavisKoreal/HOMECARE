@@ -6,7 +6,6 @@ import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
 import 'package:intl/intl.dart';
 
-// ignore: library_private_types_in_public_api
 class CareNotesScreen extends StatefulWidget {
   const CareNotesScreen({super.key});
 

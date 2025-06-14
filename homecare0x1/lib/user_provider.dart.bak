@@ -11,11 +11,6 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearUser() {
-    _user = null;
-    notifyListeners();
-  }
-
   String getInitialRoute() {
     switch (_user?.role) {
       case 'admin':

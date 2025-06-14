@@ -8,7 +8,6 @@ class ModernScreenLayout extends StatelessWidget {
   final List<Widget>? actions;
   final Widget? floatingActionButton;
   final Widget? leading;
-  final VoidCallback? onBackPressed;
 
   const ModernScreenLayout({
     super.key,
@@ -18,7 +17,6 @@ class ModernScreenLayout extends StatelessWidget {
     this.actions,
     this.floatingActionButton,
     this.leading,
-    this.onBackPressed,
   });
 
   @override
@@ -30,7 +28,7 @@ class ModernScreenLayout extends StatelessWidget {
             (showBackButton
                 ? IconButton(
                     icon: const Icon(Icons.arrow_back),
-                    onPressed: onBackPressed ?? () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(context),
                   )
                 : null),
         actions: actions,
