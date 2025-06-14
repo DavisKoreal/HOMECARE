@@ -21,11 +21,11 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> {
 
   // Mock client data
   Client _client = Client(
-    id: '1',
-    name: 'John Doe',
-    address: '123 Main St',
-    carePlan: 'Daily care, mobility assistance',
-  );
+      id: '1',
+      name: 'John Doe',
+      address: '123 Main St',
+      carePlan: 'Daily care, mobility assistance',
+      email: 'test@email.com');
 
   @override
   void initState() {
@@ -53,6 +53,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> {
           name: _nameController.text,
           address: _addressController.text,
           carePlan: _carePlanController.text,
+          email: _client.email, // Assuming email is not editable
         );
       }
     });

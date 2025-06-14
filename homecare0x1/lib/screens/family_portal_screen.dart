@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/user_provider.dart';
 import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
-import 'package:homecare0x1/widgets/cards/stats_card.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:provider/provider.dart';
 
@@ -60,31 +59,6 @@ class FamilyPortalScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
-            StatsCard(
-              title: 'Recent Visits',
-              value: '4',
-              change: '+1',
-              isPositive: true,
-              icon: Icons.event,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            StatsCard(
-              title: 'Care Notes',
-              value: '12',
-              change: '+3',
-              isPositive: true,
-              icon: Icons.note,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-            StatsCard(
-              title: 'Messages',
-              value: '5',
-              change: '+2',
-              isPositive: true,
-              icon: Icons.message,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 24),
             DashboardCard(
               title: 'Client Profile',
               subtitle: 'View profile',
@@ -95,6 +69,9 @@ class FamilyPortalScreen extends StatelessWidget {
             DashboardCard(
               title: 'Messages',
               subtitle: 'View messages',
+              value: '5',
+              change: '+2',
+              isPositive: true,
               icon: Icons.message,
               iconColor: Theme.of(context).colorScheme.secondary,
               onTap: () => Navigator.pushNamed(context, Routes.messages),
@@ -102,9 +79,22 @@ class FamilyPortalScreen extends StatelessWidget {
             DashboardCard(
               title: 'Care Notes',
               subtitle: 'View notes',
+              value: '12',
+              change: '+3',
+              isPositive: true,
               icon: Icons.note,
               iconColor: Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.pushNamed(context, Routes.careNotes),
+            ),
+            DashboardCard(
+              title: 'Recent Visits',
+              subtitle: 'View visits',
+              value: '4',
+              change: '+1',
+              isPositive: true,
+              icon: Icons.event,
+              iconColor: Theme.of(context).colorScheme.primary,
+              onTap: () => Navigator.pushNamed(context, Routes.auditLog),
             ),
             DashboardCard(
               title: 'Payment Status',

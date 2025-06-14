@@ -12,29 +12,103 @@ class UserProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
+
     return ModernScreenLayout(
       title: 'User Profile',
+      showBackButton: true,
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            // Profile Header
+            Text(
               'User Profile',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryBlue,
+              ),
             ),
-            const SizedBox(height: 10),
-            const Text(
-              'View and edit your profile details (e.g., name, email, contact info).',
-              textAlign: TextAlign.center,
+            const SizedBox(height: 8),
+            Text(
+              'View and manage your account details.',
+              style: TextStyle(fontSize: 16, color: AppTheme.neutral600),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
+
+            // User Details Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Name: ${user?.name ?? 'Not logged in'}',
+                    style: const TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Email: ${user?.email ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Role: ${user?.role ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 40),
+
+            // Action Buttons
             ModernButton(
               text: 'Back to Dashboard',
               icon: Icons.arrow_back,
               isOutlined: true,
               width: double.infinity,
-              onPressed: () => Navigator.pushNamed(context, userProvider.getInitialRoute()),
+              onPressed: () => Navigator.pushNamed(
+                context,
+                userProvider.getInitialRoute(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ModernButton(
+              text: 'Log Out',
+              icon: Icons.logout,
+              isOutlined: true,
+              width: double.infinity,
+              onPressed: () async {
+                bool? shouldLogout = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Log Out'),
+                    content: const Text('Are you sure you want to log out?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Log Out'),
+                      ),
+                    ],
+                  ),
+                );
+                if (shouldLogout ?? false) {
+                  userProvider.clearUser();
+                  Navigator.pushReplacementNamed(context, Routes.login);
+                }
+              },
             ),
           ],
         ),

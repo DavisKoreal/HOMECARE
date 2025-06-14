@@ -3,10 +3,6 @@ import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/user_provider.dart';
 import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
-import 'package:homecare0x1/models/care_note.dart';
-import 'package:homecare0x1/models/medication_record.dart';
-import 'package:homecare0x1/care_note_provider.dart';
-import 'package:homecare0x1/medication_record_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -35,37 +31,17 @@ class CaregiverDashboardScreen extends StatelessWidget {
   }
 
   Future<bool> _requestLocationPermission(BuildContext context) async {
-    try {
-      var status = await Permission.location.status;
-      if (status.isDenied || status.isPermanentlyDenied) {
-        status = await Permission.location.request();
-      }
-      if (status.isGranted) {
-        return true;
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Location permission is required to check in'),
-              action: status.isPermanentlyDenied
-                  ? SnackBarAction(
-                      label: 'Open Settings',
-                      onPressed: () => openAppSettings(),
-                    )
-                  : null,
-            ),
-          );
-        }
-        return false;
-      }
-    } catch (e) {
+    var status = await Permission.location.request();
+    if (status.isDenied || status.isPermanentlyDenied) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error accessing location permissions')),
+          const SnackBar(
+              content: Text('Location permission is required to check in')),
         );
       }
       return false;
     }
+    return true;
   }
 
   Future<bool> _confirmCheckIn(BuildContext context) async {
@@ -91,22 +67,22 @@ class CaregiverDashboardScreen extends StatelessWidget {
 
   Future<bool> _confirmCheckOut(BuildContext context) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Check-Out'),
-        content: const Text('Do you want to check out from your visit?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Check-Out'),
+            content: const Text('Do you want to check out from your visit?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Check-Out'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Check-Out'),
-          ),
-        ],
-      ),
-    ) ??
+        ) ??
         false;
   }
 
@@ -145,7 +121,6 @@ class CaregiverDashboardScreen extends StatelessWidget {
   Future<Map<String, String>?> _logMedication(BuildContext context) async {
     final TextEditingController medController = TextEditingController();
     final TextEditingController doseController = TextEditingController();
-    final TextEditingController notesController = TextEditingController();
     return await showDialog<Map<String, String>>(
       context: context,
       builder: (context) => AlertDialog(
@@ -168,15 +143,6 @@ class CaregiverDashboardScreen extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: notesController,
-              decoration: const InputDecoration(
-                labelText: 'Notes',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
           ],
         ),
         actions: [
@@ -191,7 +157,6 @@ class CaregiverDashboardScreen extends StatelessWidget {
                 Navigator.pop(context, {
                   'medication': medController.text.trim(),
                   'dosage': doseController.text.trim(),
-                  'notes': notesController.text.trim(),
                 });
               }
             },
@@ -211,7 +176,6 @@ class CaregiverDashboardScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Successfully checked in')),
       );
-      Navigator.pushNamed(context, Routes.visitCheckIn);
     }
   }
 
@@ -221,49 +185,24 @@ class CaregiverDashboardScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Successfully checked out')),
       );
-      Navigator.pushNamed(context, Routes.visitCheckOut);
     }
   }
 
   void _handleAddCareNote(BuildContext context) async {
-    final noteText = await _addCareNote(context);
-    if (noteText != null && context.mounted) {
-      final careNoteProvider = Provider.of<CareNoteProvider>(context, listen: false);
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      careNoteProvider.addNote(
-        CareNote(
-          id: (careNoteProvider.notes.length + 1).toString(),
-          clientId: '1', // Mock client ID
-          caregiverId: userProvider.user?.id ?? 'caregiver1',
-          note: noteText,
-          timestamp: DateTime.now(),
-        ),
-      );
+    final note = await _addCareNote(context);
+    if (note != null && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Care note added successfully')),
       );
-      Navigator.pushNamed(context, Routes.careNotes);
     }
   }
 
   void _handleLogMedication(BuildContext context) async {
     final medication = await _logMedication(context);
     if (medication != null && context.mounted) {
-      final medicationProvider = Provider.of<MedicationRecordProvider>(context, listen: false);
-      medicationProvider.addRecord(
-        MedicationRecord(
-          id: (medicationProvider.records.length + 1).toString(),
-          clientId: '1', // Mock client ID
-          medicationName: medication['medication']!,
-          dosage: medication['dosage']!,
-          administrationTime: DateTime.now(),
-          notes: medication['notes'] ?? '',
-        ),
-      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Medication logged successfully')),
       );
-      Navigator.pushNamed(context, Routes.emar);
     }
   }
 
@@ -352,16 +291,16 @@ class CaregiverDashboardScreen extends StatelessWidget {
               iconColor: Theme.of(context).colorScheme.secondary,
               onTap: () => _handleLogMedication(context),
             ),
-            DashboardCard(
-              title: 'Tasks Completed',
-              subtitle: 'View completed tasks',
-              value: '8',
-              change: '+2',
-              isPositive: true,
-              icon: Icons.check_circle,
-              iconColor: Theme.of(context).colorScheme.primary,
-              onTap: () => Navigator.pushNamed(context, Routes.taskList),
-            ),
+            // DashboardCard(
+            //   title: 'Tasks Completed',
+            //   subtitle: 'View completed tasks',
+            //   value: '8',
+            //   change: '+2',
+            //   isPositive: true,
+            //   icon: Icons.check_circle,
+            //   iconColor: Theme.of(context).colorScheme.primary,
+            //   onTap: () => Navigator.pushNamed(context, Routes.tasksCompleted),
+            // ),
           ],
         ),
       ),

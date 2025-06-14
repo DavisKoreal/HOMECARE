@@ -24,8 +24,6 @@ import 'package:homecare0x1/screens/visit_check_in_screen.dart';
 import 'package:homecare0x1/screens/visit_check_out_screen.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/user_provider.dart';
-import 'package:homecare0x1/care_note_provider.dart';
-import 'package:homecare0x1/medication_record_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -37,12 +35,8 @@ class HomecareApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => UserProvider()),
-        ChangeNotifierProvider(create: (_) => CareNoteProvider()),
-        ChangeNotifierProvider(create: (_) => MedicationRecordProvider()),
-      ],
+    return ChangeNotifierProvider(
+      create: (_) => UserProvider(),
       child: MaterialApp(
         title: 'Homecare App',
         theme: AppTheme.theme,
@@ -54,15 +48,19 @@ class HomecareApp extends StatelessWidget {
             case Routes.login:
               return MaterialPageRoute(builder: (_) => const LoginScreen());
             case Routes.adminDashboard:
-              return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const AdminDashboardScreen());
             case Routes.caregiverDashboard:
-              return MaterialPageRoute(builder: (_) => const CaregiverDashboardScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const CaregiverDashboardScreen());
             case Routes.familyPortal:
-              return MaterialPageRoute(builder: (_) => const FamilyPortalScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const FamilyPortalScreen());
             case Routes.clientList:
               return MaterialPageRoute(builder: (_) => ClientListScreen());
             case Routes.clientProfile:
-              return MaterialPageRoute(builder: (_) => const ClientProfileScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const ClientProfileScreen());
             case Routes.taskList:
               return MaterialPageRoute(builder: (_) => const TaskListScreen());
             case Routes.messages:
@@ -72,29 +70,40 @@ class HomecareApp extends StatelessWidget {
             case Routes.emar:
               return MaterialPageRoute(builder: (_) => const EmarScreen());
             case Routes.visitCheckIn:
-              return MaterialPageRoute(builder: (_) => const VisitCheckInScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const VisitCheckInScreen());
             case Routes.visitCheckOut:
-              return MaterialPageRoute(builder: (_) => const VisitCheckOutScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const VisitCheckOutScreen());
             case Routes.billingDashboard:
-              return MaterialPageRoute(builder: (_) => const BillingDashboardScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const BillingDashboardScreen());
             case Routes.reportsDashboard:
-              return MaterialPageRoute(builder: (_) => const ReportsDashboardScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const ReportsDashboardScreen());
             case Routes.auditLog:
               return MaterialPageRoute(builder: (_) => AuditLogScreen());
             case Routes.shiftAssignment:
-              return MaterialPageRoute(builder: (_) => const ShiftAssignmentScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const ShiftAssignmentScreen());
             case Routes.payrollProcessing:
-              return MaterialPageRoute(builder: (_) => const PayrollProcessingScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const PayrollProcessingScreen());
             case Routes.invoiceGeneration:
-              return MaterialPageRoute(builder: (_) => const InvoiceGenerationScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const InvoiceGenerationScreen());
             case Routes.paymentStatus:
-              return MaterialPageRoute(builder: (_) => const PaymentStatusScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const PaymentStatusScreen());
             case Routes.userProfile:
-              return MaterialPageRoute(builder: (_) => const UserProfileScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const UserProfileScreen());
             case Routes.offlineMode:
-              return MaterialPageRoute(builder: (_) => const OfflineModeScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const OfflineModeScreen());
             case Routes.syncStatus:
-              return MaterialPageRoute(builder: (_) => const SyncStatusScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const SyncStatusScreen());
             default:
               return MaterialPageRoute(
                 builder: (_) => Scaffold(

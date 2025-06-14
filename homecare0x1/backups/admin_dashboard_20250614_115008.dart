@@ -4,8 +4,6 @@ import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
-import 'package:provider/provider.dart';
-import 'package:homecare0x1/user_provider.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -20,7 +18,7 @@ class AdminDashboardScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blueGrey.withOpacity(0.9),
+        color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
@@ -44,14 +42,11 @@ class AdminDashboardScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white)),
           const SizedBox(height: 4),
           Text(title, style: const TextStyle(color: Colors.white70)),
         ],
@@ -62,26 +57,47 @@ class AdminDashboardScreen extends StatelessWidget {
   List<Widget> _buildDashboardActions(BuildContext context) {
     return [
       DashboardCard(
-        title: 'Shifts',
-        subtitle: 'Assign tasks to caregivers, and track them',
-        icon: Icons.schedule,
-        iconColor: AppTheme.secondaryTeal,
-        onTap: () => Navigator.pushNamed(context, Routes.shiftAssignment),
-      ),
-      DashboardCard(
-        title: 'See Clients',
-        subtitle: 'Client Profiles and files',
+        title: 'Clients',
+        subtitle: 'Profiles',
         icon: Icons.people_outline,
         iconColor: AppTheme.primaryBlue,
         onTap: () => Navigator.pushNamed(context, Routes.clientList),
       ),
       DashboardCard(
+        title: 'Shifts',
+        subtitle: 'Assign caregivers',
+        icon: Icons.schedule,
+        iconColor: AppTheme.secondaryTeal,
+        onTap: () => Navigator.pushNamed(context, Routes.shiftAssignment),
+      ),
+      DashboardCard(
+        title: 'Billing',
+        subtitle: 'Payments & tracking',
+        icon: Icons.payment,
+        iconColor: AppTheme.accentOrange,
+        onTap: () => Navigator.pushNamed(context, Routes.billingDashboard),
+      ),
+      DashboardCard(
+        title: 'Reports',
+        subtitle: 'Insights',
+        icon: Icons.analytics_outlined,
+        iconColor: AppTheme.successGreen,
+        onTap: () => Navigator.pushNamed(context, Routes.reportsDashboard),
+      ),
+      DashboardCard(
         title: 'Audit Logs',
-        subtitle: 'See activity in real time',
+        subtitle: 'User activity',
         icon: Icons.history,
         iconColor: AppTheme.neutral600,
-        // badge: '3',
+        badge: '3',
         onTap: () => Navigator.pushNamed(context, Routes.auditLog),
+      ),
+      DashboardCard(
+        title: 'Invoices',
+        subtitle: 'Manage',
+        icon: Icons.receipt_long,
+        iconColor: AppTheme.warningYellow,
+        onTap: () => Navigator.pushNamed(context, Routes.invoiceGeneration),
       ),
     ];
   }
@@ -96,38 +112,29 @@ class AdminDashboardScreen extends StatelessWidget {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Exit App'),
-            content: const Text('Log out and return to login screen?'),
+            content: const Text('Exit the dashboard?'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel')),
               TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Logout'),
-              ),
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Exit')),
             ],
           ),
         );
-        if (shouldExit ?? false) {
-          final userProvider =
-              Provider.of<UserProvider>(context, listen: false);
-          userProvider.clearUser();
-          Navigator.pushReplacementNamed(context, Routes.login);
-        }
+        if (shouldExit ?? false) SystemNavigator.pop();
       },
       child: ModernScreenLayout(
         title: '',
         showBackButton: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
-          ),
+              icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
           IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => Navigator.pushNamed(context, Routes.userProfile),
-          ),
+              icon: const Icon(Icons.person_outline),
+              onPressed: () =>
+                  Navigator.pushNamed(context, Routes.userProfile)),
         ],
         body: RefreshIndicator(
           onRefresh: () async =>
@@ -145,7 +152,7 @@ class AdminDashboardScreen extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: [
                         AppTheme.primaryBlue.withOpacity(0.7),
-                        AppTheme.primaryBlueLight.withOpacity(0.4),
+                        AppTheme.primaryBlueLight.withOpacity(0.4)
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -155,19 +162,15 @@ class AdminDashboardScreen extends StatelessWidget {
                   child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Welcome Back, Admin!",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text("Welcome Back, Admin!",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold)),
                       SizedBox(height: 8),
-                      Text(
-                        "Here's your overview for today.",
-                        style: TextStyle(color: Colors.white70, fontSize: 16),
-                      ),
+                      Text("Here's your overview for today.",
+                          style:
+                              TextStyle(color: Colors.white70, fontSize: 16)),
                     ],
                   ),
                 ),
@@ -210,40 +213,6 @@ class AdminDashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
 
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primaryBlue.withOpacity(0.7),
-                        AppTheme.primaryBlueLight.withOpacity(0.4),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "We hope you are having a great day",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        "Here's are some quick actions for you.",
-                        style: TextStyle(color: Colors.white70, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
                 // Quick Actions
                 GridView.count(
                   shrinkWrap: true,

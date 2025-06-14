@@ -4,74 +4,18 @@ import 'package:homecare0x1/models/care_note.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
+import 'package:homecare0x1/care_note_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
-// ignore: library_private_types_in_public_api
-class CareNotesScreen extends StatefulWidget {
+class CareNotesScreen extends StatelessWidget {
   const CareNotesScreen({super.key});
 
   @override
-  _CareNotesScreenState createState() => _CareNotesScreenState();
-}
-
-class _CareNotesScreenState extends State<CareNotesScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _noteController = TextEditingController();
-  bool _isAdding = false;
-
-  // Mock care notes
-  List<CareNote> _notes = [
-    CareNote(
-      id: '1',
-      clientId: '1',
-      caregiverId: 'caregiver1',
-      note: 'Client was in good spirits, assisted with mobility.',
-      timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-    ),
-    CareNote(
-      id: '2',
-      clientId: '1',
-      caregiverId: 'caregiver1',
-      note: 'Noticed slight fatigue, recommended rest.',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-  ];
-
-  void _toggleAddForm() {
-    setState(() {
-      _isAdding = !_isAdding;
-      if (!_isAdding) {
-        _noteController.clear();
-      }
-    });
-  }
-
-  void _addNote() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _notes.insert(
-          0,
-          CareNote(
-            id: (_notes.length + 1).toString(),
-            clientId: '1',
-            caregiverId: 'caregiver1',
-            note: _noteController.text,
-            timestamp: DateTime.now(),
-          ),
-        );
-        _toggleAddForm();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _noteController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final careNoteProvider = Provider.of<CareNoteProvider>(context);
+    final notes = careNoteProvider.notes;
+
     return ModernScreenLayout(
       title: 'Care Notes',
       body: SingleChildScrollView(
@@ -85,58 +29,18 @@ class _CareNotesScreenState extends State<CareNotesScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Record and view notes about client care',
+              'View notes about client care',
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
-            ModernButton(
-              text: _isAdding ? 'Cancel' : 'Add Note',
-              icon: _isAdding ? Icons.cancel : Icons.add,
-              width: double.infinity,
-              isOutlined: _isAdding,
-              onPressed: _toggleAddForm,
-            ),
-            if (_isAdding) ...[
-              const SizedBox(height: 16),
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _noteController,
-                      decoration: const InputDecoration(
-                        labelText: 'Note',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 5,
-                      validator: (value) =>
-                          value!.isEmpty ? 'Please enter a note' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    ModernButton(
-                      text: 'Save Note',
-                      icon: Icons.save,
-                      width: double.infinity,
-                      onPressed: _addNote,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 24),
-            Text(
-              'Note History',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            _notes.isEmpty
+            notes.isEmpty
                 ? const Center(child: Text('No notes found'))
                 : ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _notes.length,
+                    itemCount: notes.length,
                     itemBuilder: (context, index) {
-                      final note = _notes[index];
+                      final note = notes[index];
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         child: ListTile(
