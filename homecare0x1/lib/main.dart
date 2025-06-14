@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
         Routes.login: (context) => const LoginScreen(),
         Routes.userProfile: (context) => const UserProfileScreen(),
         Routes.adminDashboard: (context) => const AdminDashboardScreen(),
-        Routes.clientList: (context) => const ClientListScreen(),
+        Routes.clientList: (context) => ClientListScreen(),
         Routes.clientProfile: (context) => const ClientProfileScreen(),
         Routes.shiftAssignment: (context) => const ShiftAssignmentScreen(),
         Routes.billingDashboard: (context) => const BillingDashboardScreen(),
