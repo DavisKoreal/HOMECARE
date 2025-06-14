@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 
-class ModernButton extends StatelessWidget {
+class ModernButton extends StatefulWidget {
   final String text;
   final IconData? icon;
   final VoidCallback? onPressed;
@@ -20,17 +20,22 @@ class ModernButton extends StatelessWidget {
   });
 
   @override
+  State<ModernButton> createState() => _ModernButtonState();
+}
+
+class _ModernButtonState extends State<ModernButton> {
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: width ?? 120.0, // Default finite width to avoid infinite width error
+      width: widget.width ?? 120.0, // Default finite width to avoid infinite width error
       height: 48,
-      child: isOutlined
+      child: widget.isOutlined
           ? OutlinedButton.icon(
-              onPressed: isLoading ? null : onPressed,
-              icon: icon != null && !isLoading ? Icon(icon, color: AppTheme.primaryBlue) : const SizedBox(),
-              label: isLoading
+              onPressed: widget.isLoading ? null : widget.onPressed,
+              icon: widget.icon != null && !widget.isLoading ? Icon(widget.icon, color: AppTheme.primaryBlue) : const SizedBox(),
+              label: widget.isLoading
                   ? const CircularProgressIndicator()
-                  : Text(text, style: const TextStyle(color: AppTheme.primaryBlue)),
+                  : Text(widget.text, style: const TextStyle(color: AppTheme.primaryBlue)),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppTheme.primaryBlue),
                 shape: RoundedRectangleBorder(
@@ -39,11 +44,11 @@ class ModernButton extends StatelessWidget {
               ),
             )
           : ElevatedButton.icon(
-              onPressed: isLoading ? null : onPressed,
-              icon: icon != null && !isLoading ? Icon(icon, color: Colors.white) : const SizedBox(),
-              label: isLoading
+              onPressed: widget.isLoading ? null : widget.onPressed,
+              icon: widget.icon != null && !widget.isLoading ? Icon(widget.icon, color: Colors.white) : const SizedBox(),
+              label: widget.isLoading
                   ? const CircularProgressIndicator()
-                  : Text(text),
+                  : Text(widget.text),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryBlue,
                 foregroundColor: Colors.white,

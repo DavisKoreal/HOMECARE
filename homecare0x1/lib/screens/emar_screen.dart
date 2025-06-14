@@ -57,13 +57,6 @@ class EmarScreen extends StatelessWidget {
                     },
                   ),
             const SizedBox(height: 16),
-            ModernButton(
-              text: 'Back to Check-In',
-              icon: Icons.arrow_back,
-              isOutlined: true,
-              width: double.infinity,
-              onPressed: () => Navigator.pop(context),
-            ),
           ],
         ),
       ),

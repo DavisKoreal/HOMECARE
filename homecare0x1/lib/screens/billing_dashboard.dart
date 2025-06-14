@@ -94,13 +94,6 @@ class BillingDashboardScreen extends StatelessWidget {
               onPressed: () => Navigator.pushNamed(context, Routes.payrollProcessing),
             ),
             const SizedBox(height: 16),
-            ModernButton(
-              text: 'Back to Dashboard',
-              icon: Icons.arrow_back,
-              isOutlined: true,
-              width: double.infinity,
-              onPressed: () => Navigator.pop(context),
-            ),
           ],
         ),
       ),

@@ -1,13 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
-import 'package:provider/provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
+import 'package:provider/provider.dart';
 
 class UserProfileScreen extends StatelessWidget {
   const UserProfileScreen({super.key});
+
+  Future<bool?> _confirmLogout(BuildContext context) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Log Out'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,102 +37,146 @@ class UserProfileScreen extends StatelessWidget {
     return ModernScreenLayout(
       title: 'User Profile',
       showBackButton: true,
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Profile Header
-            Text(
-              'User Profile',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryBlue,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'View and manage your account details.',
-              style: TextStyle(fontSize: 16, color: AppTheme.neutral600),
-            ),
-            const SizedBox(height: 30),
+      onBackPressed: () => Navigator.pushReplacementNamed(
+        context,
+        userProvider.getInitialRoute(),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: user == null
+            ? _buildNotLoggedIn(context)
+            : _buildProfile(context, userProvider),
+      ),
+    );
+  }
 
-            // User Details Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
+  Widget _buildNotLoggedIn(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Not Logged In',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Please log in to view your profile.',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppTheme.neutral600,
               ),
+        ),
+        const SizedBox(height: 24),
+        ModernButton(
+          text: 'Go to Login',
+          icon: Icons.login,
+          width: double.infinity,
+          onPressed: () =>
+              Navigator.pushReplacementNamed(context, Routes.login),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfile(BuildContext context, UserProvider userProvider) {
+    final user = userProvider.user!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Text(
+          'Your Profile',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Manage your account details.',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppTheme.neutral600,
+              ),
+        ),
+        const SizedBox(height: 24),
+
+        // Profile Card
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Name: ${user?.name ?? 'Not logged in'}',
-                    style: const TextStyle(fontSize: 18, color: Colors.white),
+                  // Avatar
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                    child: Icon(
+                      Icons.person,
+                      size: 40,
+                      color: AppTheme.primaryBlue,
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  // User Details
                   Text(
-                    'Email: ${user?.email ?? 'N/A'}',
-                    style: const TextStyle(fontSize: 18, color: Colors.white),
+                    user.name,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(
-                    'Role: ${user?.role ?? 'N/A'}',
-                    style: const TextStyle(fontSize: 18, color: Colors.white),
+                    user.email,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.neutral600,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Chip(
+                    label: Text(user.role),
+                    backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                    labelStyle: TextStyle(
+                      color: AppTheme.primaryBlue,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 40),
-
-            // Action Buttons
-            ModernButton(
-              text: 'Back to Dashboard',
-              icon: Icons.arrow_back,
-              isOutlined: true,
-              width: double.infinity,
-              onPressed: () => Navigator.pushNamed(
-                context,
-                userProvider.getInitialRoute(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ModernButton(
-              text: 'Log Out',
-              icon: Icons.logout,
-              isOutlined: true,
-              width: double.infinity,
-              onPressed: () async {
-                bool? shouldLogout = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Log Out'),
-                    content: const Text('Are you sure you want to log out?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Log Out'),
-                      ),
-                    ],
-                  ),
-                );
-                if (shouldLogout ?? false) {
-                  userProvider.clearUser();
-                  Navigator.pushReplacementNamed(context, Routes.login);
-                }
-              },
-            ),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(height: 24),
+
+        // Action Buttons
+        ModernButton(
+          text: 'Edit Profile',
+          icon: Icons.edit,
+          width: double.infinity,
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Edit profile feature coming soon!'),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        ModernButton(
+          text: 'Log Out',
+          icon: Icons.logout,
+          isOutlined: true,
+          width: double.infinity,
+          onPressed: () async {
+            final shouldLogout = await _confirmLogout(context);
+            if (shouldLogout ?? false) {
+              userProvider.clearUser();
+              Navigator.pushReplacementNamed(context, Routes.login);
+            }
+          },
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

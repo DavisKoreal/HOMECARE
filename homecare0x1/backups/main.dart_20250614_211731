@@ -27,7 +27,6 @@ import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:homecare0x1/providers/care_note_provider.dart';
 import 'package:homecare0x1/providers/medication_record_provider.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
-import 'package:homecare0x1/providers/task_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -45,7 +44,6 @@ class HomecareApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CareNoteProvider()),
         ChangeNotifierProvider(create: (_) => MedicationRecordProvider()),
         ChangeNotifierProvider(create: (_) => ShiftAssignmentProvider()),
-        ChangeNotifierProvider(create: (_) => TaskProvider()),
       ],
       child: MaterialApp(
         title: 'Homecare App',

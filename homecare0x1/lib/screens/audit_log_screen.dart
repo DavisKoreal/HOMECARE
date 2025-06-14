@@ -76,13 +76,6 @@ class AuditLogScreen extends StatelessWidget {
                     ),
             ),
             const SizedBox(height: 16),
-            ModernButton(
-              text: 'Back to Reports',
-              icon: Icons.arrow_back,
-              isOutlined: true,
-              width: double.infinity,
-              onPressed: () => Navigator.pop(context),
-            ),
           ],
         ),
       ),

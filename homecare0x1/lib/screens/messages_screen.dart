@@ -20,7 +20,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Mock messages
-  List<Message> _messages = [
+  final List<Message> _messages = [
     Message(
       id: '1',
       senderId: 'caregiver1',
@@ -71,11 +71,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
     return ModernScreenLayout(
       title: 'Messages',
-      showBackButton: !isFamilyMember, // Hide default back button for family members
+      showBackButton:
+          !isFamilyMember, // Hide default back button for family members
       leading: isFamilyMember
           ? IconButton(
               icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.pushReplacementNamed(context, Routes.familyPortal),
+              onPressed: () =>
+                  Navigator.pushReplacementNamed(context, Routes.familyPortal),
             )
           : null,
       body: Column(
@@ -112,7 +114,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                     ? Alignment.centerRight
                                     : Alignment.centerLeft,
                                 child: Container(
-                                  margin: const EdgeInsets.symmetric(vertical: 4),
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 4),
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
                                     color: isSentByCurrentUser
@@ -121,7 +124,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         message.content,
@@ -181,18 +185,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
               ),
             ),
           ),
-          if (isFamilyMember) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: ModernButton(
-                text: 'Back to Family Portal',
-                icon: Icons.arrow_back,
-                isOutlined: true,
-                width: double.infinity,
-                onPressed: () => Navigator.pushReplacementNamed(context, Routes.familyPortal),
-              ),
-            ),
-          ],
         ],
       ),
     );
