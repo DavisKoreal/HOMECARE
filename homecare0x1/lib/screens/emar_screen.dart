@@ -4,7 +4,7 @@ import 'package:homecare0x1/models/medication_record.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
-import 'package:homecare0x1/medication_record_provider.dart';
+import 'package:homecare0x1/providers/medication_record_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 

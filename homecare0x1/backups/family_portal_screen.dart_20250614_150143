@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
-import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:homecare0x1/user_provider.dart';
 import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:provider/provider.dart';
@@ -60,17 +60,15 @@ class FamilyPortalScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             DashboardCard(
-              title: 'Caregiver Profile',
-              subtitle:
-                  'Get to know your caregiver. View details and contact info and location...',
+              title: 'Client Profile',
+              subtitle: 'View profile',
               icon: Icons.person,
               iconColor: Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.pushNamed(context, Routes.clientProfile),
             ),
             DashboardCard(
               title: 'Messages',
-              subtitle:
-                  'Communicate with your caregiver. Give specific instructions...',
+              subtitle: 'View messages',
               value: '5',
               change: '+2',
               isPositive: true,
@@ -80,7 +78,7 @@ class FamilyPortalScreen extends StatelessWidget {
             ),
             DashboardCard(
               title: 'Care Notes',
-              subtitle: "View caregiver's notes",
+              subtitle: 'View notes',
               value: '12',
               change: '+3',
               isPositive: true,

@@ -4,7 +4,7 @@ import 'package:homecare0x1/models/care_note.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
-import 'package:homecare0x1/providers/care_note_provider.dart';
+import 'package:homecare0x1/care_note_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 

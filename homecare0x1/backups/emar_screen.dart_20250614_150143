@@ -1,54 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
-import 'package:homecare0x1/models/care_note.dart';
+import 'package:homecare0x1/models/medication_record.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
-import 'package:homecare0x1/providers/care_note_provider.dart';
+import 'package:homecare0x1/medication_record_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class CareNotesScreen extends StatelessWidget {
-  const CareNotesScreen({super.key});
+class EmarScreen extends StatelessWidget {
+  const EmarScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final careNoteProvider = Provider.of<CareNoteProvider>(context);
-    final notes = careNoteProvider.notes;
+    final medicationProvider = Provider.of<MedicationRecordProvider>(context);
+    final records = medicationProvider.records;
 
     return ModernScreenLayout(
-      title: 'Care Notes',
+      title: 'eMAR',
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Care Notes',
+              'Medication Administration',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'View notes about client care',
+              'View medication records',
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
-            notes.isEmpty
-                ? const Center(child: Text('No notes found'))
+            records.isEmpty
+                ? const Center(child: Text('No records found'))
                 : ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: notes.length,
+                    itemCount: records.length,
                     itemBuilder: (context, index) {
-                      final note = notes[index];
+                      final record = records[index];
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         child: ListTile(
-                          title: Text(note.note),
+                          title: Text(record.medicationName),
                           subtitle: Text(
-                            'Time: ${DateFormat('MMM d, h:mm a').format(note.timestamp)}',
+                            'Dosage: ${record.dosage}\nTime: ${DateFormat('MMM d, h:mm a').format(record.administrationTime)}\nNotes: ${record.notes}',
                           ),
-                          leading: Icon(Icons.note, color: AppTheme.primaryBlue),
+                          leading: Icon(
+                            Icons.medical_services,
+                            color: AppTheme.primaryBlue,
+                          ),
                         ),
                       );
                     },

@@ -23,9 +23,9 @@ import 'package:homecare0x1/screens/user_profile_screen.dart';
 import 'package:homecare0x1/screens/visit_check_in_screen.dart';
 import 'package:homecare0x1/screens/visit_check_out_screen.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
-import 'package:homecare0x1/providers/user_provider.dart';
-import 'package:homecare0x1/providers/care_note_provider.dart';
-import 'package:homecare0x1/providers/medication_record_provider.dart';
+import 'package:homecare0x1/user_provider.dart';
+import 'package:homecare0x1/care_note_provider.dart';
+import 'package:homecare0x1/medication_record_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() {

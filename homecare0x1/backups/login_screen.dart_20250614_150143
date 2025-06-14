@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/services/auth_service.dart';
-import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:homecare0x1/user_provider.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
 import 'package:provider/provider.dart';
 
