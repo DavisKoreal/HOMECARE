@@ -713,6 +713,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FA),
         appBar: AppBar(
+          
           backgroundColor: Colors.white,
           elevation: 0,
           automaticallyImplyLeading: false,
