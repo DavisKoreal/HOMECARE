@@ -27,7 +27,7 @@ class AppTheme {
         bodyLarge: TextStyle(fontSize: 16),
         bodyMedium: TextStyle(fontSize: 14),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
