@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
-import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
-import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
+// import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
+// import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/models/care_note.dart';
 import 'package:homecare0x1/models/medication_record.dart';
 import 'package:homecare0x1/providers/care_note_provider.dart';
@@ -713,7 +713,6 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FA),
         appBar: AppBar(
-          
           backgroundColor: Colors.white,
           elevation: 0,
           automaticallyImplyLeading: false,
