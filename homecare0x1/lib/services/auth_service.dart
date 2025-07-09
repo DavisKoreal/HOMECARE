@@ -4,21 +4,21 @@ class AuthService {
   // Mock user database
   final Map<String, Map<String, String>> _mockUsers = {
     'admin@example.com': {
-      'password': 'admin123',
+      'password': '123',
       'role': 'admin',
-      'id': 'admin1',
+      'id': '123',
       'name': 'Admin User'
     },
     'caregiver@example.com': {
-      'password': 'care123',
+      'password': '123',
       'role': 'caregiver',
-      'id': 'caregiver1',
+      'id': '123',
       'name': 'Caregiver User'
     },
     'family@example.com': {
-      'password': 'fam123',
+      'password': '123',
       'role': 'family',
-      'id': 'family1',
+      'id': '123',
       'name': 'Family User'
     },
   };
