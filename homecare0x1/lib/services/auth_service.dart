@@ -3,22 +3,22 @@ import 'package:homecare0x1/models/user.dart';
 class AuthService {
   // Mock user database
   final Map<String, Map<String, String>> _mockUsers = {
-    'admin@example.com': {
+    'a@example.com': {
       'password': '123',
       'role': 'admin',
-      'id': '123',
+      'id': 'admin1',
       'name': 'Admin User'
     },
-    'caregiver@example.com': {
+    'c@example.com': {
       'password': '123',
       'role': 'caregiver',
-      'id': '123',
+      'id': 'caregiver1',
       'name': 'Caregiver User'
     },
-    'family@example.com': {
+    'f@example.com': {
       'password': '123',
       'role': 'family',
-      'id': '123',
+      'id': 'family1',
       'name': 'Family User'
     },
   };
