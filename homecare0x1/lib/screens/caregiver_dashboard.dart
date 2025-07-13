@@ -979,7 +979,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                       crossAxisCount: 2,
                       mainAxisSpacing: 16,
                       crossAxisSpacing: 16,
-                      childAspectRatio: 0.85,
+                      childAspectRatio: 0.65,
                       children: [
                         _buildModernActionCard(
                           title: 'Check-In',

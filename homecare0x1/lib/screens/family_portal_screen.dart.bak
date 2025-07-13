@@ -621,7 +621,7 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                       crossAxisCount: 2,
                       mainAxisSpacing: 16,
                       crossAxisSpacing: 16,
-                      childAspectRatio: 0.65,
+                      childAspectRatio: 0.85,
                       children: [
                         _buildModernActionCard(
                           title: 'Caregiver Profile',

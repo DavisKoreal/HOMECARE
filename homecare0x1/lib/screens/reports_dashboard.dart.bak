@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
+import 'package:homecare0x1/theme/app_theme.dart';
+import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
+import 'package:homecare0x1/widgets/common/modern_button.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class ReportsDashboardScreen extends StatelessWidget {
@@ -7,10 +10,8 @@ class ReportsDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reports Dashboard'),
-      ),
+    return ModernScreenLayout(
+      title: 'Reports Dashboard',
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -22,7 +23,13 @@ class ReportsDashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Task Completion Rates',
+              'View analytics and reports on services, revenue, and performance.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            // Revenue Chart
+            const Text(
+              'Monthly Revenue',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 10),
@@ -31,14 +38,14 @@ class ReportsDashboardScreen extends StatelessWidget {
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
-                  maxY: 100,
+                  maxY: 8000,
                   barTouchData: BarTouchData(
                     enabled: true,
                     touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (group) => Colors.grey.withOpacity(0.8),
+                      tooltipBgColor: Colors.grey.withOpacity(0.8),
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         return BarTooltipItem(
-                          '${rod.toY.toInt()}%',
+                          '\$${rod.toY.toInt()}',
                           const TextStyle(color: Colors.white, fontSize: 12),
                         );
                       },
@@ -46,16 +53,16 @@ class ReportsDashboardScreen extends StatelessWidget {
                   ),
                   barGroups: [
                     BarChartGroupData(x: 1, barRods: [
-                      BarChartRodData(toY: 50, color: Colors.blue),
+                      BarChartRodData(toY: 5000, color: AppTheme.successGreen),
                     ]),
                     BarChartGroupData(x: 2, barRods: [
-                      BarChartRodData(toY: 60, color: Colors.blue),
+                      BarChartRodData(toY: 6000, color: AppTheme.successGreen),
                     ]),
                     BarChartGroupData(x: 3, barRods: [
-                      BarChartRodData(toY: 55, color: Colors.blue),
+                      BarChartRodData(toY: 5500, color: AppTheme.successGreen),
                     ]),
                     BarChartGroupData(x: 4, barRods: [
-                      BarChartRodData(toY: 70, color: Colors.blue),
+                      BarChartRodData(toY: 7000, color: AppTheme.successGreen),
                     ]),
                   ],
                   titlesData: FlTitlesData(
@@ -65,7 +72,7 @@ class ReportsDashboardScreen extends StatelessWidget {
                         reservedSize: 40,
                         getTitlesWidget: (value, meta) {
                           return Text(
-                            '${value.toInt()}%',
+                            '\$${value.toInt()}',
                             style: const TextStyle(fontSize: 12),
                           );
                         },
@@ -96,14 +103,19 @@ class ReportsDashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
+            ModernButton(
+              text: 'View Audit Logs',
+              icon: Icons.history,
+              width: double.infinity,
               onPressed: () => Navigator.pushNamed(context, Routes.auditLog),
-              child: const Text('View Audit Logs'),
             ),
             const SizedBox(height: 16),
-            OutlinedButton(
+            ModernButton(
+              text: 'Back to Dashboard',
+              icon: Icons.arrow_back,
+              isOutlined: true,
+              width: double.infinity,
               onPressed: () => Navigator.pop(context),
-              child: const Text('Back to Dashboard'),
             ),
           ],
         ),
