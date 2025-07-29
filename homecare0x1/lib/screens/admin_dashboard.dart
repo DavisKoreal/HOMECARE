@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:homecare0x1/constants.dart';
-// import 'package:homecare0x1/theme/app_theme.dart';
-// import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
-// import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 
@@ -42,7 +39,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     ).animate(CurvedAnimation(
         parent: _animationController, curve: Curves.easeOutCubic));
 
-    // Create staggered animations for stats
     _statsAnimations = List.generate(3, (index) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
@@ -267,6 +263,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   List<Widget> _buildDashboardActions(BuildContext context) {
     return [
       _buildModernActionCard(
+        title: 'Admin Calendar',
+        subtitle: 'View and manage your schedule',
+        icon: Icons.calendar_today,
+        color: const Color(0xFF1E88E5),
+        onTap: () => Navigator.pushNamed(context, Routes.adminCalendar),
+      ),
+      _buildModernActionCard(
         title: 'Shift Management',
         subtitle:
             'Assign tasks to caregivers and track their progress in real-time',
@@ -436,7 +439,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Welcome Banner
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(32),
@@ -532,10 +534,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 32),
-
-                    // Statistics Section
                     const Text(
                       'Key Metrics',
                       style: TextStyle(
@@ -545,7 +544,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-
                     Row(
                       children: [
                         Expanded(
@@ -582,10 +580,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 40),
-
-                    // Quick Actions Section
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -616,7 +611,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       ],
                     ),
                     const SizedBox(height: 16),
-
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -627,7 +621,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       childAspectRatio: 0.85,
                       children: _buildDashboardActions(context),
                     ),
-
                     const SizedBox(height: 32),
                   ],
                 ),

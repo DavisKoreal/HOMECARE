@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
-// import 'package:homecare0x1/widgets/cards/dashboard_card.dart';
-// import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/models/care_note.dart';
 import 'package:homecare0x1/models/medication_record.dart';
 import 'package:homecare0x1/providers/care_note_provider.dart';
@@ -47,7 +45,6 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
     ).animate(CurvedAnimation(
         parent: _animationController, curve: Curves.easeOutCubic));
 
-    // Create staggered animations for stats
     _statsAnimations = List.generate(3, (index) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
@@ -291,6 +288,48 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         ),
       ),
     );
+  }
+
+  List<Widget> _buildDashboardActions(BuildContext context) {
+    return [
+      _buildModernActionCard(
+        title: 'Caregiver Calendar',
+        subtitle: 'View your assigned shifts',
+        icon: Icons.calendar_today,
+        color: const Color(0xFF1E88E5),
+        onTap: () => Navigator.pushNamed(context, Routes.caregiverCalendar),
+      ),
+      _buildModernActionCard(
+        title: 'Check-In',
+        subtitle: 'Start your visit with location tracking',
+        icon: Icons.login,
+        color: const Color(0xFF00A86B),
+        onTap: () => _handleCheckIn(context),
+      ),
+      _buildModernActionCard(
+        title: 'Check-Out',
+        subtitle: 'End your visit and save time logs',
+        icon: Icons.logout,
+        color: const Color(0xFFE67E22),
+        onTap: () => _handleCheckOut(context),
+      ),
+      _buildModernActionCard(
+        title: 'Care Notes',
+        subtitle: 'Add observations and care updates',
+        icon: Icons.note_add,
+        color: const Color(0xFF3498DB),
+        onTap: () => _handleAddCareNote(context),
+        badge: '2',
+      ),
+      _buildModernActionCard(
+        title: 'Medications',
+        subtitle: 'Log medication administration',
+        icon: Icons.medical_services,
+        color: const Color(0xFF9B59B6),
+        onTap: () => _handleLogMedication(context),
+        badge: '1',
+      ),
+    ];
   }
 
   Future<bool> _confirmLogout(BuildContext context) async {
@@ -661,7 +700,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       careNoteProvider.addNote(
         CareNote(
           id: (careNoteProvider.notes.length + 1).toString(),
-          clientId: '1', // Mock client ID
+          clientId: '1',
           caregiverId: userProvider.user?.id ?? 'caregiver1',
           note: noteText,
           timestamp: DateTime.now(),
@@ -682,7 +721,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       medicationProvider.addRecord(
         MedicationRecord(
           id: (medicationProvider.records.length + 1).toString(),
-          clientId: '1', // Mock client ID
+          clientId: '1',
           medicationName: medication['medication']!,
           dosage: medication['dosage']!,
           administrationTime: DateTime.now(),
@@ -814,7 +853,6 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Welcome Banner
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(32),
@@ -910,10 +948,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 32),
-
-                    // Today's Overview
                     const Text(
                       'Today\'s Overview',
                       style: TextStyle(
@@ -923,7 +958,6 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-
                     Row(
                       children: [
                         Expanded(
@@ -960,10 +994,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 32),
-
-                    // Quick Actions Section
                     const Text(
                       'Quick Actions',
                       style: TextStyle(
@@ -973,7 +1004,6 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -981,43 +1011,9 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                       mainAxisSpacing: 16,
                       crossAxisSpacing: 16,
                       childAspectRatio: 0.85,
-                      children: [
-                        _buildModernActionCard(
-                          title: 'Check-In',
-                          subtitle: 'Start your visit with location tracking',
-                          icon: Icons.login,
-                          color: const Color(0xFF00A86B),
-                          onTap: () => _handleCheckIn(context),
-                        ),
-                        _buildModernActionCard(
-                          title: 'Check-Out',
-                          subtitle: 'End your visit and save time logs',
-                          icon: Icons.logout,
-                          color: const Color(0xFFE67E22),
-                          onTap: () => _handleCheckOut(context),
-                        ),
-                        _buildModernActionCard(
-                          title: 'Care Notes',
-                          subtitle: 'Add observations and care updates',
-                          icon: Icons.note_add,
-                          color: const Color(0xFF3498DB),
-                          onTap: () => _handleAddCareNote(context),
-                          badge: '2',
-                        ),
-                        _buildModernActionCard(
-                          title: 'Medications',
-                          subtitle: 'Log medication administration',
-                          icon: Icons.medical_services,
-                          color: const Color(0xFF9B59B6),
-                          onTap: () => _handleLogMedication(context),
-                          badge: '1',
-                        ),
-                      ],
+                      children: _buildDashboardActions(context),
                     ),
-
                     const SizedBox(height: 32),
-
-                    // Recent Activity Section
                     const Text(
                       'Recent Activity',
                       style: TextStyle(
@@ -1027,7 +1023,6 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -1068,10 +1063,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 32),
-
-                    // Emergency Contact Button
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -1128,7 +1120,6 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                             ),
                             child: TextButton(
                               onPressed: () {
-                                // Handle emergency contact
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content:
@@ -1149,7 +1140,6 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 20),
                   ],
                 ),

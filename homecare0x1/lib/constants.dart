@@ -22,5 +22,7 @@ class Routes {
   static const String paymentStatus = '/payment_status';
   static const String offlineMode = '/offline_mode';
   static const String syncStatus = '/sync_status';
-  static const String shiftList = "/shift_list";
+  static const String shiftList = '/shift_list';
+  static const String adminCalendar = '/admin_calendar';
+  static const String caregiverCalendar = '/caregiver_calendar';
 }

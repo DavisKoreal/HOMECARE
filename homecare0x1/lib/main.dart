@@ -2,10 +2,12 @@ import 'package:homecare0x1/providers/location_provider.dart';
 import 'package:homecare0x1/screens/shift_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
+import 'package:homecare0x1/screens/admin_calendar_screen.dart';
 import 'package:homecare0x1/screens/admin_dashboard.dart';
 import 'package:homecare0x1/screens/audit_log_screen.dart';
 import 'package:homecare0x1/screens/billing_dashboard.dart';
 import 'package:homecare0x1/screens/care_notes_screen.dart';
+import 'package:homecare0x1/screens/caregiver_calendar_screen.dart';
 import 'package:homecare0x1/screens/caregiver_dashboard.dart';
 import 'package:homecare0x1/screens/client_list_screen.dart';
 import 'package:homecare0x1/screens/client_profile_screen.dart';
@@ -48,7 +50,6 @@ class HomecareApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MedicationRecordProvider()),
         ChangeNotifierProvider(create: (_) => ShiftAssignmentProvider()),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
-        ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
       ],
       child: MaterialApp(
@@ -105,6 +106,10 @@ class HomecareApp extends StatelessWidget {
               return MaterialPageRoute(builder: (_) => ShiftListScreen(selectedDay: settings.arguments as DateTime));
             case Routes.syncStatus:
               return MaterialPageRoute(builder: (_) => const SyncStatusScreen());
+            case Routes.adminCalendar:
+              return MaterialPageRoute(builder: (_) => const AdminCalendarScreen());
+            case Routes.caregiverCalendar:
+              return MaterialPageRoute(builder: (_) => const CaregiverCalendarScreen());
             default:
               return MaterialPageRoute(
                 builder: (_) => Scaffold(
