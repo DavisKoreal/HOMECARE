@@ -14,7 +14,7 @@ fi
 
 # Define common source file extensions, including .dart
 # Add or remove extensions as needed
-source_extensions=("*.dart")
+source_extensions=("*.dart" "*.yaml" )
 
 # Iterate through source file extensions
 for ext in "${source_extensions[@]}"; do

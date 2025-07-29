@@ -1,0 +1,75 @@
+directory: .
+    |---analysis_options.yaml
+    |---pubspec.yaml
+
+directory: .dart_tool/dartpad
+    |---web_plugin_registrant.dart
+
+directory: lib
+    |---constants.dart
+    |---main.dart
+
+directory: lib/models
+    |---audit_log.dart
+    |---care_note.dart
+    |---client.dart
+    |---medication_record.dart
+    |---message.dart
+    |---task.dart
+    |---user.dart
+
+directory: lib/providers
+    |---care_note_provider.dart
+    |---location_provider.dart
+    |---medication_record_provider.dart
+    |---shift_assignment_provider.dart
+    |---task_provider.dart
+    |---user_provider.dart
+
+directory: lib/theme
+    |---app_theme.dart
+
+directory: lib/widgets/common
+    |---modern_button.dart
+    |---modern_screen_layout.dart
+    |---search_bar.dart
+
+directory: lib/widgets/cards
+    |---dashboard_card.dart
+    |---stats_card.dart
+
+directory: lib/screens
+    |---admin_calendar_screen.dart
+    |---admin_dashboard.dart
+    |---audit_log_screen.dart
+    |---billing_dashboard.dart
+    |---caregiver_calendar_screen.dart
+    |---caregiver_dashboard.dart
+    |---care_notes_screen.dart
+    |---client_calendar_screen.dart
+    |---client_list_screen.dart
+    |---client_profile_screen.dart
+    |---emar_screen.dart
+    |---family_portal_screen.dart
+    |---invoice_generation_screen.dart
+    |---login_screen.dart
+    |---messages_screen.dart
+    |---offline_mode_screen.dart
+    |---payment_status_screen.dart
+    |---payroll_processing_screen.dart
+    |---reports_dashboard.dart
+    |---schedule_overview_screen.dart
+    |---shift_assignment_screen.dart
+    |---shift_list_screen.dart
+    |---sync_status_screen.dart
+    |---task_list_screen.dart
+    |---user_profile_screen.dart
+    |---visit_check_in_screen.dart
+    |---visit_check_out_screen.dart
+
+directory: lib/services
+    |---auth_service.dart
+
+directory: test
+    |---widget_test.dart
+
