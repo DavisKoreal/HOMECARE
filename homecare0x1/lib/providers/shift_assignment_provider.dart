@@ -4,13 +4,6 @@ import 'package:homecare0x1/providers/location_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 
-class Location {
-  double latitude;
-  double longitude;
-
-  Location({required this.latitude, required this.longitude});
-}
-
 class Shift {
   final String id;
   final String clientId;
@@ -136,10 +129,13 @@ class ShiftAssignmentProvider with ChangeNotifier {
     return _shifts.where((shift) => shift.clientId == clientId).toList();
   }
 
-  bool _isShiftOverlap(DateTime startTime, DateTime endTime, String? caregiverId, String clientId) {
+  bool _isShiftOverlap(DateTime startTime, DateTime endTime,
+      String? caregiverId, String clientId) {
     for (var shift in _shifts) {
-      if ((caregiverId != null && shift.caregiverId == caregiverId) || shift.clientId == clientId) {
-        if (!(endTime.isBefore(shift.startTime) || startTime.isAfter(shift.endTime))) {
+      if ((caregiverId != null && shift.caregiverId == caregiverId) ||
+          shift.clientId == clientId) {
+        if (!(endTime.isBefore(shift.startTime) ||
+            startTime.isAfter(shift.endTime))) {
           return true;
         }
       }
@@ -199,7 +195,11 @@ class ShiftAssignmentProvider with ChangeNotifier {
     if (startTime.isAfter(endTime)) {
       throw Exception('Start time must be before end time');
     }
-    if (_isShiftOverlap(startTime, endTime, caregiverId ?? _shifts[shiftIndex].caregiverId, _shifts[shiftIndex].clientId)) {
+    if (_isShiftOverlap(
+        startTime,
+        endTime,
+        caregiverId ?? _shifts[shiftIndex].caregiverId,
+        _shifts[shiftIndex].clientId)) {
       throw Exception('Shift overlaps with existing shift');
     }
     _shifts[shiftIndex].startTime = startTime;
@@ -229,8 +229,10 @@ class ShiftAssignmentProvider with ChangeNotifier {
 
   void assignShift(String shiftId, String caregiverId, String caregiverName) {
     final shift = _shifts.firstWhere((shift) => shift.id == shiftId);
-    if (_isShiftOverlap(shift.startTime, shift.endTime, caregiverId, shift.clientId)) {
-      throw Exception('Caregiver is already assigned to another shift at this time');
+    if (_isShiftOverlap(
+        shift.startTime, shift.endTime, caregiverId, shift.clientId)) {
+      throw Exception(
+          'Caregiver is already assigned to another shift at this time');
     }
     shift.caregiverId = caregiverId;
     shift.caregiverName = caregiverName;

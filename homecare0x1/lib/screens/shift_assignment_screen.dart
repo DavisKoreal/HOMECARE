@@ -139,7 +139,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                 ),
                           ),
                           Text(
-                            DateFormat('MMM d, h:mm a').format(shift.dateTime),
+                            DateFormat('MMM d, h:mm a').format(shift.startTime),
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: AppTheme.primaryBlue,
@@ -857,7 +857,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                           const SizedBox(width: 4),
                                           Text(
                                             DateFormat('MMM d, h:mm a')
-                                                .format(shift.dateTime),
+                                                .format(shift.startTime),
                                             style: TextStyle(
                                               color: Colors.grey[600],
                                               fontSize: 14,

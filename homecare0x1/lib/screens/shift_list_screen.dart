@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:homecare0x1/constants.dart';
+// import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
+import 'package:homecare0x1/widgets/common/modern_button.dart'; // Ensure ModernButton is imported
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'admin_calendar_screen.dart';
@@ -27,9 +28,16 @@ class _ShiftListScreenState extends State<ShiftListScreen> {
     super.dispose();
   }
 
+  bool isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
+  }
+
   List<Shift> _getFilteredShifts(ShiftAssignmentProvider provider) {
     final shifts = provider.allShifts.where((shift) {
-      final shiftDay = DateTime(shift.startTime.year, shift.startTime.month, shift.startTime.day);
+      final shiftDay = DateTime(
+          shift.startTime.year, shift.startTime.month, shift.startTime.day);
       return isSameDay(shiftDay, widget.selectedDay);
     }).toList();
 
@@ -37,8 +45,12 @@ class _ShiftListScreenState extends State<ShiftListScreen> {
       final matchesSearch = _searchQuery.isEmpty ||
           shift.id.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           shift.clientName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          (shift.caregiverName?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
-      final matchesFilter = _selectedFilter == 'All' || shift.status == _selectedFilter;
+          (shift.caregiverName
+                  ?.toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ??
+              false);
+      final matchesFilter =
+          _selectedFilter == 'All' || shift.status == _selectedFilter;
       return matchesSearch && matchesFilter;
     }).toList();
   }
@@ -130,11 +142,13 @@ class _ShiftListScreenState extends State<ShiftListScreen> {
             children: [
               Text('Shift ID: ${shift.id}'),
               Text('Client: ${shift.clientName} (ID: ${shift.clientId})'),
-              Text('Start: ${DateFormat('h:mm a, MMM d').format(shift.startTime)}'),
+              Text(
+                  'Start: ${DateFormat('h:mm a, MMM d').format(shift.startTime)}'),
               Text('End: ${DateFormat('h:mm a, MMM d').format(shift.endTime)}'),
               Text('Caregiver: ${shift.caregiverName ?? 'Unassigned'}'),
               Text('Status: ${shift.status}'),
-              Text('Location: ${shift.location != null ? '(${shift.location!.latitude}, ${shift.location!.longitude})' : 'Not set'}'),
+              Text(
+                  'Location: ${shift.location != null ? '(${shift.location!.latitude}, ${shift.location!.longitude})' : 'Not set'}'),
             ],
           ),
         ),
@@ -148,9 +162,8 @@ class _ShiftListScreenState extends State<ShiftListScreen> {
               text: 'Edit Shift',
               icon: Icons.edit,
               onPressed: () {
-                Navigator.pop(context);
-                final adminScreen = AdminCalendarScreen();
-                adminScreen._showEditShiftDialog(shift);
+                // show message of "navigating to be able to edit shift to be implemented"
+                // showDialog(builder: )
               },
             ),
         ],
@@ -161,7 +174,8 @@ class _ShiftListScreenState extends State<ShiftListScreen> {
   @override
   Widget build(BuildContext context) {
     return ModernScreenLayout(
-      title: 'Shifts on ${DateFormat('MMMM d, yyyy').format(widget.selectedDay)}',
+      title:
+          'Shifts on ${DateFormat('MMMM d, yyyy').format(widget.selectedDay)}',
       showBackButton: true,
       onBackPressed: () => Navigator.pop(context),
       body: Consumer<ShiftAssignmentProvider>(
@@ -191,8 +205,10 @@ class _ShiftListScreenState extends State<ShiftListScreen> {
                             ),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                                child: Icon(Icons.event, color: AppTheme.primaryBlue),
+                                backgroundColor:
+                                    AppTheme.primaryBlue.withOpacity(0.1),
+                                child: Icon(Icons.event,
+                                    color: AppTheme.primaryBlue),
                               ),
                               title: Text(shift.clientName),
                               subtitle: Text(

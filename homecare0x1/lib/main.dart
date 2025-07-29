@@ -1,5 +1,5 @@
-import package:homecare0x1/providers/location_provider.dart;
-import package:homecare0x1/screens/shift_list_screen.dart;
+import 'package:homecare0x1/providers/location_provider.dart';
+import 'package:homecare0x1/screens/shift_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/screens/admin_dashboard.dart';
@@ -101,8 +101,6 @@ class HomecareApp extends StatelessWidget {
               return MaterialPageRoute(builder: (_) => const UserProfileScreen());
             case Routes.offlineMode:
               return MaterialPageRoute(builder: (_) => const OfflineModeScreen());
-            case Routes.shiftList:
-              return MaterialPageRoute(builder: (_) => ShiftListScreen(selectedDay: settings.arguments as DateTime));
             case Routes.shiftList:
               return MaterialPageRoute(builder: (_) => ShiftListScreen(selectedDay: settings.arguments as DateTime));
             case Routes.syncStatus:

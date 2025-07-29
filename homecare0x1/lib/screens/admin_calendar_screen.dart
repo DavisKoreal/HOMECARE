@@ -14,10 +14,10 @@ class AdminCalendarScreen extends StatefulWidget {
   const AdminCalendarScreen({super.key});
 
   @override
-  State<AdminCalendarScreen> createState() => _AdminCalendarScreenState();
+  State<AdminCalendarScreen> createState() => AdminCalendarScreenState();
 }
 
-class _AdminCalendarScreenState extends State<AdminCalendarScreen>
+class AdminCalendarScreenState extends State<AdminCalendarScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -48,10 +48,12 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen>
   }
 
   void _loadEvents() {
-    final provider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+    final provider =
+        Provider.of<ShiftAssignmentProvider>(context, listen: false);
     _events.clear();
     for (final shift in provider.allShifts) {
-      final day = DateTime(shift.startTime.year, shift.startTime.month, shift.startTime.day);
+      final day = DateTime(
+          shift.startTime.year, shift.startTime.month, shift.startTime.day);
       if (_events[day] == null) {
         _events[day] = [];
       }
@@ -152,7 +154,8 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen>
                   startTime != null &&
                   endTime != null) {
                 try {
-                  await Provider.of<ShiftAssignmentProvider>(context, listen: false)
+                  await Provider.of<ShiftAssignmentProvider>(context,
+                          listen: false)
                       .addShift(
                     clientId: clientIdController.text,
                     clientName: clientNameController.text,
@@ -182,7 +185,7 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen>
     );
   }
 
-  Future<void> _showEditShiftDialog(Shift shift) async {
+  Future<void> showEditShiftDialog(Shift shift) async {
     DateTime? startTime = shift.startTime;
     DateTime? endTime = shift.endTime;
     String? selectedCaregiverId = shift.caregiverId;
@@ -281,7 +284,8 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen>
             onPressed: () async {
               if (startTime != null && endTime != null) {
                 try {
-                  await Provider.of<ShiftAssignmentProvider>(context, listen: false)
+                  await Provider.of<ShiftAssignmentProvider>(context,
+                          listen: false)
                       .updateShift(
                     shiftId: shift.id,
                     startTime: startTime!,
