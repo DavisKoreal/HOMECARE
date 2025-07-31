@@ -5,41 +5,46 @@ class ModernScreenLayout extends StatelessWidget {
   final String title;
   final Widget body;
   final bool showBackButton;
-  final List<Widget>? actions;
-  final Widget? floatingActionButton;
-  final Widget? leading;
   final VoidCallback? onBackPressed;
+  final Widget? floatingActionButton;
 
   const ModernScreenLayout({
     super.key,
     required this.title,
     required this.body,
-    this.showBackButton = true,
-    this.actions,
-    this.floatingActionButton,
-    this.leading,
+    this.showBackButton = false,
     this.onBackPressed,
+    this.floatingActionButton,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: Text(title),
-        leading: leading ??
-            (showBackButton
-                ? IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: onBackPressed ?? () => Navigator.pop(context),
-                  )
-                : null),
-        actions: actions,
-        backgroundColor: AppTheme.neutral100,
+        backgroundColor: Colors.white,
         elevation: 0,
+        leading: showBackButton
+            ? IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: AppTheme.primaryBlue,
+                ),
+                onPressed: onBackPressed ??
+                    () => Navigator.pop(context),
+              )
+            : null,
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Color(0xFF2C3E50),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: body,
       floatingActionButton: floatingActionButton,
-      backgroundColor: AppTheme.neutral100,
     );
   }
 }

@@ -74,6 +74,231 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
     super.dispose();
   }
 
+  Future<void> _showCreateShiftDialog() async {
+    final clientController = TextEditingController();
+    String? selectedClientId;
+    String? selectedCaregiverId;
+    DateTime? startTime = DateTime.now().add(const Duration(hours: 1));
+    DateTime? endTime = startTime.add(const Duration(hours: 2));
+    String? errorMessage;
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Create New Shift'),
+        content: StatefulBuilder(
+          builder: (context, setState) => SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Consumer<ShiftAssignmentProvider>(
+                  builder: (context, provider, child) {
+                    return DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Client',
+                        border: OutlineInputBorder(),
+                      ),
+                      value: selectedClientId,
+                      items: provider.clients
+                          .map((client) => DropdownMenuItem<String>(
+                                value: client.id,
+                                child: Text(client.name),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedClientId = value;
+                          clientController.text = value != null
+                              ? provider.clients
+                                  .firstWhere((c) => c.id == value)
+                                  .name
+                              : '';
+                          errorMessage = null;
+                        });
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                Consumer<ShiftAssignmentProvider>(
+                  builder: (context, provider, child) {
+                    return DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Caregiver (Optional)',
+                        border: OutlineInputBorder(),
+                      ),
+                      value: selectedCaregiverId,
+                      items: [
+                        const DropdownMenuItem<String>(
+                          value: null,
+                          child: Text('None'),
+                        ),
+                        ...provider.availableCaregivers
+                            .map((caregiver) => DropdownMenuItem<String>(
+                                  value: caregiver.id,
+                                  child: Text(caregiver.name),
+                                ))
+                            .toList(),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCaregiverId = value;
+                          errorMessage = null;
+                        });
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                ModernButton(
+                  text: 'Select Start Time',
+                  icon: Icons.access_time,
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: startTime!,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (date != null) {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.fromDateTime(startTime!),
+                      );
+                      if (time != null) {
+                        setState(() {
+                          startTime = DateTime(
+                            date.year,
+                            date.month,
+                            date.day,
+                            time.hour,
+                            time.minute,
+                          );
+                          endTime = startTime!.add(const Duration(hours: 2));
+                          errorMessage = null;
+                        });
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                ModernButton(
+                  text: 'Select End Time',
+                  icon: Icons.access_time,
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: endTime!,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (date != null) {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.fromDateTime(endTime!),
+                      );
+                      if (time != null) {
+                        setState(() {
+                          endTime = DateTime(
+                            date.year,
+                            date.month,
+                            date.day,
+                            time.hour,
+                            time.minute,
+                          );
+                          errorMessage = null;
+                        });
+                      }
+                    }
+                  },
+                ),
+                if (errorMessage != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    errorMessage!,
+                    style: const TextStyle(color: AppTheme.errorRed),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (selectedClientId == null) {
+                setState(() {
+                  errorMessage = 'Please select a client';
+                });
+                return;
+              }
+              if (startTime == null || endTime == null) {
+                setState(() {
+                  errorMessage = 'Please select both start and end times';
+                });
+                return;
+              }
+              if (startTime!.isBefore(DateTime.now())) {
+                setState(() {
+                  errorMessage = 'Start time must be in the future';
+                });
+                return;
+              }
+              if (startTime!.isAfter(endTime!)) {
+                setState(() {
+                  errorMessage = 'Start time must be before end time';
+                });
+                return;
+              }
+              try {
+                final shiftProvider = Provider.of<ShiftAssignmentProvider>(
+                    context,
+                    listen: false);
+                final clientName = shiftProvider.clients
+                    .firstWhere((c) => c.id == selectedClientId)
+                    .name;
+                final caregiverName = selectedCaregiverId != null
+                    ? shiftProvider.availableCaregivers
+                        .firstWhere((c) => c.id == selectedCaregiverId)
+                        .name
+                    : null;
+                await shiftProvider.addShift(
+                  clientId: selectedClientId!,
+                  clientName: clientName,
+                  startTime: startTime!,
+                  endTime: endTime!,
+                  context: context,
+                  caregiverId: selectedCaregiverId,
+                  caregiverName: caregiverName,
+                );
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Shift created successfully')),
+                );
+              } catch (e) {
+                setState(() {
+                  errorMessage = e.toString();
+                });
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryBlue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Create Shift'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _assignCaregiver(BuildContext context, Shift shift) {
     final provider =
         Provider.of<ShiftAssignmentProvider>(context, listen: false);
@@ -105,7 +330,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                 height: 4,
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: AppTheme.neutral600.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -135,7 +360,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                 .textTheme
                                 .bodyMedium
                                 ?.copyWith(
-                                  color: Colors.grey[600],
+                                  color: AppTheme.neutral600,
                                 ),
                           ),
                           Text(
@@ -186,7 +411,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                               border: Border.all(
                                 color: isSelected
                                     ? AppTheme.primaryBlue
-                                    : Colors.grey[200]!,
+                                    : AppTheme.neutral600.withOpacity(0.2),
                                 width: isSelected ? 2 : 1,
                               ),
                               color: isSelected
@@ -201,12 +426,12 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                               leading: CircleAvatar(
                                 backgroundColor: isSelected
                                     ? AppTheme.primaryBlue
-                                    : Colors.grey[200],
+                                    : AppTheme.neutral100,
                                 child: Icon(
                                   Icons.person,
                                   color: isSelected
                                       ? Colors.white
-                                      : Colors.grey[600],
+                                      : AppTheme.neutral600,
                                 ),
                               ),
                               title: Text(
@@ -226,7 +451,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                       Icon(
                                         Icons.check_circle,
                                         size: 16,
-                                        color: Colors.green[600],
+                                        color: AppTheme.successGreen,
                                       ),
                                       const SizedBox(width: 4),
                                       const Text('Available'),
@@ -237,7 +462,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                     'Experience: 3+ years',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey[600],
+                                      color: AppTheme.neutral600,
                                     ),
                                   ),
                                 ],
@@ -266,9 +491,10 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: AppTheme.neutral100,
                     border: Border(
-                      top: BorderSide(color: Colors.grey[200]!),
+                      top: BorderSide(
+                          color: AppTheme.neutral600.withOpacity(0.2)),
                     ),
                   ),
                   child: Row(
@@ -308,24 +534,36 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                   await Future.delayed(
                                       const Duration(milliseconds: 800));
 
-                                  provider.assignShift(
-                                    shift.id,
-                                    selectedCaregiver.id,
-                                    selectedCaregiver.name,
-                                  );
+                                  try {
+                                    provider.assignShift(
+                                      shift.id,
+                                      selectedCaregiver.id,
+                                      selectedCaregiver.name,
+                                    );
 
-                                  setState(() {
-                                    _isAssigning = false;
-                                    _selectedShiftId = null;
-                                    _selectedCaregiverId = null;
-                                  });
+                                    setState(() {
+                                      _isAssigning = false;
+                                      _selectedShiftId = null;
+                                      _selectedCaregiverId = null;
+                                    });
 
-                                  Navigator.pop(context);
+                                    Navigator.pop(context);
 
-                                  // Show success animation
-                                  _showSuccessSnackBar(
-                                    'Successfully assigned ${selectedCaregiver.name} to ${shift.clientName}\'s shift',
-                                  );
+                                    // Show success animation
+                                    _showSuccessSnackBar(
+                                      'Successfully assigned ${selectedCaregiver.name} to ${shift.clientName}\'s shift',
+                                    );
+                                  } catch (e) {
+                                    setState(() {
+                                      _isAssigning = false;
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(e.toString()),
+                                        backgroundColor: AppTheme.errorRed,
+                                      ),
+                                    );
+                                  }
                                 },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryBlue,
@@ -379,7 +617,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
             ),
           ],
         ),
-        backgroundColor: Colors.green[600],
+        backgroundColor: AppTheme.successGreen,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -398,13 +636,13 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
           Icon(
             icon,
             size: 64,
-            color: Colors.grey[400],
+            color: AppTheme.neutral600,
           ),
           const SizedBox(height: 16),
           Text(
             message,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
+                  color: AppTheme.neutral600,
                 ),
           ),
         ],
@@ -416,7 +654,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: AppTheme.neutral100,
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextField(
@@ -428,7 +666,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
         },
         decoration: InputDecoration(
           hintText: 'Search caregivers or clients...',
-          prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+          prefixIcon: Icon(Icons.search, color: AppTheme.neutral600),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   onPressed: () {
@@ -437,7 +675,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                       _searchQuery = '';
                     });
                   },
-                  icon: const Icon(Icons.clear),
+                  icon: Icon(Icons.clear, color: AppTheme.neutral600),
                 )
               : null,
           border: InputBorder.none,
@@ -448,7 +686,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
   }
 
   Widget _buildFilterChips() {
-    final filters = ['All', 'Urgent', 'Today', 'This Week'];
+    final filters = ['All', 'Urgent', 'Today', 'This Week', 'Requests'];
 
     return Container(
       height: 50,
@@ -470,10 +708,10 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                   _selectedFilter = filter;
                 });
               },
-              backgroundColor: Colors.grey[100],
+              backgroundColor: AppTheme.neutral100,
               selectedColor: AppTheme.primaryBlue.withOpacity(0.2),
               labelStyle: TextStyle(
-                color: isSelected ? AppTheme.primaryBlue : Colors.grey[700],
+                color: isSelected ? AppTheme.primaryBlue : AppTheme.neutral600,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
               side: BorderSide(
@@ -492,7 +730,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryBlue, AppTheme.primaryBlue.withOpacity(0.8)],
+          colors: [AppTheme.primaryBlue, AppTheme.primaryBlueLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -573,6 +811,11 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
       showBackButton: true,
       onBackPressed: () =>
           Navigator.pushReplacementNamed(context, Routes.adminDashboard),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showCreateShiftDialog,
+        backgroundColor: AppTheme.primaryBlue,
+        child: const Icon(Icons.add),
+      ),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
@@ -580,15 +823,21 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
           child: Consumer<ShiftAssignmentProvider>(
             builder: (context, provider, child) {
               final unassignedShifts = provider.unassignedShifts;
-              final availableCaregivers = provider.availableCaregivers;
+              final requestShifts = provider.requestShifts;
 
-              // Filter shifts based on search query
-              final filteredShifts = unassignedShifts.where((shift) {
+              // Combine and filter shifts based on search query and filter
+              final allShifts = [...unassignedShifts, ...requestShifts];
+              final filteredShifts = allShifts.where((shift) {
                 final matchesSearch = _searchQuery.isEmpty ||
                     shift.clientName
                         .toLowerCase()
                         .contains(_searchQuery.toLowerCase());
-                return matchesSearch;
+                final matchesFilter = _selectedFilter == 'All' ||
+                    (_selectedFilter == 'Requests' &&
+                        shift.status == 'request') ||
+                    (_selectedFilter != 'Requests' &&
+                        shift.status != 'request');
+                return matchesSearch && matchesFilter;
               }).toList();
 
               return SingleChildScrollView(
@@ -633,14 +882,16 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.green[50],
+                              color: AppTheme.successGreen.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.green[200]!),
+                              border: Border.all(
+                                  color:
+                                      AppTheme.successGreen.withOpacity(0.3)),
                             ),
                             child: Text(
-                              '${availableCaregivers.length}',
+                              '${provider.availableCaregivers.length}',
                               style: TextStyle(
-                                color: Colors.green[700],
+                                color: AppTheme.successGreen,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),
@@ -652,7 +903,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
 
                     const SizedBox(height: 16),
 
-                    availableCaregivers.isEmpty
+                    provider.availableCaregivers.isEmpty
                         ? Container(
                             height: 120,
                             child: _buildEmptyState(
@@ -664,9 +915,10 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                               scrollDirection: Axis.horizontal,
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: availableCaregivers.length,
+                              itemCount: provider.availableCaregivers.length,
                               itemBuilder: (context, index) {
-                                final caregiver = availableCaregivers[index];
+                                final caregiver =
+                                    provider.availableCaregivers[index];
                                 return Container(
                                   width: 160,
                                   margin: const EdgeInsets.only(right: 16),
@@ -675,7 +927,8 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.grey.withOpacity(0.1),
+                                        color: AppTheme.neutral600
+                                            .withOpacity(0.1),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -713,14 +966,15 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                             vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.green[50],
+                                            color: AppTheme.successGreen
+                                                .withOpacity(0.1),
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                           ),
                                           child: Text(
                                             'Available',
                                             style: TextStyle(
-                                              color: Colors.green[700],
+                                              color: AppTheme.successGreen,
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
                                             ),
@@ -743,7 +997,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                         children: [
                           Icon(
                             Icons.assignment_late,
-                            color: Colors.orange[600],
+                            color: AppTheme.accentOrange,
                             size: 24,
                           ),
                           const SizedBox(width: 8),
@@ -763,14 +1017,16 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.orange[50],
+                              color: AppTheme.accentOrange.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.orange[200]!),
+                              border: Border.all(
+                                  color:
+                                      AppTheme.accentOrange.withOpacity(0.3)),
                             ),
                             child: Text(
                               '${filteredShifts.length}',
                               style: TextStyle(
-                                color: Colors.orange[700],
+                                color: AppTheme.accentOrange,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),
@@ -810,12 +1066,13 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                   border: Border.all(
                                     color: isSelected
                                         ? AppTheme.primaryBlue
-                                        : Colors.grey[200]!,
+                                        : AppTheme.neutral600.withOpacity(0.2),
                                     width: isSelected ? 2 : 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.grey.withOpacity(0.08),
+                                      color:
+                                          AppTheme.neutral600.withOpacity(0.08),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -827,12 +1084,13 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                     width: 48,
                                     height: 48,
                                     decoration: BoxDecoration(
-                                      color: Colors.orange[50],
+                                      color: AppTheme.accentOrange
+                                          .withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
                                       Icons.event,
-                                      color: Colors.orange[600],
+                                      color: AppTheme.accentOrange,
                                     ),
                                   ),
                                   title: Text(
@@ -852,14 +1110,14 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                           Icon(
                                             Icons.schedule,
                                             size: 16,
-                                            color: Colors.grey[600],
+                                            color: AppTheme.neutral600,
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
                                             DateFormat('MMM d, h:mm a')
                                                 .format(shift.startTime),
                                             style: TextStyle(
-                                              color: Colors.grey[600],
+                                              color: AppTheme.neutral600,
                                               fontSize: 14,
                                             ),
                                           ),
@@ -872,14 +1130,22 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                           vertical: 2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.red[50],
+                                          color: shift.status == 'request'
+                                              ? AppTheme.errorRed
+                                                  .withOpacity(0.1)
+                                              : AppTheme.errorRed
+                                                  .withOpacity(0.1),
                                           borderRadius:
                                               BorderRadius.circular(8),
                                         ),
                                         child: Text(
-                                          'Unassigned',
+                                          shift.status == 'request'
+                                              ? 'Request'
+                                              : 'Unassigned',
                                           style: TextStyle(
-                                            color: Colors.red[600],
+                                            color: shift.status == 'request'
+                                                ? AppTheme.errorRed
+                                                : AppTheme.errorRed,
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
                                           ),

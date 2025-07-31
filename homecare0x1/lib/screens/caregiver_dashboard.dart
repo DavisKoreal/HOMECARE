@@ -697,15 +697,15 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       final careNoteProvider =
           Provider.of<CareNoteProvider>(context, listen: false);
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      careNoteProvider.addNote(
-        CareNote(
-          id: (careNoteProvider.notes.length + 1).toString(),
-          clientId: '1',
-          caregiverId: userProvider.user?.id ?? 'caregiver1',
-          note: noteText,
-          timestamp: DateTime.now(),
-        ),
-      );
+      // careNoteProvider.addNote(
+      //   CareNote(
+      //     id: (careNoteProvider.notes.length + 1).toString(),
+      //     clientId: '1',
+      //     caregiverId: userProvider.user?.id ?? 'caregiver1',
+      //     note: noteText,
+      //     timestamp: DateTime.now(),
+      //   ),
+      // );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Care note added successfully')),
       );

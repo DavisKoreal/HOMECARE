@@ -201,7 +201,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
         ModernButton(
           text: 'Go to Login',
           icon: Icons.login,
-          width: double.infinity,
+          // width: double.infinity,
           onPressed: () =>
               Navigator.pushReplacementNamed(context, Routes.login),
         ),
@@ -428,7 +428,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                   text: 'Cancel',
                   icon: Icons.cancel,
                   isOutlined: true,
-                  width: double.infinity,
+                  // width: double.infinity,
                   onPressed: _toggleEditMode,
                 ),
               ),
@@ -437,7 +437,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                 child: ModernButton(
                   text: 'Save',
                   icon: Icons.save,
-                  width: double.infinity,
+                  // width: double.infinity,
                   isLoading: _isLoading,
                   onPressed: _saveProfile,
                 ),
@@ -448,7 +448,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
           ModernButton(
             text: 'Edit Profile',
             icon: Icons.edit,
-            width: double.infinity,
+            // width: double.infinity,
             onPressed: _toggleEditMode,
           ),
         const SizedBox(height: 16),
@@ -456,7 +456,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
           text: 'Log Out',
           icon: Icons.logout,
           isOutlined: true,
-          width: double.infinity,
+          // width: double.infinity,
           onPressed: () async {
             final shouldLogout = await _confirmLogout(context);
             if (shouldLogout ?? false) {

@@ -364,7 +364,7 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
               ModernButton(
                 text: 'Add New Shift',
                 icon: Icons.add,
-                width: double.infinity,
+                // width: double.infinity,
                 onPressed: _showAddShiftDialog,
               ),
             ],

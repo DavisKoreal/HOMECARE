@@ -117,7 +117,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> {
               ModernButton(
                 text: _isEditing ? 'Save Changes' : 'Edit Profile',
                 icon: _isEditing ? Icons.save : Icons.edit,
-                width: double.infinity,
+                // width: double.infinity,
                 onPressed: () {
                   if (_isEditing && _formKey.currentState!.validate()) {
                     _toggleEdit();

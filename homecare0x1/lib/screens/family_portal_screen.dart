@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:homecare0x1/providers/shift_assignment_provider.dart';
+import 'package:homecare0x1/theme/app_theme.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:homecare0x1/widgets/common/modern_button.dart';
 
 class FamilyPortalScreen extends StatefulWidget {
   const FamilyPortalScreen({super.key});
@@ -39,7 +43,6 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
     ).animate(CurvedAnimation(
         parent: _animationController, curve: Curves.easeOutCubic));
 
-    // Create staggered animations for stats
     _statsAnimations = List.generate(3, (index) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
@@ -64,6 +67,659 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
     _animationController.dispose();
     _statsAnimationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showRequestShiftDialog(BuildContext context) async {
+    DateTime? startTime = DateTime.now().add(const Duration(hours: 1));
+    DateTime? endTime = startTime.add(const Duration(hours: 2));
+    String? errorMessage;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+              ),
+            ],
+          ),
+          child: StatefulBuilder(
+            builder: (context, setState) => SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header with icon and title
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.secondaryTeal.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.schedule,
+                            color: AppTheme.secondaryTeal,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Request Caregiving Session',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Schedule a new care session',
+                                style: TextStyle(
+                                  color: Color(0xFF7F8C8D),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Start Time Selection Card
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F9FA),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFFE9ECEF),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF3498DB)
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.play_arrow,
+                                        color: Color(0xFF3498DB),
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Start Time',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2C3E50),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Container(
+                                  width: double.infinity,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () async {
+                                        final date = await showDatePicker(
+                                          context: context,
+                                          initialDate: startTime!,
+                                          firstDate: DateTime.now(),
+                                          lastDate: DateTime.now()
+                                              .add(const Duration(days: 365)),
+                                          builder: (context, child) {
+                                            return Theme(
+                                              data: Theme.of(context).copyWith(
+                                                colorScheme: Theme.of(context)
+                                                    .colorScheme
+                                                    .copyWith(
+                                                      primary: const Color(
+                                                          0xFF3498DB),
+                                                    ),
+                                              ),
+                                              child: child!,
+                                            );
+                                          },
+                                        );
+                                        if (date != null) {
+                                          final time = await showTimePicker(
+                                            context: context,
+                                            initialTime: TimeOfDay.fromDateTime(
+                                                startTime!),
+                                            builder: (context, child) {
+                                              return Theme(
+                                                data:
+                                                    Theme.of(context).copyWith(
+                                                  colorScheme: Theme.of(context)
+                                                      .colorScheme
+                                                      .copyWith(
+                                                        primary: const Color(
+                                                            0xFF3498DB),
+                                                      ),
+                                                ),
+                                                child: child!,
+                                              );
+                                            },
+                                          );
+                                          if (time != null) {
+                                            setState(() {
+                                              startTime = DateTime(
+                                                date.year,
+                                                date.month,
+                                                date.day,
+                                                time.hour,
+                                                time.minute,
+                                              );
+                                              endTime = startTime!.add(
+                                                  const Duration(hours: 2));
+                                              errorMessage = null;
+                                            });
+                                          }
+                                        }
+                                      },
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF3498DB)
+                                              .withOpacity(0.05),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: const Color(0xFF3498DB)
+                                                .withOpacity(0.2),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.access_time,
+                                              color: Color(0xFF3498DB),
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                startTime != null
+                                                    ? DateFormat(
+                                                            'MMM dd, yyyy • hh:mm a')
+                                                        .format(startTime!)
+                                                    : 'Select start time',
+                                                style: TextStyle(
+                                                  color: startTime != null
+                                                      ? const Color(0xFF2C3E50)
+                                                      : const Color(0xFF7F8C8D),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                            const Icon(
+                                              Icons.chevron_right,
+                                              color: Color(0xFF3498DB),
+                                              size: 20,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // End Time Selection Card
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE67E22)
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.stop,
+                                        color: Color(0xFFE67E22),
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'End Time',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2C3E50),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Container(
+                                  width: double.infinity,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () async {
+                                        final date = await showDatePicker(
+                                          context: context,
+                                          initialDate: endTime!,
+                                          firstDate: DateTime.now(),
+                                          lastDate: DateTime.now()
+                                              .add(const Duration(days: 365)),
+                                          builder: (context, child) {
+                                            return Theme(
+                                              data: Theme.of(context).copyWith(
+                                                colorScheme: Theme.of(context)
+                                                    .colorScheme
+                                                    .copyWith(
+                                                      primary: const Color(
+                                                          0xFFE67E22),
+                                                    ),
+                                              ),
+                                              child: child!,
+                                            );
+                                          },
+                                        );
+                                        if (date != null) {
+                                          final time = await showTimePicker(
+                                            context: context,
+                                            initialTime: TimeOfDay.fromDateTime(
+                                                endTime!),
+                                            builder: (context, child) {
+                                              return Theme(
+                                                data:
+                                                    Theme.of(context).copyWith(
+                                                  colorScheme: Theme.of(context)
+                                                      .colorScheme
+                                                      .copyWith(
+                                                        primary: const Color(
+                                                            0xFFE67E22),
+                                                      ),
+                                                ),
+                                                child: child!,
+                                              );
+                                            },
+                                          );
+                                          if (time != null) {
+                                            setState(() {
+                                              endTime = DateTime(
+                                                date.year,
+                                                date.month,
+                                                date.day,
+                                                time.hour,
+                                                time.minute,
+                                              );
+                                              errorMessage = null;
+                                            });
+                                          }
+                                        }
+                                      },
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE67E22)
+                                              .withOpacity(0.05),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: const Color(0xFFE67E22)
+                                                .withOpacity(0.2),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.access_time,
+                                              color: Color(0xFFE67E22),
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                endTime != null
+                                                    ? DateFormat(
+                                                            'MMM dd, yyyy • hh:mm a')
+                                                        .format(endTime!)
+                                                    : 'Select end time',
+                                                style: TextStyle(
+                                                  color: endTime != null
+                                                      ? const Color(0xFF2C3E50)
+                                                      : const Color(0xFF7F8C8D),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                            const Icon(
+                                              Icons.chevron_right,
+                                              color: Color(0xFFE67E22),
+                                              size: 20,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Duration Display
+                    if (startTime != null && endTime != null) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.secondaryTeal.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.secondaryTeal.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppTheme.secondaryTeal.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.schedule,
+                                color: AppTheme.secondaryTeal,
+                                size: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Duration: ${endTime!.difference(startTime!).inHours}h ${endTime!.difference(startTime!).inMinutes % 60}m',
+                              style: const TextStyle(
+                                color: AppTheme.secondaryTeal,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // Error Message
+                    if (errorMessage != null) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.errorRed.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.errorRed.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppTheme.errorRed.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.error_outline,
+                                color: AppTheme.errorRed,
+                                size: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: const TextStyle(
+                                  color: AppTheme.errorRed,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 32),
+
+                    // Action Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 50,
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: const BorderSide(
+                                    color: Color(0xFFE9ECEF),
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: Color(0xFF7F8C8D),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (startTime == null || endTime == null) {
+                                  setState(() {
+                                    errorMessage =
+                                        'Please select both start and end times';
+                                  });
+                                  return;
+                                }
+                                if (startTime!.isBefore(DateTime.now())) {
+                                  setState(() {
+                                    errorMessage =
+                                        'Start time must be in the future';
+                                  });
+                                  return;
+                                }
+                                if (startTime!.isAfter(endTime!)) {
+                                  setState(() {
+                                    errorMessage =
+                                        'Start time must be before end time';
+                                  });
+                                  return;
+                                }
+                                try {
+                                  final userProvider =
+                                      Provider.of<UserProvider>(context,
+                                          listen: false);
+                                  final shiftProvider =
+                                      Provider.of<ShiftAssignmentProvider>(
+                                          context,
+                                          listen: false);
+                                  await shiftProvider.requestShift(
+                                    clientId: userProvider.user!.id,
+                                    clientName: userProvider.user!.name,
+                                    startTime: startTime!,
+                                    endTime: endTime!,
+                                    context: context,
+                                  );
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white
+                                                    .withOpacity(0.2),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: const Icon(
+                                                Icons.check_circle,
+                                                color: Colors.white,
+                                                size: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            const Text(
+                                              'Caregiving session request submitted successfully',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      backgroundColor: const Color(0xFF00A86B),
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      margin: const EdgeInsets.all(16),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  setState(() {
+                                    errorMessage = e.toString();
+                                  });
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primaryBlue,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.send,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Submit Request',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildModernStat({
@@ -344,7 +1000,7 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
+      onPopInvoked: (didPop) async {
         if (didPop) return;
         final shouldLogout = await _confirmLogout(context);
         if (shouldLogout && context.mounted) {
@@ -624,6 +1280,14 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                       childAspectRatio: 0.85,
                       children: [
                         _buildModernActionCard(
+                          title: 'Request Caregiving Session',
+                          subtitle:
+                              'Request a new caregiving session for your loved one',
+                          icon: Icons.schedule,
+                          color: AppTheme.secondaryTeal,
+                          onTap: () => _showRequestShiftDialog(context),
+                        ),
+                        _buildModernActionCard(
                           title: 'Caregiver Profile',
                           subtitle:
                               'View your caregiver\'s details and contact information',
@@ -688,6 +1352,23 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text('Opening support center...'),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildModernActionCard(
+                            title: 'Support Testing',
+                            subtitle: 'Get help and contact our support team',
+                            icon: Icons.support_agent,
+                            color: const Color(0xFFF39C12),
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Opening the tap of this test widget...'),
                                 ),
                               );
                             },

@@ -15,6 +15,7 @@ directory: lib/models
     |---client.dart
     |---medication_record.dart
     |---message.dart
+    |---payment.dart
     |---task.dart
     |---user.dart
 
@@ -22,6 +23,7 @@ directory: lib/providers
     |---care_note_provider.dart
     |---location_provider.dart
     |---medication_record_provider.dart
+    |---payment_provider.dart
     |---shift_assignment_provider.dart
     |---task_provider.dart
     |---user_provider.dart
@@ -53,15 +55,9 @@ directory: lib/screens
     |---family_portal_screen.dart
     |---invoice_generation_screen.dart
     |---login_screen.dart
-    |---messages_screen.dart
-    |---offline_mode_screen.dart
-    |---payment_status_screen.dart
-    |---payroll_processing_screen.dart
-    |---reports_dashboard.dart
-    |---schedule_overview_screen.dart
+    |---payment_status.dart
     |---shift_assignment_screen.dart
     |---shift_list_screen.dart
-    |---sync_status_screen.dart
     |---task_list_screen.dart
     |---user_profile_screen.dart
     |---visit_check_in_screen.dart

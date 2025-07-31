@@ -116,10 +116,17 @@ class ShiftAssignmentProvider with ChangeNotifier {
   List<Caregiver> get availableCaregivers =>
       _caregivers.where((cg) => cg.isAvailable).toList();
 
+  List<Client> get clients => _clients;
+
   List<Shift> get unassignedShifts =>
       _shifts.where((shift) => shift.caregiverId == null).toList();
 
+  List<Shift> get requestShifts =>
+      _shifts.where((shift) => shift.status == 'request').toList();
+
   List<Shift> get allShifts => _shifts;
+
+  List<Shift> get shifts => _shifts;
 
   List<Shift> getShiftsForCaregiver(String caregiverId) {
     return _shifts.where((shift) => shift.caregiverId == caregiverId).toList();
@@ -143,12 +150,46 @@ class ShiftAssignmentProvider with ChangeNotifier {
     return false;
   }
 
+  Future<void> requestShift({
+    required String clientId,
+    required String clientName,
+    required DateTime startTime,
+    required DateTime endTime,
+    required BuildContext context,
+  }) async {
+    final client = _clients.firstWhere(
+      (c) => c.id == clientId && c.name == clientName,
+      orElse: () => throw Exception('Invalid client ID or name'),
+    );
+    if (startTime.isAfter(endTime)) {
+      throw Exception('Start time must be before end time');
+    }
+    if (startTime.isBefore(DateTime.now())) {
+      throw Exception('Start time must be in the future');
+    }
+    if (_isShiftOverlap(startTime, endTime, null, clientId)) {
+      throw Exception('Shift overlaps with existing shift for client');
+    }
+    final shift = Shift(
+      id: 's${_shifts.length + 1}',
+      clientId: clientId,
+      clientName: clientName,
+      startTime: startTime,
+      endTime: endTime,
+      status: 'request',
+    );
+    _shifts.add(shift);
+    notifyListeners();
+  }
+
   Future<void> addShift({
     required String clientId,
     required String clientName,
     required DateTime startTime,
     required DateTime endTime,
     required BuildContext context,
+    String? caregiverId,
+    String? caregiverName,
   }) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (userProvider.user?.role != 'admin') {
@@ -161,7 +202,10 @@ class ShiftAssignmentProvider with ChangeNotifier {
     if (startTime.isAfter(endTime)) {
       throw Exception('Start time must be before end time');
     }
-    if (_isShiftOverlap(startTime, endTime, null, clientId)) {
+    if (startTime.isBefore(DateTime.now())) {
+      throw Exception('Start time must be in the future');
+    }
+    if (_isShiftOverlap(startTime, endTime, caregiverId, clientId)) {
       throw Exception('Shift overlaps with existing shift for client');
     }
     final shift = Shift(
@@ -170,6 +214,8 @@ class ShiftAssignmentProvider with ChangeNotifier {
       clientName: clientName,
       startTime: startTime,
       endTime: endTime,
+      caregiverId: caregiverId,
+      caregiverName: caregiverName,
       status: 'pending',
     );
     _shifts.add(shift);
@@ -236,7 +282,9 @@ class ShiftAssignmentProvider with ChangeNotifier {
     }
     shift.caregiverId = caregiverId;
     shift.caregiverName = caregiverName;
-    shift.status = 'pending';
+    if (shift.status == 'request') {
+      shift.status = 'pending';
+    }
     notifyListeners();
   }
 }
