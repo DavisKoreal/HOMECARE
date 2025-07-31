@@ -11,7 +11,8 @@ class LoginScreen extends StatefulWidget {
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -35,8 +36,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
-    
+    ).animate(CurvedAnimation(
+        parent: _animationController, curve: Curves.easeOutCubic));
+
     _animationController.forward();
   }
 
@@ -99,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 60),
-                    
+
                     // Health-inspired logo/icon
                     Container(
                       width: 80,
@@ -115,37 +117,38 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.health_and_safety,
-                        color: Colors.white,
-                        size: 40,
-                      ),
+                      // child: const Icon(
+                      //   Icons.healt,
+                      //   color: Colors.white,
+                      //   size: 40,
+                      // ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // App title
                     Text(
                       'homecare',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: const Color(0xFF2C3E50),
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                color: const Color(0xFF2C3E50),
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              ),
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     Text(
                       'Your health, our priority',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: const Color(0xFF7F8C8D),
-                        fontSize: 16,
-                      ),
+                            color: const Color(0xFF7F8C8D),
+                            fontSize: 16,
+                          ),
                     ),
-                    
+
                     const SizedBox(height: 48),
-                    
+
                     // Login form card
                     Container(
                       padding: const EdgeInsets.all(32),
@@ -167,33 +170,42 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           children: [
                             Text(
                               'Welcome Back',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: const Color(0xFF2C3E50),
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(
+                                    color: const Color(0xFF2C3E50),
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
-                            
+
                             const SizedBox(height: 8),
-                            
+
                             Text(
                               'Sign in to continue to your dashboard',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: const Color(0xFF7F8C8D),
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: const Color(0xFF7F8C8D),
+                                  ),
                             ),
-                            
+
                             const SizedBox(height: 32),
-                            
+
                             // Email field
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Email Address',
-                                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: const Color(0xFF2C3E50),
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelLarge
+                                      ?.copyWith(
+                                        color: const Color(0xFF2C3E50),
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                 ),
                                 const SizedBox(height: 8),
                                 TextFormField(
@@ -204,7 +216,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                       margin: const EdgeInsets.all(12),
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF00A86B).withOpacity(0.1),
+                                        color: const Color(0xFF00A86B)
+                                            .withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Icon(
@@ -246,7 +259,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                     if (value == null || value.isEmpty) {
                                       return 'Please enter your email';
                                     }
-                                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                        .hasMatch(value)) {
                                       return 'Please enter a valid email';
                                     }
                                     return null;
@@ -254,19 +268,22 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 ),
                               ],
                             ),
-                            
+
                             const SizedBox(height: 24),
-                            
+
                             // Password field
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Password',
-                                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: const Color(0xFF2C3E50),
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelLarge
+                                      ?.copyWith(
+                                        color: const Color(0xFF2C3E50),
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                 ),
                                 const SizedBox(height: 8),
                                 TextFormField(
@@ -277,7 +294,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                       margin: const EdgeInsets.all(12),
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF00A86B).withOpacity(0.1),
+                                        color: const Color(0xFF00A86B)
+                                            .withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Icon(
@@ -337,7 +355,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 ),
                               ],
                             ),
-                            
+
                             // Error message
                             if (_errorMessage != null) ...[
                               const SizedBox(height: 16),
@@ -372,9 +390,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 ),
                               ),
                             ],
-                            
+
                             const SizedBox(height: 32),
-                            
+
                             // Login button
                             SizedBox(
                               width: double.infinity,
@@ -382,7 +400,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                               child: _isLoading
                                   ? Container(
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF00A86B).withOpacity(0.8),
+                                        color: const Color(0xFF00A86B)
+                                            .withOpacity(0.8),
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                       child: const Center(
@@ -391,7 +410,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                           height: 24,
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2.5,
-                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.white),
                                           ),
                                         ),
                                       ),
@@ -399,25 +420,32 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   : ElevatedButton(
                                       onPressed: _login,
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF00A86B),
+                                        backgroundColor:
+                                            const Color(0xFF00A86B),
                                         foregroundColor: Colors.white,
                                         elevation: 0,
-                                        shadowColor: const Color(0xFF00A86B).withOpacity(0.3),
+                                        shadowColor: const Color(0xFF00A86B)
+                                            .withOpacity(0.3),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
                                         ),
                                       ),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           const Icon(Icons.login, size: 20),
                                           const SizedBox(width: 8),
                                           Text(
                                             'Sign In',
-                                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelLarge
+                                                ?.copyWith(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -427,18 +455,18 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Footer
                     Text(
                       'Secure • Private • Reliable',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF7F8C8D),
-                        fontSize: 12,
-                      ),
+                            color: const Color(0xFF7F8C8D),
+                            fontSize: 12,
+                          ),
                     ),
-                    
+
                     const SizedBox(height: 24),
                   ],
                 ),

@@ -1287,32 +1287,23 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                           color: AppTheme.secondaryTeal,
                           onTap: () => _showRequestShiftDialog(context),
                         ),
-                        _buildModernActionCard(
-                          title: 'Caregiver Profile',
-                          subtitle:
-                              'View your caregiver\'s details and contact information',
-                          icon: Icons.person,
-                          color: const Color(0xFF3498DB),
-                          onTap: () => Navigator.pushNamed(
-                              context, Routes.clientProfile),
-                        ),
-                        _buildModernActionCard(
-                          title: 'Messages',
-                          subtitle:
-                              'Communicate with your caregiver and give instructions',
-                          icon: Icons.message,
-                          color: const Color(0xFF9B59B6),
-                          onTap: () =>
-                              Navigator.pushNamed(context, Routes.messages),
-                          badge: '5',
-                        ),
+                        // _buildModernActionCard(
+                        //   title: 'Messages',
+                        //   subtitle:
+                        //       'Communicate with your caregiver and give instructions',
+                        //   icon: Icons.message,
+                        //   color: const Color(0xFF9B59B6),
+                        //   onTap: () =>
+                        //       Navigator.pushNamed(context, Routes.messages),
+                        //   badge: '5',
+                        // ),
                         _buildModernActionCard(
                           title: 'Care Notes',
                           subtitle: 'View detailed notes from your caregiver',
                           icon: Icons.note,
                           color: const Color(0xFF00A86B),
-                          onTap: () =>
-                              Navigator.pushNamed(context, Routes.careNotes),
+                          onTap: () => Navigator.pushNamed(
+                              context, Routes.familyCareNotes),
                           badge: '3',
                         ),
                         _buildModernActionCard(
@@ -1320,8 +1311,17 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                           subtitle: 'Track all recent visits and activities',
                           icon: Icons.history,
                           color: const Color(0xFFE67E22),
-                          onTap: () =>
-                              Navigator.pushNamed(context, Routes.auditLog),
+                          onTap: () => Navigator.pushNamed(
+                              context, Routes.clientViewShiftHistory),
+                        ),
+                        _buildModernActionCard(
+                          title: 'Caregiver Profile',
+                          subtitle:
+                              'View your caregiver\'s details and contact information',
+                          icon: Icons.person,
+                          color: const Color(0xFF3498DB),
+                          onTap: () => Navigator.pushNamed(
+                              context, Routes.caregiverProfile),
                         ),
                       ],
                     ),
@@ -1341,22 +1341,22 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                                 context, Routes.paymentStatus),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildModernActionCard(
-                            title: 'Support Center',
-                            subtitle: 'Get help and contact our support team',
-                            icon: Icons.support_agent,
-                            color: const Color(0xFFF39C12),
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Opening support center...'),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+                        // const SizedBox(width: 16),
+                        // Expanded(
+                        //   child: _buildModernActionCard(
+                        //     title: 'Support Center',
+                        //     subtitle: 'Get help and contact our support team',
+                        //     icon: Icons.support_agent,
+                        //     color: const Color(0xFFF39C12),
+                        //     onTap: () {
+                        //       ScaffoldMessenger.of(context).showSnackBar(
+                        //         const SnackBar(
+                        //           content: Text('Opening support center...'),
+                        //         ),
+                        //       );
+                        //     },
+                        //   ),
+                        // ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildModernActionCard(
@@ -1364,14 +1364,16 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                             subtitle: 'Get help and contact our support team',
                             icon: Icons.support_agent,
                             color: const Color(0xFFF39C12),
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Opening the tap of this test widget...'),
-                                ),
-                              );
-                            },
+                            // onTap: () {
+                            //   ScaffoldMessenger.of(context).showSnackBar(
+                            //     const SnackBar(
+                            //       content: Text(
+                            //           'Opening the tap of this test widget...'),
+                            //     ),
+                            //   );
+                            // },
+                            onTap: () => Navigator.pushNamed(
+                                context, Routes.paymentStatus),
                           ),
                         ),
                       ],

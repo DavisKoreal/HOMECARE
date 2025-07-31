@@ -28,6 +28,10 @@ import 'package:homecare0x1/providers/task_provider.dart';
 import 'package:homecare0x1/providers/payment_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/screens/payment_status.dart';
+import 'package:homecare0x1/screens/admin_notes_management_screen.dart';
+import 'package:homecare0x1/screens/family_care_notes.dart';
+import 'package:homecare0x1/screens/caregiver_profile.dart';
+import 'package:homecare0x1/screens/client_view_shift_history.dart';
 
 void main() {
   runApp(const HomecareApp());
@@ -105,9 +109,21 @@ class HomecareApp extends StatelessWidget {
             case Routes.adminCalendar:
               return MaterialPageRoute(
                   builder: (_) => const AdminCalendarScreen());
+            case Routes.adminNotesManagement:
+              return MaterialPageRoute(
+                  builder: (_) => const AdminNotesManagementScreen());
+            case Routes.familyCareNotes:
+              return MaterialPageRoute(
+                  builder: (_) => const FamilyCareNotesScreen());
+            case Routes.caregiverProfile:
+              return MaterialPageRoute(
+                  builder: (_) => const CaregiverProfileScreen());
             case Routes.caregiverCalendar:
               return MaterialPageRoute(
                   builder: (_) => const CaregiverCalendarScreen());
+            case Routes.clientViewShiftHistory:
+              return MaterialPageRoute(
+                  builder: (_) => const ClientViewShiftHistoryScreen());
             default:
               return MaterialPageRoute(
                 builder: (_) => Scaffold(

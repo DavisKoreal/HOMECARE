@@ -263,7 +263,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   List<Widget> _buildDashboardActions(BuildContext context) {
     return [
       _buildModernActionCard(
-        title: 'Admin Calendar',
+        title: 'View Calendar',
         subtitle: 'View and manage your schedule',
         icon: Icons.calendar_today,
         color: const Color(0xFF1E88E5),
@@ -276,6 +276,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         icon: Icons.schedule_outlined,
         color: const Color(0xFF00A86B),
         onTap: () => Navigator.pushNamed(context, Routes.shiftAssignment),
+      ),
+      _buildModernActionCard(
+        title: 'Manage Notes',
+        subtitle: 'Access and authorize caregiver notes',
+        icon: Icons.people_outline,
+        color: const Color(0xFF3498DB),
+        onTap: () => Navigator.pushNamed(context, Routes.adminNotesManagement),
       ),
       _buildModernActionCard(
         title: 'Client Directory',

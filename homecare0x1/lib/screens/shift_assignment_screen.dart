@@ -1002,7 +1002,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Pending Assignments',
+                            'Kindly assign caregivers to the following pending shifts',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleLarge

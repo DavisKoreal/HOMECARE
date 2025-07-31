@@ -24,4 +24,8 @@ class Routes {
   static const String syncStatus = '/sync_status';
   static const String adminCalendar = '/admin_calendar';
   static const String caregiverCalendar = '/caregiver_calendar';
+  static const String adminNotesManagement = '/admin_notes_management';
+  static const String familyCareNotes = '/family_care_notes';
+  static const String caregiverProfile = '/caregiver_profile';
+  static const String clientViewShiftHistory = '/client_view_shift_history';
 }
