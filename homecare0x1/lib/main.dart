@@ -48,30 +48,41 @@ Future<void> main() async {
   runApp(const HomecareApp());
 }
 
-// Setup mock users in Firestore (run once)
+// Setup mock users in Firestore (run once, safe for production)
 Future<void> setupMockUsers() async {
   final authService = AuthService();
-  try {
-    await authService.register(
-      email: 'admin@example.com',
-      password: 'admin123',
-      role: 'admin',
-      name: 'Business Owner',
-    );
-    await authService.register(
-      email: 'caregiver@example.com',
-      password: 'care123',
-      role: 'caregiver',
-      name: 'Kind Nurse',
-    );
-    await authService.register(
-      email: 'family@example.com',
-      password: 'fam123',
-      role: 'family',
-      name: 'Family Member',
-    );
-  } catch (e) {
-    print('Error setting up mock users: $e');
+  final users = [
+    {
+      'email': 'admin@example.com',
+      'password': 'admin123',
+      'role': 'admin',
+      'name': 'Business Owner',
+    },
+    {
+      'email': 'caregiver@example.com',
+      'password': 'care123',
+      'role': 'caregiver',
+      'name': 'Kind Nurse',
+    },
+    {
+      'email': 'family@example.com',
+      'password': 'fam123',
+      'role': 'family',
+      'name': 'Family Member',
+    },
+  ];
+
+  for (var user in users) {
+    try {
+      await authService.register(
+        email: user['email']!,
+        password: user['password']!,
+        role: user['role']!,
+        name: user['name']!,
+      );
+    } catch (e) {
+      print('Error setting up user ${user['email']}: $e');
+    }
   }
 }
 
@@ -110,7 +121,8 @@ class HomecareApp extends StatelessWidget {
               return MaterialPageRoute(
                   builder: (_) => const FamilyPortalScreen());
             case Routes.clientList:
-              return MaterialPageRoute(builder: (_) => ClientListScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const ClientListScreen());
             case Routes.clientProfile:
               return MaterialPageRoute(
                   builder: (_) => const ClientProfileScreen());

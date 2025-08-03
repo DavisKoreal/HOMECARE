@@ -29,6 +29,8 @@ class DefaultFirebaseOptions {
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
+        // return linux;
+      // Uncomment the following lines if you want to support Linux
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
           'you can reconfigure this by running the FlutterFire CLI again.',
@@ -83,4 +85,5 @@ class DefaultFirebaseOptions {
     authDomain: 'arandomtestproject.firebaseapp.com',
     storageBucket: 'arandomtestproject.firebasestorage.app',
   );
+
 }

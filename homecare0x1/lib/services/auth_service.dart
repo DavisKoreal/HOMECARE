@@ -26,10 +26,12 @@ class AuthService {
           email: userData['email'] as String,
         );
       }
-      return null;
+      throw Exception('User data not found in Firestore');
+    } on auth.FirebaseAuthException catch (e) {
+      throw e; // Re-throw for handling in UI
     } catch (e) {
       print('Login error: $e');
-      return null;
+      throw Exception('Failed to login: $e');
     }
   }
 
@@ -41,6 +43,18 @@ class AuthService {
     required String name,
   }) async {
     try {
+      // Check if user already exists
+      try {
+        await _auth.signInWithEmailAndPassword(
+            email: email, password: password);
+        print('User $email already exists, skipping registration');
+        return null;
+      } on auth.FirebaseAuthException catch (e) {
+        if (e.code != 'user-not-found') {
+          throw e; // Other errors should be handled
+        }
+      }
+
       // Create user in Firebase Authentication
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -54,6 +68,7 @@ class AuthService {
         'email': email,
         'role': role,
         'name': name,
+        'createdAt': FieldValue.serverTimestamp(),
       });
 
       return User(
@@ -62,9 +77,11 @@ class AuthService {
         name: name,
         email: email,
       );
+    } on auth.FirebaseAuthException catch (e) {
+      throw e; // Re-throw for handling in UI
     } catch (e) {
       print('Registration error: $e');
-      return null;
+      throw Exception('Failed to register: $e');
     }
   }
 }

@@ -63,18 +63,33 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             _errorMessage = 'Invalid email or password';
           });
         }
+      } on auth.FirebaseAuthException catch (e) {
+        setState(() {
+          _isLoading = false;
+          switch (e.code) {
+            case 'user-not-found':
+              _errorMessage = 'No account exists for this email.';
+              break;
+            case 'wrong-password':
+              _errorMessage = 'Incorrect password. Please try again.';
+              break;
+            case 'invalid-email':
+              _errorMessage = 'Invalid email format.';
+              break;
+            case 'too-many-requests':
+              _errorMessage = 'Too many login attempts. Please try again later.';
+              break;
+            case 'user-disabled':
+              _errorMessage = 'This account has been disabled.';
+              break;
+            default:
+              _errorMessage = 'Login failed: ${e.message}';
+          }
+        });
       } catch (e) {
         setState(() {
           _isLoading = false;
-          if (e is auth.FirebaseAuthException) {
-            _errorMessage = e.code == 'user-not-found'
-                ? 'No user found for that email.'
-                : e.code == 'wrong-password'
-                    ? 'Incorrect password.'
-                    : 'Login failed. Please try again.';
-          } else {
-            _errorMessage = 'An unexpected error occurred.';
-          }
+          _errorMessage = 'An unexpected error occurred. Please try again.';
         });
       }
     }

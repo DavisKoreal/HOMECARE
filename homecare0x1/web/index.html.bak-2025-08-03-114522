@@ -12,20 +12,22 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
   <title>homecare0x1</title>
   <link rel="manifest" href="manifest.json">
+
   <!-- Firebase JavaScript SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
   <script>
-    // Replace with your Firebase configuration from Firebase Console
+    // Your Firebase configuration (from Firebase Console)
     const firebaseConfig = {
-      apiKey: "AIzaSyBjEqxbXDvjoYZLP1Ja2VFj7EFulMR1tkE",
-      authDomain: "arandomtestproject.firebaseapp.com",
+      apiKey: "your-api-key",
+      authDomain: "your-auth-domain",
       projectId: "arandomtestproject",
-      storageBucket: "arandomtestproject.firebasestorage.app",
-      messagingSenderId: "312607240262",
-      appId: "1:312607240262:web:8f81709adc848df5cf5a47"
+      storageBucket: "your-storage-bucket",
+      messagingSenderId: "your-messaging-sender-id",
+      appId: "your-app-id"
     };
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
   </script>
 </head>
@@ -33,4 +35,3 @@
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
-
