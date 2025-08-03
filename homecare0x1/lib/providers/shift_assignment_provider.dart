@@ -50,35 +50,35 @@ class ShiftAssignmentProvider with ChangeNotifier {
 
   final List<Client> _clients = [
     Client(
-      id: 'c1',
-      name: 'John Doe',
-      email: 'john.doe@example.com',
+      id: 'f1',
+      name: 'Family Member',
+      email: 'family@example.com',
       address: '123 Elm St, Springfield',
       carePlan: 'Daily care',
     ),
     Client(
-      id: 'c2',
+      id: 'f2',
       name: 'Jane Smith',
       email: 'jane.smith@example.com',
       address: '456 Oak Ave, Springfield',
       carePlan: 'Weekly check-in',
     ),
     Client(
-      id: 'c3',
+      id: 'f3',
       name: 'Alice Johnson',
       email: 'alice.johnson@example.com',
       address: '789 Pine Rd, Springfield',
       carePlan: 'Post-op care',
     ),
     Client(
-      id: 'c4',
+      id: 'f4',
       name: 'Bob Wilson',
       email: 'bob.wilson@example.com',
       address: '321 Maple Dr, Springfield',
       carePlan: 'Mobility assistance',
     ),
     Client(
-      id: 'c5',
+      id: 'f5',
       name: 'Carol Brown',
       email: 'carol.brown@example.com',
       address: '654 Cedar Ln, Springfield',
@@ -89,7 +89,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
   final List<Shift> _shifts = [
     Shift(
       id: 's1',
-      clientId: 'c1',
+      clientId: 'f1',
       clientName: 'John Doe',
       startTime: DateTime.now().add(const Duration(days: 1, hours: 9)),
       endTime: DateTime.now().add(const Duration(days: 1, hours: 11)),
@@ -97,7 +97,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
     ),
     Shift(
       id: 's2',
-      clientId: 'c2',
+      clientId: 'f2',
       clientName: 'Jane Smith',
       startTime: DateTime.now().add(const Duration(days: 1, hours: 14)),
       endTime: DateTime.now().add(const Duration(days: 1, hours: 16)),
@@ -105,7 +105,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
     ),
     Shift(
       id: 's3',
-      clientId: 'c3',
+      clientId: 'f3',
       clientName: 'Alice Johnson',
       startTime: DateTime.now().add(const Duration(days: 2, hours: 10)),
       endTime: DateTime.now().add(const Duration(days: 2, hours: 12)),

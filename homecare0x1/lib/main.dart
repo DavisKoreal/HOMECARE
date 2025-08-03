@@ -32,8 +32,14 @@ import 'package:homecare0x1/screens/admin_notes_management_screen.dart';
 import 'package:homecare0x1/screens/family_care_notes.dart';
 import 'package:homecare0x1/screens/caregiver_profile.dart';
 import 'package:homecare0x1/screens/client_view_shift_history.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const HomecareApp());
 }
 

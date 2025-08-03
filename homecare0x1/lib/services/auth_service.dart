@@ -6,7 +6,7 @@ class AuthService {
     'admin@example.com': {
       'password': 'admin123',
       'role': 'admin',
-      'id': 'admin1',
+      'id': 'a1',
       'name': 'Business Owner',
     },
     'caregiver@example.com': {
@@ -18,7 +18,7 @@ class AuthService {
     'family@example.com': {
       'password': 'fam123',
       'role': 'family',
-      'id': 'family1',
+      'id': 'f1',
       'name': 'Family Member',
     },
   };

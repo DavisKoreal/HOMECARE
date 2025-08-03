@@ -280,7 +280,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       _buildModernActionCard(
         title: 'Manage Notes',
         subtitle: 'Access and authorize caregiver notes',
-        icon: Icons.people_outline,
+        icon: Icons.event_note_outlined,
         color: const Color(0xFF3498DB),
         onTap: () => Navigator.pushNamed(context, Routes.adminNotesManagement),
       ),

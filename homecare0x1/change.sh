@@ -1,208 +1,134 @@
-// Create the Payment model
-echo 'Creating Payment model in lib/models/payment.dart...'
-cat << 'EOF' > lib/models/payment.dart
-import 'package:flutter/material.dart';
+#!/bin/bash
 
-class Payment {
-  final String id;
-  final String invoiceNumber;
-  final double amount;
-  final DateTime dueDate;
-  final String status;
-  final String description;
-  final String servicePeriod;
-  final double hoursBilled;
-  final double rate;
+# Ensure we're in the project root
+if [ ! -f "pubspec.yaml" ]; then
+  echo "Error: pubspec.yaml not found. Run this script from the project root."
+  exit 1
+fi
 
-  Payment({
-    required this.id,
-    required this.invoiceNumber,
-    required this.amount,
-    required this.dueDate,
-    required this.status,
-    required this.description,
-    required this.servicePeriod,
-    required this.hoursBilled,
-    required this.rate,
-  });
+# Step 1: Save current state with git
+echo "Saving current state with git..."
+git add .
+git commit -m "Backup before updating Firebase Firestore and Authentication"
 
-  Color getStatusColor() {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return const Color(0xFFE67E22);
-      case 'overdue':
-        return const Color(0xFFE74C3C);
-      case 'paid':
-        return const Color(0xFF00A86B);
-      default:
-        return const Color(0xFF7F8C8D);
+# Step 2: Update pubspec.yaml to use latest Firebase dependencies
+echo "Updating pubspec.yaml..."
+sed -i '' 's/firebase_auth: ^4.16.0/firebase_auth: ^5.3.1/' pubspec.yaml
+sed -i '' 's/cloud_firestore: ^4.14.0/cloud_firestore: ^5.4.4/' pubspec.yaml
+
+# Step 3: Run flutter pub get
+echo "Running flutter pub get..."
+flutter pub get
+
+# Step 4: Overwrite auth_service.dart with Firebase implementation
+echo "Updating lib/services/auth_service.dart..."
+cat > lib/services/auth_service.dart << 'EOF'
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:homecare0x1/models/user.dart';
+
+class AuthService {
+  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<User?> login(String email, String password) async {
+    try {
+      // Authenticate with Firebase Authentication
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Fetch user data from Firestore
+      final docSnapshot =
+          await _firestore.collection('users').doc(credential.user!.uid).get();
+      if (docSnapshot.exists) {
+        final userData = docSnapshot.data()!;
+        return User(
+          id: userData['id'] as String,
+          role: userData['role'] as String,
+          name: userData['name'] as String,
+          email: userData['email'] as String,
+        );
+      }
+      return null;
+    } catch (e) {
+      print('Login error: $e');
+      return null;
     }
   }
 
-  IconData getStatusIcon() {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return Icons.pending;
-      case 'overdue':
-        return Icons.warning;
-      case 'paid':
-        return Icons.check_circle;
-      default:
-        return Icons.info;
+  // Register a new user (for setup or registration)
+  Future<User?> register({
+    required String email,
+    required String password,
+    required String role,
+    required String name,
+  }) async {
+    try {
+      // Create user in Firebase Authentication
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Store user data in Firestore
+      final userId = credential.user!.uid;
+      await _firestore.collection('users').doc(userId).set({
+        'id': userId,
+        'email': email,
+        'role': role,
+        'name': name,
+      });
+
+      return User(
+        id: userId,
+        role: role,
+        name: name,
+        email: email,
+      );
+    } catch (e) {
+      print('Registration error: $e');
+      return null;
     }
   }
 }
 EOF
 
-// Create the PaymentProvider
-echo 'Creating PaymentProvider in lib/providers/payment_provider.dart...'
-cat << 'EOF' > lib/providers/payment_provider.dart
+# Step 5: Update login_screen.dart to handle Firebase errors
+echo "Updating lib/screens/login_screen.dart..."
+cat > lib/screens/login_screen.dart << 'EOF'
 import 'package:flutter/material.dart';
-import 'package:homecare0x1/models/payment.dart';
-
-class PaymentProvider with ChangeNotifier {
-  final List<Payment> _payments = [
-    Payment(
-      id: 'p1',
-      invoiceNumber: 'HC-2025-001',
-      amount: 850.00,
-      dueDate: DateTime(2025, 2, 15),
-      status: 'Pending',
-      description: 'January 2025 caregiving services',
-      servicePeriod: 'Jan 1-31, 2025',
-      hoursBilled: 120.0,
-      rate: 25.0,
-    ),
-    Payment(
-      id: 'p2',
-      invoiceNumber: 'HC-2024-012',
-      amount: 400.00,
-      dueDate: DateTime(2025, 1, 10),
-      status: 'Overdue',
-      description: 'December 2024 caregiving services',
-      servicePeriod: 'Dec 1-31, 2024',
-      hoursBilled: 80.0,
-      rate: 20.0,
-    ),
-    Payment(
-      id: 'p3',
-      invoiceNumber: 'HC-2024-011',
-      amount: 720.00,
-      dueDate: DateTime(2024, 12, 15),
-      status: 'Paid',
-      description: 'November 2024 caregiving services',
-      servicePeriod: 'Nov 1-30, 2024',
-      hoursBilled: 100.0,
-      rate: 22.0,
-    ),
-    Payment(
-      id: 'p4',
-      invoiceNumber: 'HC-2024-010',
-      amount: 680.00,
-      dueDate: DateTime(2024, 11, 15),
-      status: 'Paid',
-      description: 'October 2024 caregiving services',
-      servicePeriod: 'Oct 1-31, 2024',
-      hoursBilled: 90.0,
-      rate: 21.0,
-    ),
-  ];
-
-  final List<Map<String, dynamic>> _paymentMethods = [
-    {
-      'id': 'pm1',
-      'title': 'Credit Card ending in 4532',
-      'subtitle': 'Primary payment method',
-      'icon': Icons.credit_card,
-      'color': const Color(0xFF3498DB),
-      'isDefault': true,
-    },
-    {
-      'id': 'pm2',
-      'title': 'Bank Account ending in 8901',
-      'subtitle': 'Backup payment method',
-      'icon': Icons.account_balance,
-      'color': const Color(0xFF16A085),
-      'isDefault': false,
-    },
-  ];
-
-  List<Payment> get payments => _payments;
-
-  List<Map<String, dynamic>> get paymentMethods => _paymentMethods;
-
-  double get totalBilledThisMonth =>
-      _payments.where((p) => p.dueDate.month == DateTime.now().month).fold(0.0,
-          (sum, payment) => sum + payment.amount);
-
-  double get totalPaidYTD => _payments
-      .where((p) =>
-          p.status.toLowerCase() == 'paid' &&
-          p.dueDate.year == DateTime.now().year)
-      .fold(0.0, (sum, payment) => sum + payment.amount);
-
-  int get pendingInvoices =>
-      _payments.where((p) => p.status.toLowerCase() == 'pending').length;
-
-  double get outstandingBalance =>
-      _payments.where((p) => p.status.toLowerCase() != 'paid').fold(
-          0.0, (sum, payment) => sum + payment.amount);
-
-  int get overduePayments =>
-      _payments.where((p) => p.status.toLowerCase() == 'overdue').length;
-
-  void addPayment(Payment payment) {
-    _payments.add(payment);
-    notifyListeners();
-  }
-
-  void addPaymentMethod(Map<String, dynamic> method) {
-    _paymentMethods.add(method);
-    notifyListeners();
-  }
-}
-EOF
-
-// Update PaymentStatusScreen
-echo 'Updating PaymentStatusScreen in lib/screens/payment_status.dart...'
-cat << 'EOF' > lib/screens/payment_status.dart
-import 'package:flutter/material.dart';
-import 'package:homecare0x1/constants.dart';
-import 'package:homecare0x1/models/payment.dart';
-import 'package:homecare0x1/providers/payment_provider.dart';
+import 'package:homecare0x1/services/auth_service.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
-import 'package:homecare0x1/theme/app_theme.dart';
-import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:provider/provider.dart';
-import 'package:homecare0x1/widgets/common/modern_button.dart';
 
-class PaymentStatusScreen extends StatefulWidget {
-  const PaymentStatusScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<PaymentStatusScreen> createState() => _PaymentStatusScreenState();
+  _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _PaymentStatusScreenState extends State<PaymentStatusScreen>
-    with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+  String? _errorMessage;
   late AnimationController _animationController;
-  late AnimationController _statsAnimationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  late List<Animation<double>> _statsAnimations;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _statsAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
@@ -212,760 +138,452 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen>
     ).animate(CurvedAnimation(
         parent: _animationController, curve: Curves.easeOutCubic));
 
-    _statsAnimations = List.generate(3, (index) {
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _statsAnimationController,
-          curve: Interval(
-            index * 0.2,
-            0.6 + (index * 0.2),
-            curve: Curves.elasticOut,
-          ),
-        ),
-      );
-    });
-
     _animationController.forward();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _statsAnimationController.forward();
-    });
+  }
+
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+      final authService = AuthService();
+      try {
+        final user = await authService.login(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
+        setState(() => _isLoading = false);
+        if (user != null && context.mounted) {
+          final userProvider = Provider.of<UserProvider>(context, listen: false);
+          userProvider.setUser(user);
+          Navigator.pushReplacementNamed(context, userProvider.getInitialRoute());
+        } else {
+          setState(() {
+            _errorMessage = 'Invalid email or password';
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+          if (e is auth.FirebaseAuthException) {
+            _errorMessage = e.code == 'user-not-found'
+                ? 'No user found for that email.'
+                : e.code == 'wrong-password'
+                    ? 'Incorrect password.'
+                    : 'Login failed. Please try again.';
+          } else {
+            _errorMessage = 'An unexpected error occurred.';
+          }
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
     _animationController.dispose();
-    _statsAnimationController.dispose();
     super.dispose();
-  }
-
-  Widget _buildModernStat({
-    required String title,
-    required String value,
-    required double percent,
-    required Color color,
-    required IconData icon,
-    required Animation<double> animation,
-    String? subtitle,
-  }) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: animation.value,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.15),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-              border: Border.all(
-                color: color.withOpacity(0.1),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      height: 70,
-                      width: 70,
-                      child: TweenAnimationBuilder<double>(
-                        duration: Duration(
-                            milliseconds:
-                                1000 + (animation.value * 500).round()),
-                        tween:
-                            Tween(begin: 0.0, end: percent * animation.value),
-                        builder: (context, value, child) {
-                          return CircularProgressIndicator(
-                            value: value,
-                            backgroundColor: color.withOpacity(0.1),
-                            strokeWidth: 5,
-                            valueColor: AlwaysStoppedAnimation(color),
-                            strokeCap: StrokeCap.round,
-                          );
-                        },
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: color, size: 24),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF7F8C8D),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: Color(0xFF95A5A6),
-                      fontSize: 12,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPaymentCard(Payment payment) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: payment.getStatusColor().withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    payment.getStatusIcon(),
-                    color: payment.getStatusColor(),
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Invoice #${payment.invoiceNumber}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        payment.description,
-                        style: const TextStyle(
-                          color: Color(0xFF7F8C8D),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '\$${payment.amount.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: payment.getStatusColor().withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        payment.status,
-                        style: TextStyle(
-                          color: payment.getStatusColor(),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Icon(
-                  Icons.calendar_today,
-                  size: 16,
-                  color: Color(0xFF95A5A6),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Due: ${DateFormat('MMM d, yyyy').format(payment.dueDate)}',
-                  style: const TextStyle(
-                    color: Color(0xFF95A5A6),
-                    fontSize: 12,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {
-                    _showInvoiceDetails(payment);
-                  },
-                  child: const Text(
-                    'View Details',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showInvoiceDetails(Payment payment) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Invoice #${payment.invoiceNumber}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailRow('Amount', '\$${payment.amount.toStringAsFixed(2)}'),
-            _buildDetailRow(
-                'Due Date', DateFormat('MMM d, yyyy').format(payment.dueDate)),
-            _buildDetailRow('Status', payment.status),
-            _buildDetailRow('Service Period', payment.servicePeriod),
-            _buildDetailRow('Hours Billed', '${payment.hoursBilled} hours'),
-            _buildDetailRow('Rate', '\$${payment.rate}/hour'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-          if (payment.status.toLowerCase() == 'pending')
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showPaymentDialog();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryBlue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Pay Now'),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Text(
-            '$label:',
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF7F8C8D),
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2C3E50),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPaymentDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Make Payment'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Choose your payment method:'),
-            const SizedBox(height: 16),
-            ModernButton(
-              text: 'Credit Card',
-              icon: Icons.credit_card,
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Redirecting to payment gateway...')),
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            ModernButton(
-              text: 'Bank Transfer',
-              icon: Icons.account_balance,
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content:
-                          Text('Bank transfer instructions sent to email')),
-                );
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentMethodItem(Map<String, dynamic> method) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: (method['color'] as Color).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              method['icon'] as IconData,
-              color: method['color'] as Color,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  method['title'] as String,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  method['subtitle'] as String,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF7F8C8D),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (method['isDefault'] as bool)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF00A86B).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'Default',
-                style: TextStyle(
-                  color: Color(0xFF00A86B),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          const SizedBox(width: 8),
-          Icon(
-            Icons.more_vert,
-            color: const Color(0xFF95A5A6),
-            size: 20,
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final paymentProvider = Provider.of<PaymentProvider>(context);
-    final userName = userProvider.user?.name ?? 'Family Member';
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Color(0xFF2C3E50),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFE8F5E8), // Light mint green
+              Color(0xFFF0F8FF), // Alice blue
+              Colors.white,
+            ],
+            stops: [0.0, 0.5, 1.0],
           ),
-          onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.secondaryTeal.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.payment,
-                color: AppTheme.secondaryTeal,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Payment Status',
-              style: TextStyle(
-                color: Color(0xFF2C3E50),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.download,
-                color: Color(0xFF7F8C8D),
-              ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Downloading payment history...')),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Account Summary Banner
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppTheme.secondaryTeal,
-                          AppTheme.primaryBlue,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 60),
+
+                    // Health-inspired logo/icon
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00A86B), // Medical green
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF00A86B).withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
                         ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.secondaryTeal.withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+                      child: const Icon(
+                        Icons.favorite, // Replaced invalid Icons.healt
+                        color: Colors.white,
+                        size: 40,
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+
+                    const SizedBox(height: 24),
+
+                    // App title
+                    Text(
+                      'homecare',
+                      style:
+                          Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                color: const Color(0xFF2C3E50),
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Text(
+                      'Your health, our priority',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: const Color(0xFF7F8C8D),
+                            fontSize: 16,
+                          ),
+                    ),
+
+                    const SizedBox(height: 48),
+
+                    // Login form card
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 30,
+                            offset: const Offset(0, 15),
+                          ),
+                        ],
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Account Balance",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
+                            Text(
+                              'Welcome Back',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(
+                                    color: const Color(0xFF2C3E50),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            Text(
+                              'Sign in to continue to your dashboard',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: const Color(0xFF7F8C8D),
+                                  ),
+                            ),
+
+                            const SizedBox(height: 32),
+
+                            // Email field
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Email Address',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelLarge
+                                      ?.copyWith(
+                                        color: const Color(0xFF2C3E50),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                                const SizedBox(height: 8),
+                                TextFormField(
+                                  controller: _emailController,
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter your email',
+                                    prefixIcon: Container(
+                                      margin: const EdgeInsets.all(12),
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF00A86B)
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.email_outlined,
+                                        color: Color(0xFF00A86B),
+                                        size: 20,
+                                      ),
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF00A86B),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF8F9FA),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 16,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    "Current outstanding balance",
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontSize: 16,
-                                      height: 1.4,
+                                  keyboardType: TextInputType.emailAddress,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your email';
+                                    }
+                                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                        .hasMatch(value)) {
+                                      return 'Please enter a valid email';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // Password field
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Password',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelLarge
+                                      ?.copyWith(
+                                        color: const Color(0xFF2C3E50),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                                const SizedBox(height: 8),
+                                TextFormField(
+                                  controller: _passwordController,
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter your password',
+                                    prefixIcon: Container(
+                                      margin: const EdgeInsets.all(12),
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF00A86B)
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.lock_outline,
+                                        color: Color(0xFF00A86B),
+                                        size: 20,
+                                      ),
+                                    ),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
+                                        color: const Color(0xFF7F8C8D),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscurePassword = !_obscurePassword;
+                                        });
+                                      },
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF00A86B),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF8F9FA),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 16,
                                     ),
                                   ),
-                                ],
-                              ),
+                                  obscureText: _obscurePassword,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your password';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Icon(
-                                Icons.account_balance_wallet,
-                                color: Colors.white,
-                                size: 32,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          '\$${paymentProvider.outstandingBalance.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.warning,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${paymentProvider.overduePayments} payment${paymentProvider.overduePayments == 1 ? '' : 's'} overdue',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+
+                            // Error message
+                            if (_errorMessage != null) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.red.shade200,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline,
+                                      color: Colors.red.shade600,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: TextStyle(
+                                          color: Colors.red.shade700,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
+
+                            const SizedBox(height: 32),
+
+                            // Login button
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: _isLoading
+                                  ? Container(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF00A86B)
+                                            .withOpacity(0.8),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: const Center(
+                                        child: SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : ElevatedButton(
+                                      onPressed: _login,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            const Color(0xFF00A86B),
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        shadowColor: const Color(0xFF00A86B)
+                                            .withOpacity(0.3),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.login, size: 20),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Sign In',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelLarge
+                                                ?.copyWith(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Footer
+                    Text(
+                      'Secure • Private • Reliable',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF7F8C8D),
+                            fontSize: 12,
                           ),
-                        ),
-                      ],
                     ),
-                  ),
 
-                  const SizedBox(height: 32),
-
-                  // Payment Overview Stats
-                  const Text(
-                    'Payment Overview',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildModernStat(
-                          title: 'This Month',
-                          value: '\$${paymentProvider.totalBilledThisMonth.toStringAsFixed(2)}',
-                          percent: paymentProvider.totalBilledThisMonth / 1000,
-                          color: AppTheme.primaryBlue,
-                          icon: Icons.calendar_month,
-                          animation: _statsAnimations[0],
-                          subtitle: 'Total billed',
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildModernStat(
-                          title: 'Paid',
-                          value: '\$${paymentProvider.totalPaidYTD.toStringAsFixed(2)}',
-                          percent: paymentProvider.totalPaidYTD / 3000,
-                          color: AppTheme.successGreen,
-                          icon: Icons.check_circle,
-                          animation: _statsAnimations[1],
-                          subtitle: 'YTD payments',
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildModernStat(
-                          title: 'Pending',
-                          value: paymentProvider.pendingInvoices.toString(),
-                          percent: paymentProvider.pendingInvoices / 5,
-                          color: AppTheme.accentOrange,
-                          icon: Icons.pending,
-                          animation: _statsAnimations[2],
-                          subtitle: 'Invoices',
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Recent Invoices
-                  Row(
-                    children: [
-                      const Text(
-                        'Recent Invoices',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50),
-                        ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Viewing all invoices...')),
-                          );
-                        },
-                        child: const Text('View All'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  ...paymentProvider.payments.map((payment) => _buildPaymentCard(payment)).toList(),
-
-                  const SizedBox(height: 32),
-
-                  // Payment Methods
-                  const Text(
-                    'Payment Methods',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: paymentProvider.paymentMethods
-                          .map((method) => _buildPaymentMethodItem(method))
-                          .toList(),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Add Payment Method Button
-                  Center(
-                    child: ModernButton(
-                      text: 'Add Payment Method',
-                      icon: Icons.add,
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Adding new payment method...')),
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             ),
           ),
@@ -976,10 +594,207 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen>
 }
 EOF
 
-// Update pubspec.yaml to include provider dependency if not already present
-echo 'Ensuring provider dependency in pubspec.yaml...'
-if ! grep -q "provider:" pubspec.yaml; then
-  sed -i '/dependencies:/a\  provider: ^6.1.2' pubspec.yaml
-fi
+# Step 6: Update main.dart to include mock user setup
+echo "Updating lib/main.dart..."
+cat > lib/main.dart << 'EOF'
+import 'package:homecare0x1/providers/location_provider.dart';
+import 'package:homecare0x1/screens/shift_list_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:homecare0x1/constants.dart';
+import 'package:homecare0x1/screens/admin_calendar_screen.dart';
+import 'package:homecare0x1/screens/admin_dashboard.dart';
+import 'package:homecare0x1/screens/audit_log_screen.dart';
+import 'package:homecare0x1/screens/care_notes_screen.dart';
+import 'package:homecare0x1/screens/caregiver_calendar_screen.dart';
+import 'package:homecare0x1/screens/caregiver_dashboard.dart';
+import 'package:homecare0x1/screens/client_list_screen.dart';
+import 'package:homecare0x1/screens/client_profile_screen.dart';
+import 'package:homecare0x1/screens/emar_screen.dart';
+import 'package:homecare0x1/screens/family_portal_screen.dart';
+import 'package:homecare0x1/screens/invoice_generation_screen.dart';
+import 'package:homecare0x1/screens/login_screen.dart';
+import 'package:homecare0x1/screens/shift_assignment_screen.dart';
+import 'package:homecare0x1/screens/task_list_screen.dart';
+import 'package:homecare0x1/screens/user_profile_screen.dart';
+import 'package:homecare0x1/screens/visit_check_in_screen.dart';
+import 'package:homecare0x1/screens/visit_check_out_screen.dart';
+import 'package:homecare0x1/theme/app_theme.dart';
+import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:homecare0x1/providers/care_note_provider.dart';
+import 'package:homecare0x1/providers/medication_record_provider.dart';
+import 'package:homecare0x1/providers/shift_assignment_provider.dart';
+import 'package:homecare0x1/providers/task_provider.dart';
+import 'package:homecare0x1/providers/payment_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:homecare0x1/screens/payment_status.dart';
+import 'package:homecare0x1/screens/admin_notes_management_screen.dart';
+import 'package:homecare0x1/screens/family_care_notes.dart';
+import 'package:homecare0x1/screens/caregiver_profile.dart';
+import 'package:homecare0x1/screens/client_view_shift_history.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:homecare0x1/services/auth_service.dart';
+import 'firebase_options.dart';
 
-echo 'Script completed. Please run `flutter pub get` to fetch dependencies and then test the app.'
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Initialize mock users in Firestore (run once for testing)
+  await setupMockUsers();
+
+  runApp(const HomecareApp());
+}
+
+// Setup mock users in Firestore (run once)
+Future<void> setupMockUsers() async {
+  final authService = AuthService();
+  try {
+    await authService.register(
+      email: 'admin@example.com',
+      password: 'admin123',
+      role: 'admin',
+      name: 'Business Owner',
+    );
+    await authService.register(
+      email: 'caregiver@example.com',
+      password: 'care123',
+      role: 'caregiver',
+      name: 'Kind Nurse',
+    );
+    await authService.register(
+      email: 'family@example.com',
+      password: 'fam123',
+      role: 'family',
+      name: 'Family Member',
+    );
+  } catch (e) {
+    print('Error setting up mock users: $e');
+  }
+}
+
+class HomecareApp extends StatelessWidget {
+  const HomecareApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => CareNoteProvider()),
+        ChangeNotifierProvider(create: (_) => MedicationRecordProvider()),
+        ChangeNotifierProvider(create: (_) => ShiftAssignmentProvider()),
+        ChangeNotifierProvider(create: (_) => TaskProvider()),
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Homecare App',
+        theme: AppTheme.lightTheme,
+        themeMode: ThemeMode.system,
+        debugShowCheckedModeBanner: false,
+        initialRoute: Routes.login,
+        onGenerateRoute: (settings) {
+          switch (settings.name) {
+            case Routes.login:
+              return MaterialPageRoute(builder: (_) => const LoginScreen());
+            case Routes.adminDashboard:
+              return MaterialPageRoute(
+                  builder: (_) => const AdminDashboardScreen());
+            case Routes.caregiverDashboard:
+              return MaterialPageRoute(
+                  builder: (_) => const CaregiverDashboardScreen());
+            case Routes.familyPortal:
+              return MaterialPageRoute(
+                  builder: (_) => const FamilyPortalScreen());
+            case Routes.clientList:
+              return MaterialPageRoute(builder: (_) => ClientListScreen());
+            case Routes.clientProfile:
+              return MaterialPageRoute(
+                  builder: (_) => const ClientProfileScreen());
+            case Routes.taskList:
+              return MaterialPageRoute(builder: (_) => const TaskListScreen());
+            case Routes.careNotes:
+              return MaterialPageRoute(builder: (_) => const CareNotesScreen());
+            case Routes.emar:
+              return MaterialPageRoute(builder: (_) => const EmarScreen());
+            case Routes.paymentStatus:
+              return MaterialPageRoute(
+                  builder: (_) => const PaymentStatusScreen());
+            case Routes.visitCheckIn:
+              return MaterialPageRoute(
+                  builder: (_) => const VisitCheckInScreen());
+            case Routes.visitCheckOut:
+              return MaterialPageRoute(
+                  builder: (_) => const VisitCheckOutScreen());
+            case Routes.auditLog:
+              return MaterialPageRoute(builder: (_) => const AuditLogScreen());
+            case Routes.shiftAssignment:
+              return MaterialPageRoute(
+                  builder: (_) => const ShiftAssignmentScreen());
+            case Routes.invoiceGeneration:
+              return MaterialPageRoute(
+                  builder: (_) => const InvoiceGenerationScreen());
+            case Routes.userProfile:
+              return MaterialPageRoute(
+                  builder: (_) => const UserProfileScreen());
+            case Routes.shiftList:
+              return MaterialPageRoute(
+                  builder: (_) => ShiftListScreen(
+                      selectedDay: settings.arguments as DateTime));
+            case Routes.adminCalendar:
+              return MaterialPageRoute(
+                  builder: (_) => const AdminCalendarScreen());
+            case Routes.adminNotesManagement:
+              return MaterialPageRoute(
+                  builder: (_) => const AdminNotesManagementScreen());
+            case Routes.familyCareNotes:
+              return MaterialPageRoute(
+                  builder: (_) => const FamilyCareNotesScreen());
+            case Routes.caregiverProfile:
+              return MaterialPageRoute(
+                  builder: (_) => const CaregiverProfileScreen());
+            case Routes.caregiverCalendar:
+              return MaterialPageRoute(
+                  builder: (_) => const CaregiverCalendarScreen());
+            case Routes.clientViewShiftHistory:
+              return MaterialPageRoute(
+                  builder: (_) => const ClientViewShiftHistoryScreen());
+            default:
+              return MaterialPageRoute(
+                builder: (_) => Scaffold(
+                  body: Center(
+                    child: Text('Page not found: ${settings.name}'),
+                  ),
+                ),
+              );
+          }
+        },
+      ),
+    );
+  }
+}
+EOF
+
+# Step 7: Provide instructions for manual Firebase setup
+echo "Script completed! Please perform the following manual steps in the Firebase Console:"
+echo "1. Go to Firebase Console > Build > Firestore Database."
+echo "2. Create a database in test mode (secure later with rules)."
+echo "3. Go to Build > Authentication, enable Email/Password provider."
+echo "4. Update Firestore Security Rules (example below):"
+cat << 'RULES'
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+RULES
+echo "5. Run 'flutter run' to test the app."
+echo "To revert changes, use: git reset --hard HEAD^ && git clean -fd"
+echo "Note: Comment out the setupMockUsers() call in main.dart after the first run to avoid duplicate user errors."
+EOF

@@ -8,9 +8,9 @@ class CareNoteProvider with ChangeNotifier {
   List<CareNote> _notes = [
     CareNote(
       id: const Uuid().v4(),
-      clientId: '1',
-      caregiverId: '1',
-      shiftId: '1',
+      clientId: 'f1',
+      caregiverId: 'cg1',
+      shiftId: 's1',
       healthStatus: 'Stable, no new issues',
       activities: 'Assisted with morning walk and meal prep',
       observations: 'Client was cooperative',
@@ -23,9 +23,9 @@ class CareNoteProvider with ChangeNotifier {
     ),
     CareNote(
       id: const Uuid().v4(),
-      clientId: '1',
-      caregiverId: '1',
-      shiftId: '2',
+      clientId: 'f1',
+      caregiverId: 'cg1',
+      shiftId: 's2',
       healthStatus: 'Slight fatigue reported',
       activities: 'Helped with bathing and exercises',
       observations: 'Client needed extra rest',

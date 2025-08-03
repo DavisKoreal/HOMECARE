@@ -5,7 +5,7 @@ class MedicationRecordProvider with ChangeNotifier {
   List<MedicationRecord> _records = [
     MedicationRecord(
       id: '1',
-      clientId: '1',
+      clientId: 'f1',
       medicationName: 'Aspirin',
       dosage: '100mg',
       administrationTime: DateTime.now().subtract(const Duration(hours: 2)),
@@ -13,7 +13,7 @@ class MedicationRecordProvider with ChangeNotifier {
     ),
     MedicationRecord(
       id: '2',
-      clientId: '1',
+      clientId: 'f1',
       medicationName: 'Lisinopril',
       dosage: '10mg',
       administrationTime: DateTime.now().subtract(const Duration(hours: 4)),
