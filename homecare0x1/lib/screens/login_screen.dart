@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/services/auth_service.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
-import 'package:homecare0x1/widgets/common/modern_button.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -11,8 +11,7 @@ class LoginScreen extends StatefulWidget {
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -49,18 +48,33 @@ class _LoginScreenState extends State<LoginScreen>
         _errorMessage = null;
       });
       final authService = AuthService();
-      final user = await authService.login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-      setState(() => _isLoading = false);
-      if (user != null && context.mounted) {
-        final userProvider = Provider.of<UserProvider>(context, listen: false);
-        userProvider.setUser(user);
-        Navigator.pushReplacementNamed(context, userProvider.getInitialRoute());
-      } else {
+      try {
+        final user = await authService.login(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
+        setState(() => _isLoading = false);
+        if (user != null && context.mounted) {
+          final userProvider = Provider.of<UserProvider>(context, listen: false);
+          userProvider.setUser(user);
+          Navigator.pushReplacementNamed(context, userProvider.getInitialRoute());
+        } else {
+          setState(() {
+            _errorMessage = 'Invalid email or password';
+          });
+        }
+      } catch (e) {
         setState(() {
-          _errorMessage = 'Invalid email or password';
+          _isLoading = false;
+          if (e is auth.FirebaseAuthException) {
+            _errorMessage = e.code == 'user-not-found'
+                ? 'No user found for that email.'
+                : e.code == 'wrong-password'
+                    ? 'Incorrect password.'
+                    : 'Login failed. Please try again.';
+          } else {
+            _errorMessage = 'An unexpected error occurred.';
+          }
         });
       }
     }
@@ -117,11 +131,11 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                         ],
                       ),
-                      // child: const Icon(
-                      //   Icons.healt,
-                      //   color: Colors.white,
-                      //   size: 40,
-                      // ),
+                      child: const Icon(
+                        Icons.favorite, // Replaced invalid Icons.healt
+                        color: Colors.white,
+                        size: 40,
+                      ),
                     ),
 
                     const SizedBox(height: 24),

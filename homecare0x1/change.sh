@@ -9,7 +9,7 @@ fi
 # Step 1: Save current state with git
 echo "Saving current state with git..."
 git add .
-git commit -m "Backup before updating Firebase Firestore and Authentication"
+git commit -m "Backup before integrating Firebase Firestore and Authentication for production"
 
 # Step 2: Update pubspec.yaml to use latest Firebase dependencies
 echo "Updating pubspec.yaml..."
@@ -20,7 +20,7 @@ sed -i '' 's/cloud_firestore: ^4.14.0/cloud_firestore: ^5.4.4/' pubspec.yaml
 echo "Running flutter pub get..."
 flutter pub get
 
-# Step 4: Overwrite auth_service.dart with Firebase implementation
+# Step 4: Overwrite auth_service.dart with production-ready Firebase implementation
 echo "Updating lib/services/auth_service.dart..."
 cat > lib/services/auth_service.dart << 'EOF'
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -51,10 +51,12 @@ class AuthService {
           email: userData['email'] as String,
         );
       }
-      return null;
+      throw Exception('User data not found in Firestore');
+    } on auth.FirebaseAuthException catch (e) {
+      throw e; // Re-throw for handling in UI
     } catch (e) {
       print('Login error: $e');
-      return null;
+      throw Exception('Failed to login: $e');
     }
   }
 
@@ -66,6 +68,17 @@ class AuthService {
     required String name,
   }) async {
     try {
+      // Check if user already exists
+      try {
+        await _auth.signInWithEmailAndPassword(email: email, password: password);
+        print('User $email already exists, skipping registration');
+        return null;
+      } on auth.FirebaseAuthException catch (e) {
+        if (e.code != 'user-not-found') {
+          throw e; // Other errors should be handled
+        }
+      }
+
       // Create user in Firebase Authentication
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -79,6 +92,7 @@ class AuthService {
         'email': email,
         'role': role,
         'name': name,
+        'createdAt': FieldValue.serverTimestamp(),
       });
 
       return User(
@@ -87,15 +101,17 @@ class AuthService {
         name: name,
         email: email,
       );
+    } on auth.FirebaseAuthException catch (e) {
+      throw e; // Re-throw for handling in UI
     } catch (e) {
       print('Registration error: $e');
-      return null;
+      throw Exception('Failed to register: $e');
     }
   }
 }
 EOF
 
-# Step 5: Update login_screen.dart to handle Firebase errors
+# Step 5: Update login_screen.dart to handle Firebase errors for production
 echo "Updating lib/screens/login_screen.dart..."
 cat > lib/screens/login_screen.dart << 'EOF'
 import 'package:flutter/material.dart';
@@ -163,18 +179,33 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             _errorMessage = 'Invalid email or password';
           });
         }
+      } on auth.FirebaseAuthException catch (e) {
+        setState(() {
+          _isLoading = false;
+          switch (e.code) {
+            case 'user-not-found':
+              _errorMessage = 'No account exists for this email.';
+              break;
+            case 'wrong-password':
+              _errorMessage = 'Incorrect password. Please try again.';
+              break;
+            case 'invalid-email':
+              _errorMessage = 'Invalid email format.';
+              break;
+            case 'too-many-requests':
+              _errorMessage = 'Too many login attempts. Please try again later.';
+              break;
+            case 'user-disabled':
+              _errorMessage = 'This account has been disabled.';
+              break;
+            default:
+              _errorMessage = 'Login failed: ${e.message}';
+          }
+        });
       } catch (e) {
         setState(() {
           _isLoading = false;
-          if (e is auth.FirebaseAuthException) {
-            _errorMessage = e.code == 'user-not-found'
-                ? 'No user found for that email.'
-                : e.code == 'wrong-password'
-                    ? 'Incorrect password.'
-                    : 'Login failed. Please try again.';
-          } else {
-            _errorMessage = 'An unexpected error occurred.';
-          }
+          _errorMessage = 'An unexpected error occurred. Please try again.';
         });
       }
     }
@@ -594,7 +625,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 }
 EOF
 
-# Step 6: Update main.dart to include mock user setup
+# Step 6: Update main.dart to include safe mock user setup
 echo "Updating lib/main.dart..."
 cat > lib/main.dart << 'EOF'
 import 'package:homecare0x1/providers/location_provider.dart';
@@ -647,30 +678,41 @@ Future<void> main() async {
   runApp(const HomecareApp());
 }
 
-// Setup mock users in Firestore (run once)
+// Setup mock users in Firestore (run once, safe for production)
 Future<void> setupMockUsers() async {
   final authService = AuthService();
-  try {
-    await authService.register(
-      email: 'admin@example.com',
-      password: 'admin123',
-      role: 'admin',
-      name: 'Business Owner',
-    );
-    await authService.register(
-      email: 'caregiver@example.com',
-      password: 'care123',
-      role: 'caregiver',
-      name: 'Kind Nurse',
-    );
-    await authService.register(
-      email: 'family@example.com',
-      password: 'fam123',
-      role: 'family',
-      name: 'Family Member',
-    );
-  } catch (e) {
-    print('Error setting up mock users: $e');
+  final users = [
+    {
+      'email': 'admin@example.com',
+      'password': 'admin123',
+      'role': 'admin',
+      'name': 'Business Owner',
+    },
+    {
+      'email': 'caregiver@example.com',
+      'password': 'care123',
+      'role': 'caregiver',
+      'name': 'Kind Nurse',
+    },
+    {
+      'email': 'family@example.com',
+      'password': 'fam123',
+      'role': 'family',
+      'name': 'Family Member',
+    },
+  ];
+
+  for (var user in users) {
+    try {
+      await authService.register(
+        email: user['email']!,
+        password: user['password']!,
+        role: user['role']!,
+        name: user['name']!,
+      );
+    } catch (e) {
+      print('Error setting up user ${user['email']}: $e');
+    }
   }
 }
 
@@ -777,24 +819,34 @@ class HomecareApp extends StatelessWidget {
 }
 EOF
 
-# Step 7: Provide instructions for manual Firebase setup
+# Step 7: Provide instructions for manual Firebase setup in production mode
 echo "Script completed! Please perform the following manual steps in the Firebase Console:"
 echo "1. Go to Firebase Console > Build > Firestore Database."
-echo "2. Create a database in test mode (secure later with rules)."
-echo "3. Go to Build > Authentication, enable Email/Password provider."
-echo "4. Update Firestore Security Rules (example below):"
+echo "2. Create a database in PRODUCTION MODE (not test mode)."
+echo "3. Select a region (e.g., nam5 (us-central))."
+echo "4. Go to Build > Authentication, enable Email/Password provider."
+echo "5. Update Firestore Security Rules with the following production-ready rules:"
 cat << 'RULES'
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
+      // Allow authenticated users to read their own data
       allow read: if request.auth != null && request.auth.uid == userId;
+      // Allow authenticated users to write their own data
       allow write: if request.auth != null && request.auth.uid == userId;
+      // Allow admins to read all user data
+      allow read: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Restrict admin writes to specific fields if needed
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' && request.resource.data.keys().hasOnly(['role', 'name', 'email']);
     }
   }
 }
 RULES
-echo "5. Run 'flutter run' to test the app."
+echo "6. Run 'flutter run' to test the app."
+echo "7. After the first run, comment out the setupMockUsers() call in main.dart to avoid duplicate user attempts:"
+echo "   // await setupMockUsers();"
 echo "To revert changes, use: git reset --hard HEAD^ && git clean -fd"
-echo "Note: Comment out the setupMockUsers() call in main.dart after the first run to avoid duplicate user errors."
+echo "8. Monitor Firebase Console > Authentication and Firestore for user data."
+echo "9. Test thoroughly in a staging environment before deploying to production."
 EOF

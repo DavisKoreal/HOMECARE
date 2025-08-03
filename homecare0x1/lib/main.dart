@@ -33,6 +33,7 @@ import 'package:homecare0x1/screens/family_care_notes.dart';
 import 'package:homecare0x1/screens/caregiver_profile.dart';
 import 'package:homecare0x1/screens/client_view_shift_history.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:homecare0x1/services/auth_service.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -40,7 +41,38 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialize mock users in Firestore (run once for testing)
+  await setupMockUsers();
+
   runApp(const HomecareApp());
+}
+
+// Setup mock users in Firestore (run once)
+Future<void> setupMockUsers() async {
+  final authService = AuthService();
+  try {
+    await authService.register(
+      email: 'admin@example.com',
+      password: 'admin123',
+      role: 'admin',
+      name: 'Business Owner',
+    );
+    await authService.register(
+      email: 'caregiver@example.com',
+      password: 'care123',
+      role: 'caregiver',
+      name: 'Kind Nurse',
+    );
+    await authService.register(
+      email: 'family@example.com',
+      password: 'fam123',
+      role: 'family',
+      name: 'Family Member',
+    );
+  } catch (e) {
+    print('Error setting up mock users: $e');
+  }
 }
 
 class HomecareApp extends StatelessWidget {

@@ -1,39 +1,70 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:homecare0x1/models/user.dart';
 
 class AuthService {
-  // Mock user database
-  final Map<String, Map<String, String>> _mockUsers = {
-    'admin@example.com': {
-      'password': 'admin123',
-      'role': 'admin',
-      'id': 'a1',
-      'name': 'Business Owner',
-    },
-    'caregiver@example.com': {
-      'password': 'care123',
-      'role': 'caregiver',
-      'id': 'cg1',
-      'name': 'Kind Nurse'
-    },
-    'family@example.com': {
-      'password': 'fam123',
-      'role': 'family',
-      'id': 'f1',
-      'name': 'Family Member',
-    },
-  };
+  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<User?> login(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
-    final userData = _mockUsers[email];
-    if (userData != null && userData['password'] == password) {
-      return User(
-        id: userData['id']!,
-        role: userData['role']!,
-        name: userData['name']!,
-        email: userData['email'] ?? email,
+    try {
+      // Authenticate with Firebase Authentication
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
+
+      // Fetch user data from Firestore
+      final docSnapshot =
+          await _firestore.collection('users').doc(credential.user!.uid).get();
+      if (docSnapshot.exists) {
+        final userData = docSnapshot.data()!;
+        return User(
+          id: userData['id'] as String,
+          role: userData['role'] as String,
+          name: userData['name'] as String,
+          email: userData['email'] as String,
+        );
+      }
+      return null;
+    } catch (e) {
+      print('Login error: $e');
+      return null;
     }
-    return null;
+  }
+
+  // Register a new user (for setup or registration)
+  Future<User?> register({
+    required String email,
+    required String password,
+    required String role,
+    required String name,
+  }) async {
+    try {
+      // Create user in Firebase Authentication
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Store user data in Firestore
+      final userId = credential.user!.uid;
+      await _firestore.collection('users').doc(userId).set({
+        'id': userId,
+        'email': email,
+        'role': role,
+        'name': name,
+      });
+
+      return User(
+        id: userId,
+        role: role,
+        name: name,
+        email: email,
+      );
+    } catch (e) {
+      print('Registration error: $e');
+      return null;
+    }
   }
 }
