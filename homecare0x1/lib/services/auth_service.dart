@@ -18,6 +18,7 @@ class AuthService {
       final docSnapshot =
           await _firestore.collection('users').doc(credential.user!.uid).get();
       if (docSnapshot.exists) {
+        print("A document snapshot exists");
         final userData = docSnapshot.data()!;
         return User(
           id: userData['id'] as String,
@@ -35,53 +36,54 @@ class AuthService {
     }
   }
 
-  // Register a new user (for setup or registration)
-  Future<User?> register({
-    required String email,
-    required String password,
-    required String role,
-    required String name,
-  }) async {
+Future<User?> register({
+  required String email,
+  required String password,
+  required String role,
+  required String name,
+}) async {
+  try {
+    // Check if user already exists
     try {
-      // Check if user already exists
-      try {
-        await _auth.signInWithEmailAndPassword(
-            email: email, password: password);
-        print('User $email already exists, skipping registration');
-        return null;
-      } on auth.FirebaseAuthException catch (e) {
-        if (e.code != 'user-not-found') {
-          throw e; // Other errors should be handled
-        }
-      }
-
-      // Create user in Firebase Authentication
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // Store user data in Firestore
-      final userId = credential.user!.uid;
-      await _firestore.collection('users').doc(userId).set({
-        'id': userId,
-        'email': email,
-        'role': role,
-        'name': name,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      return User(
-        id: userId,
-        role: role,
-        name: name,
-        email: email,
-      );
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      print('User $email already exists, skipping registration');
+      return null;
     } on auth.FirebaseAuthException catch (e) {
-      throw e; // Re-throw for handling in UI
-    } catch (e) {
-      print('Registration error: $e');
-      throw Exception('Failed to register: $e');
+      if (e.code != 'user-not-found' && e.code != 'invalid-credential') {
+        print("Some other error has been found when trying to sign in with the user and the password");
+        throw e; // Other errors should be handled
+      }
     }
+
+    // Create user in Firebase Authentication
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // Store user data in Firestore
+    final userId = credential.user!.uid;
+    await _firestore.collection('users').doc(userId).set({
+      'id': userId,
+      'email': email,
+      'role': role,
+      'name': name,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    print("Currently ready to return the user ");
+
+    return User(
+      id: userId,
+      role: role,
+      name: name,
+      email: email,
+    );
+  } on auth.FirebaseAuthException catch (e) {
+    throw e; // Re-throw for handling in UI
+  } catch (e) {
+    print('Registration error: $e');
+    throw Exception('Failed to register: $e');
   }
+}
 }
