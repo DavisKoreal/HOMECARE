@@ -1,0 +1,1032 @@
+===== lib/providers/care_note_provider.dart =====
+import 'package:flutter/material.dart';
+import 'package:homecare0x1/models/care_note.dart';
+import 'package:homecare0x1/providers/shift_assignment_provider.dart';
+import 'package:uuid/uuid.dart';
+import 'package:provider/provider.dart';
+
+class CareNoteProvider with ChangeNotifier {
+  final List<CareNote> _notes = [
+    CareNote(
+      id: const Uuid().v4(),
+      clientId: 'f1',
+      caregiverId: 'cg1',
+      shiftId: 's1',
+      healthStatus: 'Stable, no new issues',
+      activities: 'Assisted with morning walk and meal prep',
+      observations: 'Client was cooperative',
+      medicationAdherence: 'Aspirin 100mg taken as prescribed',
+      mood: 'Cheerful',
+      note: 'Daily check completed',
+      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+      isVisibleToClient: true,
+      isLate: false,
+    ),
+    CareNote(
+      id: const Uuid().v4(),
+      clientId: 'f1',
+      caregiverId: 'cg1',
+      shiftId: 's2',
+      healthStatus: 'Slight fatigue reported',
+      activities: 'Helped with bathing and exercises',
+      observations: 'Client needed extra rest',
+      medicationAdherence: 'Lisinopril 10mg taken',
+      mood: 'Calm',
+      note: 'Evening check',
+      timestamp: DateTime.now().subtract(const Duration(days: 1)),
+      isVisibleToClient: false,
+      isLate: true,
+    ),
+  ];
+
+  List<CareNote> get notes => _notes;
+
+  List<CareNote> getNotesForClient(String clientId,
+      {bool onlyVisible = false}) {
+    return _notes
+        .where((note) =>
+            note.clientId == clientId &&
+            (!onlyVisible || note.isVisibleToClient))
+        .toList();
+  }
+
+  List<CareNote> getNotesForCaregiver(String caregiverId) {
+    return _notes.where((note) => note.caregiverId == caregiverId).toList();
+  }
+
+  Future<void> addNote({
+    required BuildContext context,
+    required String clientId,
+    required String caregiverId,
+    required String shiftId,
+    required String healthStatus,
+    required String activities,
+    required String observations,
+    required String medicationAdherence,
+    required String mood,
+    required String note,
+  }) async {
+    final shiftProvider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+    final shift = shiftProvider.shifts.firstWhere(
+      (shift) => shift.id == shiftId,
+      orElse: () => throw Exception('Shift not found'),
+    );
+    final now = DateTime.now();
+    final isLate = now.isAfter(shift.endTime.add(const Duration(hours: 12)));
+
+    if (isLate) {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Late Submission'),
+          content: const Text(
+              'This note is being submitted more than 12 hours after the shift ended.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final newNote = CareNote(
+      clientId: clientId,
+      caregiverId: caregiverId,
+      shiftId: shiftId,
+      healthStatus: healthStatus,
+      activities: activities,
+      observations: observations,
+      medicationAdherence: medicationAdherence,
+      mood: mood,
+      note: note,
+      timestamp: now,
+      isLate: isLate,
+    );
+    _notes.insert(0, newNote);
+    notifyListeners();
+  }
+
+  void toggleVisibility(String noteId) {
+    final index = _notes.indexWhere((note) => note.id == noteId);
+    if (index != -1) {
+      _notes[index] = CareNote(
+        id: _notes[index].id,
+        clientId: _notes[index].clientId,
+        caregiverId: _notes[index].caregiverId,
+        shiftId: _notes[index].shiftId,
+        healthStatus: _notes[index].healthStatus,
+        activities: _notes[index].activities,
+        observations: _notes[index].observations,
+        medicationAdherence: _notes[index].medicationAdherence,
+        mood: _notes[index].mood,
+        note: _notes[index].note,
+        timestamp: _notes[index].timestamp,
+        isVisibleToClient: !_notes[index].isVisibleToClient,
+        isLate: _notes[index].isLate,
+      );
+      notifyListeners();
+    }
+  }
+}
+
+===== lib/providers/medication_record_provider.dart =====
+import 'package:flutter/material.dart';
+import 'package:homecare0x1/models/medication_record.dart';
+
+class MedicationRecordProvider with ChangeNotifier {
+  List<MedicationRecord> _records = [
+    MedicationRecord(
+      id: '1',
+      clientId: 'f1',
+      medicationName: 'Aspirin',
+      dosage: '100mg',
+      administrationTime: DateTime.now().subtract(const Duration(hours: 2)),
+      notes: 'Taken with water',
+    ),
+    MedicationRecord(
+      id: '2',
+      clientId: 'f1',
+      medicationName: 'Lisinopril',
+      dosage: '10mg',
+      administrationTime: DateTime.now().subtract(const Duration(hours: 4)),
+      notes: 'No side effects',
+    ),
+  ];
+
+  List<MedicationRecord> get records => _records;
+
+  void addRecord(MedicationRecord record) {
+    _records.insert(0, record);
+    notifyListeners();
+  }
+}
+
+===== lib/providers/payment_provider.dart =====
+import 'package:flutter/material.dart';
+import 'package:homecare0x1/models/payment.dart';
+
+class PaymentProvider with ChangeNotifier {
+  final List<Payment> _payments = [
+    Payment(
+      id: 'p1',
+      invoiceNumber: 'HC-2025-001',
+      amount: 850.00,
+      dueDate: DateTime(2025, 2, 15),
+      status: 'Pending',
+      description: 'January 2025 caregiving services',
+      servicePeriod: 'Jan 1-31, 2025',
+      hoursBilled: 120.0,
+      rate: 25.0,
+    ),
+    Payment(
+      id: 'p2',
+      invoiceNumber: 'HC-2024-012',
+      amount: 400.00,
+      dueDate: DateTime(2025, 1, 10),
+      status: 'Overdue',
+      description: 'December 2024 caregiving services',
+      servicePeriod: 'Dec 1-31, 2024',
+      hoursBilled: 80.0,
+      rate: 20.0,
+    ),
+    Payment(
+      id: 'p3',
+      invoiceNumber: 'HC-2024-011',
+      amount: 720.00,
+      dueDate: DateTime(2024, 12, 15),
+      status: 'Paid',
+      description: 'November 2024 caregiving services',
+      servicePeriod: 'Nov 1-30, 2024',
+      hoursBilled: 100.0,
+      rate: 22.0,
+    ),
+    Payment(
+      id: 'p4',
+      invoiceNumber: 'HC-2024-010',
+      amount: 680.00,
+      dueDate: DateTime(2024, 11, 15),
+      status: 'Paid',
+      description: 'October 2024 caregiving services',
+      servicePeriod: 'Oct 1-31, 2024',
+      hoursBilled: 90.0,
+      rate: 21.0,
+    ),
+  ];
+
+  final List<Map<String, dynamic>> _paymentMethods = [
+    {
+      'id': 'pm1',
+      'title': 'Credit Card ending in 4532',
+      'subtitle': 'Primary payment method',
+      'icon': Icons.credit_card,
+      'color': const Color(0xFF3498DB),
+      'isDefault': true,
+    },
+    {
+      'id': 'pm2',
+      'title': 'Bank Account ending in 8901',
+      'subtitle': 'Backup payment method',
+      'icon': Icons.account_balance,
+      'color': const Color(0xFF16A085),
+      'isDefault': false,
+    },
+  ];
+
+  List<Payment> get payments => _payments;
+
+  List<Map<String, dynamic>> get paymentMethods => _paymentMethods;
+
+  double get totalBilledThisMonth =>
+      _payments.where((p) => p.dueDate.month == DateTime.now().month).fold(0.0,
+          (sum, payment) => sum + payment.amount);
+
+  double get totalPaidYTD => _payments
+      .where((p) =>
+          p.status.toLowerCase() == 'paid' &&
+          p.dueDate.year == DateTime.now().year)
+      .fold(0.0, (sum, payment) => sum + payment.amount);
+
+  int get pendingInvoices =>
+      _payments.where((p) => p.status.toLowerCase() == 'pending').length;
+
+  double get outstandingBalance =>
+      _payments.where((p) => p.status.toLowerCase() != 'paid').fold(
+          0.0, (sum, payment) => sum + payment.amount);
+
+  int get overduePayments =>
+      _payments.where((p) => p.status.toLowerCase() == 'overdue').length;
+
+  void addPayment(Payment payment) {
+    _payments.add(payment);
+    notifyListeners();
+  }
+
+  void addPaymentMethod(Map<String, dynamic> method) {
+    _paymentMethods.add(method);
+    notifyListeners();
+  }
+}
+
+===== lib/providers/shift_assignment_provider.dart =====
+import 'package:flutter/material.dart';
+import 'package:homecare0x1/models/client.dart';
+import 'package:homecare0x1/providers/location_provider.dart';
+import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:provider/provider.dart';
+
+class Shift {
+  final String id;
+  final String clientId;
+  String clientName;
+  DateTime startTime;
+  DateTime endTime;
+  String? caregiverId;
+  String? caregiverName;
+  String status;
+  Location? location;
+
+  Shift({
+    required this.id,
+    required this.clientId,
+    required this.clientName,
+    required this.startTime,
+    required this.endTime,
+    this.caregiverId,
+    this.caregiverName,
+    required this.status,
+    this.location,
+  });
+}
+
+class Caregiver {
+  final String id;
+  final String name;
+  final bool isAvailable;
+
+  Caregiver({
+    required this.id,
+    required this.name,
+    required this.isAvailable,
+  });
+}
+
+class ShiftAssignmentProvider with ChangeNotifier {
+  final List<Caregiver> _caregivers = [
+    Caregiver(id: 'cg1', name: 'Emma Wilson', isAvailable: true),
+    Caregiver(id: 'cg2', name: 'Liam Brown', isAvailable: true),
+    Caregiver(id: 'cg3', name: 'Olivia Davis', isAvailable: false),
+    Caregiver(id: 'cg4', name: 'Noah Taylor', isAvailable: true),
+  ];
+
+  final List<Client> _clients = [
+    Client(
+      id: 'f1',
+      name: 'Family Member',
+      email: 'family@example.com',
+      address: '123 Elm St, Springfield',
+      carePlan: 'Daily care',
+    ),
+    Client(
+      id: 'f2',
+      name: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      address: '456 Oak Ave, Springfield',
+      carePlan: 'Weekly check-in',
+    ),
+    Client(
+      id: 'f3',
+      name: 'Alice Johnson',
+      email: 'alice.johnson@example.com',
+      address: '789 Pine Rd, Springfield',
+      carePlan: 'Post-op care',
+    ),
+    Client(
+      id: 'f4',
+      name: 'Bob Wilson',
+      email: 'bob.wilson@example.com',
+      address: '321 Maple Dr, Springfield',
+      carePlan: 'Mobility assistance',
+    ),
+    Client(
+      id: 'f5',
+      name: 'Carol Brown',
+      email: 'carol.brown@example.com',
+      address: '654 Cedar Ln, Springfield',
+      carePlan: 'Medication management',
+    ),
+  ];
+
+  final List<Shift> _shifts = [
+    Shift(
+      id: 's1',
+      clientId: 'f1',
+      clientName: 'John Doe',
+      startTime: DateTime.now().add(const Duration(days: 1, hours: 9)),
+      endTime: DateTime.now().add(const Duration(days: 1, hours: 11)),
+      status: 'pending',
+    ),
+    Shift(
+      id: 's2',
+      clientId: 'f2',
+      clientName: 'Jane Smith',
+      startTime: DateTime.now().add(const Duration(days: 1, hours: 14)),
+      endTime: DateTime.now().add(const Duration(days: 1, hours: 16)),
+      status: 'pending',
+    ),
+    Shift(
+      id: 's3',
+      clientId: 'f3',
+      clientName: 'Alice Johnson',
+      startTime: DateTime.now().add(const Duration(days: 2, hours: 10)),
+      endTime: DateTime.now().add(const Duration(days: 2, hours: 12)),
+      status: 'pending',
+    ),
+  ];
+
+  List<Caregiver> get availableCaregivers =>
+      _caregivers.where((cg) => cg.isAvailable).toList();
+
+  List<Client> get clients => _clients;
+
+  List<Shift> get unassignedShifts =>
+      _shifts.where((shift) => shift.caregiverId == null).toList();
+
+  List<Shift> get requestShifts =>
+      _shifts.where((shift) => shift.status == 'request').toList();
+
+  List<Shift> get allShifts => _shifts;
+
+  List<Shift> get shifts => _shifts;
+
+  List<Shift> getShiftsForCaregiver(String caregiverId) {
+    return _shifts.where((shift) => shift.caregiverId == caregiverId).toList();
+  }
+
+  List<Shift> getShiftsForClient(String clientId) {
+    return _shifts.where((shift) => shift.clientId == clientId).toList();
+  }
+
+  bool _isShiftOverlap(DateTime startTime, DateTime endTime,
+      String? caregiverId, String clientId) {
+    for (var shift in _shifts) {
+      if ((caregiverId != null && shift.caregiverId == caregiverId) ||
+          shift.clientId == clientId) {
+        if (!(endTime.isBefore(shift.startTime) ||
+            startTime.isAfter(shift.endTime))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  Future<void> requestShift({
+    required String clientId,
+    required String clientName,
+    required DateTime startTime,
+    required DateTime endTime,
+    required BuildContext context,
+  }) async {
+    final client = _clients.firstWhere(
+      (c) => c.id == clientId && c.name == clientName,
+      orElse: () => throw Exception('Invalid client ID or name'),
+    );
+    if (startTime.isAfter(endTime)) {
+      throw Exception('Start time must be before end time');
+    }
+    if (startTime.isBefore(DateTime.now())) {
+      throw Exception('Start time must be in the future');
+    }
+    if (_isShiftOverlap(startTime, endTime, null, clientId)) {
+      throw Exception('Shift overlaps with existing shift for client');
+    }
+    final shift = Shift(
+      id: 's${_shifts.length + 1}',
+      clientId: clientId,
+      clientName: clientName,
+      startTime: startTime,
+      endTime: endTime,
+      status: 'request',
+    );
+    _shifts.add(shift);
+    notifyListeners();
+  }
+
+  Future<void> addShift({
+    required String clientId,
+    required String clientName,
+    required DateTime startTime,
+    required DateTime endTime,
+    required BuildContext context,
+    String? caregiverId,
+    String? caregiverName,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (userProvider.user?.role != 'admin') {
+      throw Exception('Only admins can add shifts');
+    }
+    final client = _clients.firstWhere(
+      (c) => c.id == clientId && c.name == clientName,
+      orElse: () => throw Exception('Invalid client ID or name'),
+    );
+    if (startTime.isAfter(endTime)) {
+      throw Exception('Start time must be before end time');
+    }
+    if (startTime.isBefore(DateTime.now())) {
+      throw Exception('Start time must be in the future');
+    }
+    if (_isShiftOverlap(startTime, endTime, caregiverId, clientId)) {
+      throw Exception('Shift overlaps with existing shift for client');
+    }
+    final shift = Shift(
+      id: 's${_shifts.length + 1}',
+      clientId: clientId,
+      clientName: clientName,
+      startTime: startTime,
+      endTime: endTime,
+      caregiverId: caregiverId,
+      caregiverName: caregiverName,
+      status: 'pending',
+    );
+    _shifts.add(shift);
+    notifyListeners();
+  }
+
+  Future<void> updateShift({
+    required String shiftId,
+    required DateTime startTime,
+    required DateTime endTime,
+    required BuildContext context,
+    String? caregiverId,
+    String? caregiverName,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (userProvider.user?.role != 'admin') {
+      throw Exception('Only admins can update shifts');
+    }
+    final shiftIndex = _shifts.indexWhere((s) => s.id == shiftId);
+    if (shiftIndex == -1) {
+      throw Exception('Shift not found');
+    }
+    if (startTime.isAfter(endTime)) {
+      throw Exception('Start time must be before end time');
+    }
+    if (_isShiftOverlap(
+        startTime,
+        endTime,
+        caregiverId ?? _shifts[shiftIndex].caregiverId,
+        _shifts[shiftIndex].clientId)) {
+      throw Exception('Shift overlaps with existing shift');
+    }
+    _shifts[shiftIndex].startTime = startTime;
+    _shifts[shiftIndex].endTime = endTime;
+    if (caregiverId != null && caregiverName != null) {
+      _shifts[shiftIndex].caregiverId = caregiverId;
+      _shifts[shiftIndex].caregiverName = caregiverName;
+    }
+    notifyListeners();
+  }
+
+  Future<void> updateShiftStatus({
+    required String shiftId,
+    required String status,
+    Location? location,
+  }) async {
+    final shift = _shifts.firstWhere((s) => s.id == shiftId);
+    if (status == 'in_session' && location == null) {
+      throw Exception('Location is required for check-in');
+    }
+    shift.status = status;
+    if (location != null) {
+      shift.location = location;
+    }
+    notifyListeners();
+  }
+
+  void assignShift(String shiftId, String caregiverId, String caregiverName) {
+    final shift = _shifts.firstWhere((shift) => shift.id == shiftId);
+    if (_isShiftOverlap(
+        shift.startTime, shift.endTime, caregiverId, shift.clientId)) {
+      throw Exception(
+          'Caregiver is already assigned to another shift at this time');
+    }
+    shift.caregiverId = caregiverId;
+    shift.caregiverName = caregiverName;
+    if (shift.status == 'request') {
+      shift.status = 'pending';
+    }
+    notifyListeners();
+  }
+}
+
+===== lib/providers/task_provider.dart =====
+import 'package:flutter/material.dart';
+import 'package:homecare0x1/models/task.dart';
+
+class TaskProvider with ChangeNotifier {
+  final List<Task> _tasks = [
+    Task(
+      id: '1',
+      title: 'Check Vitals',
+      dueDate: DateTime.now().add(const Duration(hours: 2)),
+      isCompleted: false,
+      clientId: 'f1',
+      clientName: 'John Doe',
+      description: 'Check blood pressure and heart rate',
+    ),
+    Task(
+      id: '2',
+      title: 'Medication Admin',
+      dueDate: DateTime.now().add(const Duration(hours: 4)),
+      isCompleted: true,
+      clientId: 'f1',
+      clientName: 'John Doe',
+      description: 'Administer morning medications',
+    ),
+    Task(
+      id: '3',
+      title: 'Physical Therapy',
+      dueDate: DateTime.now().add(const Duration(hours: 6)),
+      isCompleted: false,
+      clientId: 'f2',
+      clientName: 'Jane Smith',
+      description: 'Assist with mobility exercises',
+    ),
+    Task(
+      id: '4',
+      title: 'Meal Prep',
+      dueDate: DateTime.now().add(const Duration(days: 1)),
+      isCompleted: false,
+      clientId: 'f3',
+      clientName: 'Alice Johnson',
+      description: 'Prepare lunch and dinner',
+    ),
+  ];
+
+  List<Task> get tasks => _tasks;
+
+  void toggleTaskCompletion(String taskId) {
+    final task = _tasks.firstWhere((t) => t.id == taskId);
+    task.isCompleted = !task.isCompleted;
+    notifyListeners();
+  }
+}
+
+===== lib/providers/user_provider.dart =====
+import 'package:flutter/material.dart';
+import 'package:homecare0x1/models/user.dart';
+
+class UserProvider with ChangeNotifier {
+  User? _user;
+
+  User? get user => _user;
+
+  void setUser(User user) {
+    _user = user;
+    notifyListeners();
+  }
+
+  void clearUser() {
+    _user = null;
+    notifyListeners();
+  }
+
+  String getInitialRoute() {
+    switch (_user?.role) {
+      case 'admin':
+        return '/admin_dashboard';
+      case 'caregiver':
+        return '/caregiver_dashboard';
+      case 'family':
+        return '/family_portal';
+      default:
+        return '/login';
+    }
+  }
+}
+
+===== lib/services/auth_service.dart =====
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:homecare0x1/models/user.dart';
+
+class AuthService {
+  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<User?> login(String email, String password) async {
+    try {
+      // Authenticate with Firebase Authentication
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Fetch user data from Firestore
+      final docSnapshot =
+          await _firestore.collection('users').doc(credential.user!.uid).get();
+      if (docSnapshot.exists) {
+        print("A document snapshot exists");
+        final userData = docSnapshot.data()!;
+        return User(
+          id: userData['id'] as String,
+          role: userData['role'] as String,
+          name: userData['name'] as String,
+          email: userData['email'] as String,
+        );
+      }
+      throw Exception('User data not found in Firestore');
+    } on auth.FirebaseAuthException catch (e) {
+      throw e; // Re-throw for handling in UI
+    } catch (e) {
+      print('Login error: $e');
+      throw Exception('Failed to login: $e');
+    }
+  }
+
+Future<User?> register({
+  required String email,
+  required String password,
+  required String role,
+  required String name,
+}) async {
+  try {
+    // Check if user already exists
+    try {
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      print('User $email already exists, skipping registration');
+      return null;
+    } on auth.FirebaseAuthException catch (e) {
+      if (e.code != 'user-not-found' && e.code != 'invalid-credential') {
+        print("Some other error has been found when trying to sign in with the user and the password");
+        throw e; // Other errors should be handled
+      }
+    }
+
+    // Create user in Firebase Authentication
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // Store user data in Firestore
+    final userId = credential.user!.uid;
+    await _firestore.collection('users').doc(userId).set({
+      'id': userId,
+      'email': email,
+      'role': role,
+      'name': name,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    print("Currently ready to return the user ");
+
+    return User(
+      id: userId,
+      role: role,
+      name: name,
+      email: email,
+    );
+  } on auth.FirebaseAuthException catch (e) {
+    throw e; // Re-throw for handling in UI
+  } catch (e) {
+    print('Registration error: $e');
+    throw Exception('Failed to register: $e');
+  }
+}
+}
+
+===== lib/firebase_options.dart =====
+// File generated by FlutterFire CLI.
+// ignore_for_file: type=lint
+import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+
+/// Default [FirebaseOptions] for use with your Firebase apps.
+///
+/// Example:
+/// ```dart
+/// import 'firebase_options.dart';
+/// // ...
+/// await Firebase.initializeApp(
+///   options: DefaultFirebaseOptions.currentPlatform,
+/// );
+/// ```
+class DefaultFirebaseOptions {
+  static FirebaseOptions get currentPlatform {
+    if (kIsWeb) {
+      return web;
+    }
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return android;
+      case TargetPlatform.iOS:
+        return ios;
+      case TargetPlatform.macOS:
+        return macos;
+      case TargetPlatform.windows:
+        return windows;
+      case TargetPlatform.linux:
+        // return linux;
+      // Uncomment the following lines if you want to support Linux
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for linux - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
+      default:
+        throw UnsupportedError(
+          'DefaultFirebaseOptions are not supported for this platform.',
+        );
+    }
+  }
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBjEqxbXDvjoYZLP1Ja2VFj7EFulMR1tkE',
+    appId: '1:312607240262:web:8f81709adc848df5cf5a47',
+    messagingSenderId: '312607240262',
+    projectId: 'arandomtestproject',
+    authDomain: 'arandomtestproject.firebaseapp.com',
+    storageBucket: 'arandomtestproject.firebasestorage.app',
+  );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyAeHszwS_tUhz0mRHw4cmA51i9czurCiUk',
+    appId: '1:312607240262:android:c00d42d0cf942885cf5a47',
+    messagingSenderId: '312607240262',
+    projectId: 'arandomtestproject',
+    storageBucket: 'arandomtestproject.firebasestorage.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAOYBftU6-01Xpi4s4BRHj8eyMsSBcxGi4',
+    appId: '1:312607240262:ios:e8ffa8d28b7f6479cf5a47',
+    messagingSenderId: '312607240262',
+    projectId: 'arandomtestproject',
+    storageBucket: 'arandomtestproject.firebasestorage.app',
+    iosBundleId: 'com.example.homecare0x1',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAOYBftU6-01Xpi4s4BRHj8eyMsSBcxGi4',
+    appId: '1:312607240262:ios:e8ffa8d28b7f6479cf5a47',
+    messagingSenderId: '312607240262',
+    projectId: 'arandomtestproject',
+    storageBucket: 'arandomtestproject.firebasestorage.app',
+    iosBundleId: 'com.example.homecare0x1',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBjEqxbXDvjoYZLP1Ja2VFj7EFulMR1tkE',
+    appId: '1:312607240262:web:8422d2924b39a15bcf5a47',
+    messagingSenderId: '312607240262',
+    projectId: 'arandomtestproject',
+    authDomain: 'arandomtestproject.firebaseapp.com',
+    storageBucket: 'arandomtestproject.firebasestorage.app',
+  );
+
+}
+===== lib/models/audit_log.dart =====
+class AuditLog {
+  final String id;
+  final String userId;
+  final String action;
+  final DateTime timestamp;
+  final String details;
+  final String actionType;
+  final String severity;
+
+  AuditLog({
+    required this.id,
+    required this.userId,
+    required this.action,
+    required this.timestamp,
+    required this.details,
+    required this.actionType,
+    required this.severity,
+  });
+}
+
+===== lib/models/care_note.dart =====
+import 'package:uuid/uuid.dart';
+
+class CareNote {
+  final String id;
+  final String clientId;
+  final String caregiverId;
+  final String shiftId;
+  final String healthStatus;
+  final String activities;
+  final String observations;
+  final String medicationAdherence;
+  final String mood;
+  final String note;
+  final DateTime timestamp;
+  final bool isVisibleToClient;
+  final bool isLate;
+
+  CareNote({
+    String? id,
+    required this.clientId,
+    required this.caregiverId,
+    required this.shiftId,
+    required this.healthStatus,
+    required this.activities,
+    required this.observations,
+    required this.medicationAdherence,
+    required this.mood,
+    required this.note,
+    required this.timestamp,
+    this.isVisibleToClient = false,
+    this.isLate = false,
+  }) : id = id ?? const Uuid().v4();
+}
+
+===== lib/models/client.dart =====
+class Client {
+  final String id;
+  final String name;
+  final String email;
+  final String address;
+  final String carePlan;
+
+  Client({
+    required this.id,
+    required this.name,
+    required this.address,
+    required this.carePlan,
+    required this.email,
+  });
+}
+
+===== lib/models/medication_record.dart =====
+class MedicationRecord {
+  final String id;
+  final String clientId;
+  final String medicationName;
+  final String dosage;
+  final DateTime administrationTime;
+  final String notes;
+
+  MedicationRecord({
+    required this.id,
+    required this.clientId,
+    required this.medicationName,
+    required this.dosage,
+    required this.administrationTime,
+    required this.notes,
+  });
+}
+
+===== lib/models/message.dart =====
+class Message {
+  final String id;
+  final String senderId;
+  final String receiverId;
+  final String content;
+  final DateTime timestamp;
+  final bool isRead;
+
+  Message({
+    required this.id,
+    required this.senderId,
+    required this.receiverId,
+    required this.content,
+    required this.timestamp,
+    this.isRead = false,
+  });
+}
+
+===== lib/models/payment.dart =====
+import 'package:flutter/material.dart';
+
+class Payment {
+  final String id;
+  final String invoiceNumber;
+  final double amount;
+  final DateTime dueDate;
+  final String status;
+  final String description;
+  final String servicePeriod;
+  final double hoursBilled;
+  final double rate;
+
+  Payment({
+    required this.id,
+    required this.invoiceNumber,
+    required this.amount,
+    required this.dueDate,
+    required this.status,
+    required this.description,
+    required this.servicePeriod,
+    required this.hoursBilled,
+    required this.rate,
+  });
+
+  Color getStatusColor() {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return const Color(0xFFE67E22);
+      case 'overdue':
+        return const Color(0xFFE74C3C);
+      case 'paid':
+        return const Color(0xFF00A86B);
+      default:
+        return const Color(0xFF7F8C8D);
+    }
+  }
+
+  IconData getStatusIcon() {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Icons.pending;
+      case 'overdue':
+        return Icons.warning;
+      case 'paid':
+        return Icons.check_circle;
+      default:
+        return Icons.info;
+    }
+  }
+}
+
+===== lib/models/task.dart =====
+class Task {
+  final String id;
+  final String title;
+  final DateTime dueDate;
+  bool isCompleted;
+  final String clientId;
+  final String clientName;
+  final String description;
+
+  Task({
+    required this.id,
+    required this.title,
+    required this.dueDate,
+    required this.isCompleted,
+    required this.clientId,
+    required this.clientName,
+    required this.description,
+  });
+}
+
+===== lib/models/user.dart =====
+class User {
+  final String id;
+  final String role; // e.g., 'admin', 'caregiver', 'family'
+  final String name;
+  final String email;
+
+  User({
+    required this.id,
+    required this.role,
+    required this.name,
+    required this.email,
+  });
+}
+

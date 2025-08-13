@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 
 class CareNoteProvider with ChangeNotifier {
-  List<CareNote> _notes = [
+  final List<CareNote> _notes = [
     CareNote(
       id: const Uuid().v4(),
       clientId: 'f1',

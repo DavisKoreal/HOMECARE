@@ -3,14 +3,19 @@ $output = "directory.txt"
 
 # Clear or create the output file
 Set-Content -Path $output -Value $null
+$contentAdded = $false
+
+Write-Output "Script started. Current directory: $(Get-Location)"
 
 # Find all directories containing .dart or .yaml files
 Get-ChildItem -Directory -Recurse | ForEach-Object {
     $dir = $_
-    # Find matching files in this directory
-    $files = Get-ChildItem -Path $dir.FullName -File -Include *.dart,*.yaml | 
+    Write-Output "Checking directory: $($dir.FullName)"
+    # Find matching files in this directory and subdirectories
+    $files = Get-ChildItem -Path $dir.FullName -File -Include *.dart,*.yaml -Recurse | 
              Select-Object -ExpandProperty Name | 
              Sort-Object
+    Write-Output "Found files: $($files -join ', ')"
 
     # If there are matching files in this directory
     if ($files) {
@@ -25,7 +30,12 @@ Get-ChildItem -Directory -Recurse | ForEach-Object {
 
         # Add empty line between directories
         Add-Content -Path $output -Value ""
+        $contentAdded = $true
     }
 }
 
-Write-Output "Directory structure has been saved to $output"
+if ($contentAdded) {
+    Write-Output "Directory structure has been saved to $output"
+} else {
+    Write-Output "No .dart or .yaml files found, nothing written to $output"
+}
