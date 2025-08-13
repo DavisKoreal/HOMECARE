@@ -1,47 +1,42 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/models/care_note.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
-import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 class CareNoteProvider with ChangeNotifier {
-  final List<CareNote> _notes = [
-    CareNote(
-      id: const Uuid().v4(),
-      clientId: 'f1',
-      caregiverId: 'cg1',
-      shiftId: 's1',
-      healthStatus: 'Stable, no new issues',
-      activities: 'Assisted with morning walk and meal prep',
-      observations: 'Client was cooperative',
-      medicationAdherence: 'Aspirin 100mg taken as prescribed',
-      mood: 'Cheerful',
-      note: 'Daily check completed',
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      isVisibleToClient: true,
-      isLate: false,
-    ),
-    CareNote(
-      id: const Uuid().v4(),
-      clientId: 'f1',
-      caregiverId: 'cg1',
-      shiftId: 's2',
-      healthStatus: 'Slight fatigue reported',
-      activities: 'Helped with bathing and exercises',
-      observations: 'Client needed extra rest',
-      medicationAdherence: 'Lisinopril 10mg taken',
-      mood: 'Calm',
-      note: 'Evening check',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      isVisibleToClient: false,
-      isLate: true,
-    ),
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final List<CareNote> _notes = [];
 
   List<CareNote> get notes => _notes;
 
-  List<CareNote> getNotesForClient(String clientId,
-      {bool onlyVisible = false}) {
+  Future<void> fetchNotes() async {
+    try {
+      final snapshot = await _firestore.collection('care_notes').get();
+      _notes.clear();
+      _notes.addAll(snapshot.docs.map((doc) => CareNote(
+        id: doc.id,
+        clientId: doc['clientId'],
+        caregiverId: doc['caregiverId'],
+        shiftId: doc['shiftId'],
+        healthStatus: doc['healthStatus'],
+        activities: doc['activities'],
+        observations: doc['observations'],
+        medicationAdherence: doc['medicationAdherence'],
+        mood: doc['mood'],
+        note: doc['note'],
+        timestamp: (doc['timestamp'] as Timestamp).toDate(),
+        isVisibleToClient: doc['isVisibleToClient'],
+        isLate: doc['isLate'],
+      )).toList());
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching notes: $e');
+    }
+  }
+
+  List<CareNote> getNotesForClient(String clientId, {bool onlyVisible = false}) {
     return _notes
         .where((note) =>
             note.clientId == clientId &&
@@ -77,8 +72,7 @@ class CareNoteProvider with ChangeNotifier {
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text('Late Submission'),
           content: const Text(
               'This note is being submitted more than 12 hours after the shift ended.'),
@@ -93,6 +87,7 @@ class CareNoteProvider with ChangeNotifier {
     }
 
     final newNote = CareNote(
+      id: const Uuid().v4(),
       clientId: clientId,
       caregiverId: caregiverId,
       shiftId: shiftId,
@@ -105,13 +100,33 @@ class CareNoteProvider with ChangeNotifier {
       timestamp: now,
       isLate: isLate,
     );
-    _notes.insert(0, newNote);
-    notifyListeners();
+
+    try {
+      await _firestore.collection('care_notes').doc(newNote.id).set({
+        'clientId': clientId,
+        'caregiverId': caregiverId,
+        'shiftId': shiftId,
+        'healthStatus': healthStatus,
+        'activities': activities,
+        'observations': observations,
+        'medicationAdherence': medicationAdherence,
+        'mood': mood,
+        'note': note,
+        'timestamp': Timestamp.fromDate(now),
+        'isVisibleToClient': false,
+        'isLate': isLate,
+      });
+      _notes.insert(0, newNote);
+      notifyListeners();
+    } catch (e) {
+      print('Error adding note: $e');
+    }
   }
 
-  void toggleVisibility(String noteId) {
+  Future<void> toggleVisibility(String noteId) async {
     final index = _notes.indexWhere((note) => note.id == noteId);
     if (index != -1) {
+      final newVisibility = !_notes[index].isVisibleToClient;
       _notes[index] = CareNote(
         id: _notes[index].id,
         clientId: _notes[index].clientId,
@@ -124,10 +139,17 @@ class CareNoteProvider with ChangeNotifier {
         mood: _notes[index].mood,
         note: _notes[index].note,
         timestamp: _notes[index].timestamp,
-        isVisibleToClient: !_notes[index].isVisibleToClient,
+        isVisibleToClient: newVisibility,
         isLate: _notes[index].isLate,
       );
-      notifyListeners();
+      try {
+        await _firestore.collection('care_notes').doc(noteId).update({
+          'isVisibleToClient': newVisibility,
+        });
+        notifyListeners();
+      } catch (e) {
+        print('Error toggling visibility: $e');
+      }
     }
   }
 }

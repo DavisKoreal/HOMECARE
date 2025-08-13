@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/models/client.dart';
 import 'package:homecare0x1/providers/location_provider.dart';
@@ -41,77 +42,10 @@ class Caregiver {
 }
 
 class ShiftAssignmentProvider with ChangeNotifier {
-  final List<Caregiver> _caregivers = [
-    Caregiver(id: 'cg1', name: 'Emma Wilson', isAvailable: true),
-    Caregiver(id: 'cg2', name: 'Liam Brown', isAvailable: true),
-    Caregiver(id: 'cg3', name: 'Olivia Davis', isAvailable: false),
-    Caregiver(id: 'cg4', name: 'Noah Taylor', isAvailable: true),
-  ];
-
-  final List<Client> _clients = [
-    Client(
-      id: 'f1',
-      name: 'Family Member',
-      email: 'family@example.com',
-      address: '123 Elm St, Springfield',
-      carePlan: 'Daily care',
-    ),
-    Client(
-      id: 'f2',
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      address: '456 Oak Ave, Springfield',
-      carePlan: 'Weekly check-in',
-    ),
-    Client(
-      id: 'f3',
-      name: 'Alice Johnson',
-      email: 'alice.johnson@example.com',
-      address: '789 Pine Rd, Springfield',
-      carePlan: 'Post-op care',
-    ),
-    Client(
-      id: 'f4',
-      name: 'Bob Wilson',
-      email: 'bob.wilson@example.com',
-      address: '321 Maple Dr, Springfield',
-      carePlan: 'Mobility assistance',
-    ),
-    Client(
-      id: 'f5',
-      name: 'Carol Brown',
-      email: 'carol.brown@example.com',
-      address: '654 Cedar Ln, Springfield',
-      carePlan: 'Medication management',
-    ),
-  ];
-
-  final List<Shift> _shifts = [
-    Shift(
-      id: 's1',
-      clientId: 'f1',
-      clientName: 'John Doe',
-      startTime: DateTime.now().add(const Duration(days: 1, hours: 9)),
-      endTime: DateTime.now().add(const Duration(days: 1, hours: 11)),
-      status: 'pending',
-    ),
-    Shift(
-      id: 's2',
-      clientId: 'f2',
-      clientName: 'Jane Smith',
-      startTime: DateTime.now().add(const Duration(days: 1, hours: 14)),
-      endTime: DateTime.now().add(const Duration(days: 1, hours: 16)),
-      status: 'pending',
-    ),
-    Shift(
-      id: 's3',
-      clientId: 'f3',
-      clientName: 'Alice Johnson',
-      startTime: DateTime.now().add(const Duration(days: 2, hours: 10)),
-      endTime: DateTime.now().add(const Duration(days: 2, hours: 12)),
-      status: 'pending',
-    ),
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final List<Caregiver> _caregivers = [];
+  final List<Client> _clients = [];
+  final List<Shift> _shifts = [];
 
   List<Caregiver> get availableCaregivers =>
       _caregivers.where((cg) => cg.isAvailable).toList();
@@ -127,6 +61,61 @@ class ShiftAssignmentProvider with ChangeNotifier {
   List<Shift> get allShifts => _shifts;
 
   List<Shift> get shifts => _shifts;
+
+  Future<void> fetchCaregivers() async {
+    try {
+      final snapshot = await _firestore.collection('caregivers').get();
+      _caregivers.clear();
+      _caregivers.addAll(snapshot.docs.map((doc) => Caregiver(
+        id: doc.id,
+        name: doc['name'],
+        isAvailable: doc['isAvailable'],
+      )).toList());
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching caregivers: $e');
+    }
+  }
+
+  Future<void> fetchClients() async {
+    try {
+      final snapshot = await _firestore.collection('clients').get();
+      _clients.clear();
+      _clients.addAll(snapshot.docs.map((doc) => Client(
+        id: doc.id,
+        name: doc['name'],
+        email: doc['email'],
+        address: doc['address'],
+        carePlan: doc['carePlan'],
+      )).toList());
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching clients: $e');
+    }
+  }
+
+  Future<void> fetchShifts() async {
+    try {
+      final snapshot = await _firestore.collection('shifts').get();
+      _shifts.clear();
+      _shifts.addAll(snapshot.docs.map((doc) => Shift(
+        id: doc.id,
+        clientId: doc['clientId'],
+        clientName: doc['clientName'],
+        startTime: (doc['startTime'] as Timestamp).toDate(),
+        endTime: (doc['endTime'] as Timestamp).toDate(),
+        caregiverId: doc['caregiverId'],
+        caregiverName: doc['caregiverName'],
+        status: doc['status'],
+        location: doc['location'] != null
+            ? Location(latitude: doc['location']['latitude'], longitude: doc['location']['longitude'])
+            : null,
+      )).toList());
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching shifts: $e');
+    }
+  }
 
   List<Shift> getShiftsForCaregiver(String caregiverId) {
     return _shifts.where((shift) => shift.caregiverId == caregiverId).toList();
@@ -170,16 +159,28 @@ class ShiftAssignmentProvider with ChangeNotifier {
     if (_isShiftOverlap(startTime, endTime, null, clientId)) {
       throw Exception('Shift overlaps with existing shift for client');
     }
+    final shiftId = 's${DateTime.now().millisecondsSinceEpoch}';
     final shift = Shift(
-      id: 's${_shifts.length + 1}',
+      id: shiftId,
       clientId: clientId,
       clientName: clientName,
       startTime: startTime,
       endTime: endTime,
       status: 'request',
     );
-    _shifts.add(shift);
-    notifyListeners();
+    try {
+      await _firestore.collection('shifts').doc(shiftId).set({
+        'clientId': clientId,
+        'clientName': clientName,
+        'startTime': Timestamp.fromDate(startTime),
+        'endTime': Timestamp.fromDate(endTime),
+        'status': 'request',
+      });
+      _shifts.add(shift);
+      notifyListeners();
+    } catch (e) {
+      print('Error requesting shift: $e');
+    }
   }
 
   Future<void> addShift({
@@ -208,8 +209,9 @@ class ShiftAssignmentProvider with ChangeNotifier {
     if (_isShiftOverlap(startTime, endTime, caregiverId, clientId)) {
       throw Exception('Shift overlaps with existing shift for client');
     }
+    final shiftId = 's${DateTime.now().millisecondsSinceEpoch}';
     final shift = Shift(
-      id: 's${_shifts.length + 1}',
+      id: shiftId,
       clientId: clientId,
       clientName: clientName,
       startTime: startTime,
@@ -218,8 +220,21 @@ class ShiftAssignmentProvider with ChangeNotifier {
       caregiverName: caregiverName,
       status: 'pending',
     );
-    _shifts.add(shift);
-    notifyListeners();
+    try {
+      await _firestore.collection('shifts').doc(shiftId).set({
+        'clientId': clientId,
+        'clientName': clientName,
+        'startTime': Timestamp.fromDate(startTime),
+        'endTime': Timestamp.fromDate(endTime),
+        'caregiverId': caregiverId,
+        'caregiverName': caregiverName,
+        'status': 'pending',
+      });
+      _shifts.add(shift);
+      notifyListeners();
+    } catch (e) {
+      print('Error adding shift: $e');
+    }
   }
 
   Future<void> updateShift({
@@ -248,13 +263,23 @@ class ShiftAssignmentProvider with ChangeNotifier {
         _shifts[shiftIndex].clientId)) {
       throw Exception('Shift overlaps with existing shift');
     }
-    _shifts[shiftIndex].startTime = startTime;
-    _shifts[shiftIndex].endTime = endTime;
-    if (caregiverId != null && caregiverName != null) {
-      _shifts[shiftIndex].caregiverId = caregiverId;
-      _shifts[shiftIndex].caregiverName = caregiverName;
+    try {
+      await _firestore.collection('shifts').doc(shiftId).update({
+        'startTime': Timestamp.fromDate(startTime),
+        'endTime': Timestamp.fromDate(endTime),
+        if (caregiverId != null) 'caregiverId': caregiverId,
+        if (caregiverName != null) 'caregiverName': caregiverName,
+      });
+      _shifts[shiftIndex].startTime = startTime;
+      _shifts[shiftIndex].endTime = endTime;
+      if (caregiverId != null && caregiverName != null) {
+        _shifts[shiftIndex].caregiverId = caregiverId;
+        _shifts[shiftIndex].caregiverName = caregiverName;
+      }
+      notifyListeners();
+    } catch (e) {
+      print('Error updating shift: $e');
     }
-    notifyListeners();
   }
 
   Future<void> updateShiftStatus({
@@ -266,25 +291,45 @@ class ShiftAssignmentProvider with ChangeNotifier {
     if (status == 'in_session' && location == null) {
       throw Exception('Location is required for check-in');
     }
-    shift.status = status;
-    if (location != null) {
-      shift.location = location;
+    try {
+      await _firestore.collection('shifts').doc(shiftId).update({
+        'status': status,
+        if (location != null) 'location': {
+          'latitude': location.latitude,
+          'longitude': location.longitude,
+        },
+      });
+      shift.status = status;
+      if (location != null) {
+        shift.location = location;
+      }
+      notifyListeners();
+    } catch (e) {
+      print('Error updating shift status: $e');
     }
-    notifyListeners();
   }
 
-  void assignShift(String shiftId, String caregiverId, String caregiverName) {
+  Future<void> assignShift(String shiftId, String caregiverId, String caregiverName) async {
     final shift = _shifts.firstWhere((shift) => shift.id == shiftId);
     if (_isShiftOverlap(
         shift.startTime, shift.endTime, caregiverId, shift.clientId)) {
       throw Exception(
           'Caregiver is already assigned to another shift at this time');
     }
-    shift.caregiverId = caregiverId;
-    shift.caregiverName = caregiverName;
-    if (shift.status == 'request') {
-      shift.status = 'pending';
+    try {
+      await _firestore.collection('shifts').doc(shiftId).update({
+        'caregiverId': caregiverId,
+        'caregiverName': caregiverName,
+        'status': shift.status == 'request' ? 'pending' : shift.status,
+      });
+      shift.caregiverId = caregiverId;
+      shift.caregiverName = caregiverName;
+      if (shift.status == 'request') {
+        shift.status = 'pending';
+      }
+      notifyListeners();
+    } catch (e) {
+      print('Error assigning shift: $e');
     }
-    notifyListeners();
   }
 }

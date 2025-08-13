@@ -1,76 +1,54 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/models/payment.dart';
 
 class PaymentProvider with ChangeNotifier {
-  final List<Payment> _payments = [
-    Payment(
-      id: 'p1',
-      invoiceNumber: 'HC-2025-001',
-      amount: 850.00,
-      dueDate: DateTime(2025, 2, 15),
-      status: 'Pending',
-      description: 'January 2025 caregiving services',
-      servicePeriod: 'Jan 1-31, 2025',
-      hoursBilled: 120.0,
-      rate: 25.0,
-    ),
-    Payment(
-      id: 'p2',
-      invoiceNumber: 'HC-2024-012',
-      amount: 400.00,
-      dueDate: DateTime(2025, 1, 10),
-      status: 'Overdue',
-      description: 'December 2024 caregiving services',
-      servicePeriod: 'Dec 1-31, 2024',
-      hoursBilled: 80.0,
-      rate: 20.0,
-    ),
-    Payment(
-      id: 'p3',
-      invoiceNumber: 'HC-2024-011',
-      amount: 720.00,
-      dueDate: DateTime(2024, 12, 15),
-      status: 'Paid',
-      description: 'November 2024 caregiving services',
-      servicePeriod: 'Nov 1-30, 2024',
-      hoursBilled: 100.0,
-      rate: 22.0,
-    ),
-    Payment(
-      id: 'p4',
-      invoiceNumber: 'HC-2024-010',
-      amount: 680.00,
-      dueDate: DateTime(2024, 11, 15),
-      status: 'Paid',
-      description: 'October 2024 caregiving services',
-      servicePeriod: 'Oct 1-31, 2024',
-      hoursBilled: 90.0,
-      rate: 21.0,
-    ),
-  ];
-
-  final List<Map<String, dynamic>> _paymentMethods = [
-    {
-      'id': 'pm1',
-      'title': 'Credit Card ending in 4532',
-      'subtitle': 'Primary payment method',
-      'icon': Icons.credit_card,
-      'color': const Color(0xFF3498DB),
-      'isDefault': true,
-    },
-    {
-      'id': 'pm2',
-      'title': 'Bank Account ending in 8901',
-      'subtitle': 'Backup payment method',
-      'icon': Icons.account_balance,
-      'color': const Color(0xFF16A085),
-      'isDefault': false,
-    },
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final List<Payment> _payments = [];
+  final List<Map<String, dynamic>> _paymentMethods = [];
 
   List<Payment> get payments => _payments;
 
   List<Map<String, dynamic>> get paymentMethods => _paymentMethods;
+
+  Future<void> fetchPayments() async {
+    try {
+      final snapshot = await _firestore.collection('payments').get();
+      _payments.clear();
+      _payments.addAll(snapshot.docs.map((doc) => Payment(
+        id: doc.id,
+        invoiceNumber: doc['invoiceNumber'],
+        amount: doc['amount'].toDouble(),
+        dueDate: (doc['dueDate'] as Timestamp).toDate(),
+        status: doc['status'],
+        description: doc['description'],
+        servicePeriod: doc['servicePeriod'],
+        hoursBilled: doc['hoursBilled'].toDouble(),
+        rate: doc['rate'].toDouble(),
+      )).toList());
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching payments: $e');
+    }
+  }
+
+  Future<void> fetchPaymentMethods() async {
+    try {
+      final snapshot = await _firestore.collection('payment_methods').get();
+      _paymentMethods.clear();
+      _paymentMethods.addAll(snapshot.docs.map((doc) => {
+        'id': doc.id,
+        'title': doc['title'],
+        'subtitle': doc['subtitle'],
+        'icon': Icons.credit_card, // Note: Icons can't be stored in Firestore, handle accordingly
+        'color': Color(doc['color']),
+        'isDefault': doc['isDefault'],
+      }).toList());
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching payment methods: $e');
+    }
+  }
 
   double get totalBilledThisMonth =>
       _payments.where((p) => p.dueDate.month == DateTime.now().month).fold(0.0,
@@ -92,13 +70,37 @@ class PaymentProvider with ChangeNotifier {
   int get overduePayments =>
       _payments.where((p) => p.status.toLowerCase() == 'overdue').length;
 
-  void addPayment(Payment payment) {
-    _payments.add(payment);
-    notifyListeners();
+  Future<void> addPayment(Payment payment) async {
+    try {
+      await _firestore.collection('payments').doc(payment.id).set({
+        'invoiceNumber': payment.invoiceNumber,
+        'amount': payment.amount,
+        'dueDate': Timestamp.fromDate(payment.dueDate),
+        'status': payment.status,
+        'description': payment.description,
+        'servicePeriod': payment.servicePeriod,
+        'hoursBilled': payment.hoursBilled,
+        'rate': payment.rate,
+      });
+      _payments.add(payment);
+      notifyListeners();
+    } catch (e) {
+      print('Error adding payment: $e');
+    }
   }
 
-  void addPaymentMethod(Map<String, dynamic> method) {
-    _paymentMethods.add(method);
-    notifyListeners();
+  Future<void> addPaymentMethod(Map<String, dynamic> method) async {
+    try {
+      await _firestore.collection('payment_methods').doc(method['id']).set({
+        'title': method['title'],
+        'subtitle': method['subtitle'],
+        'color': method['color'].value,
+        'isDefault': method['isDefault'],
+      });
+      _paymentMethods.add(method);
+      notifyListeners();
+    } catch (e) {
+      print('Error adding payment method: $e');
+    }
   }
 }

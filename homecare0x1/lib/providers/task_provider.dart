@@ -1,51 +1,42 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/models/task.dart';
 
 class TaskProvider with ChangeNotifier {
-  final List<Task> _tasks = [
-    Task(
-      id: '1',
-      title: 'Check Vitals',
-      dueDate: DateTime.now().add(const Duration(hours: 2)),
-      isCompleted: false,
-      clientId: 'f1',
-      clientName: 'John Doe',
-      description: 'Check blood pressure and heart rate',
-    ),
-    Task(
-      id: '2',
-      title: 'Medication Admin',
-      dueDate: DateTime.now().add(const Duration(hours: 4)),
-      isCompleted: true,
-      clientId: 'f1',
-      clientName: 'John Doe',
-      description: 'Administer morning medications',
-    ),
-    Task(
-      id: '3',
-      title: 'Physical Therapy',
-      dueDate: DateTime.now().add(const Duration(hours: 6)),
-      isCompleted: false,
-      clientId: 'f2',
-      clientName: 'Jane Smith',
-      description: 'Assist with mobility exercises',
-    ),
-    Task(
-      id: '4',
-      title: 'Meal Prep',
-      dueDate: DateTime.now().add(const Duration(days: 1)),
-      isCompleted: false,
-      clientId: 'f3',
-      clientName: 'Alice Johnson',
-      description: 'Prepare lunch and dinner',
-    ),
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final List<Task> _tasks = [];
 
   List<Task> get tasks => _tasks;
 
-  void toggleTaskCompletion(String taskId) {
+  Future<void> fetchTasks() async {
+    try {
+      final snapshot = await _firestore.collection('tasks').get();
+      _tasks.clear();
+      _tasks.addAll(snapshot.docs.map((doc) => Task(
+        id: doc.id,
+        title: doc['title'],
+        dueDate: (doc['dueDate'] as Timestamp).toDate(),
+        isCompleted: doc['isCompleted'],
+        clientId: doc['clientId'],
+        clientName: doc['clientName'],
+        description: doc['description'],
+      )).toList());
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching tasks: $e');
+    }
+  }
+
+  Future<void> toggleTaskCompletion(String taskId) async {
     final task = _tasks.firstWhere((t) => t.id == taskId);
-    task.isCompleted = !task.isCompleted;
-    notifyListeners();
+    try {
+      await _firestore.collection('tasks').doc(taskId).update({
+        'isCompleted': !task.isCompleted,
+      });
+      task.isCompleted = !task.isCompleted;
+      notifyListeners();
+    } catch (e) {
+      print('Error toggling task completion: $e');
+    }
   }
 }
