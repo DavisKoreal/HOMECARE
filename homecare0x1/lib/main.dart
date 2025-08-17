@@ -1,40 +1,40 @@
-import 'package:homecare0x1/providers/location_provider.dart';
-import 'package:homecare0x1/screens/shift_list_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
+import 'package:homecare0x1/providers/care_note_provider.dart';
+import 'package:homecare0x1/providers/location_provider.dart';
+import 'package:homecare0x1/providers/medication_record_provider.dart';
+import 'package:homecare0x1/providers/payment_provider.dart';
+import 'package:homecare0x1/providers/shift_assignment_provider.dart';
+import 'package:homecare0x1/providers/task_provider.dart';
+import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:homecare0x1/screens/admin_calendar_screen.dart';
 import 'package:homecare0x1/screens/admin_dashboard.dart';
+import 'package:homecare0x1/screens/admin_notes_management_screen.dart';
 import 'package:homecare0x1/screens/audit_log_screen.dart';
 import 'package:homecare0x1/screens/care_notes_screen.dart';
 import 'package:homecare0x1/screens/caregiver_calendar_screen.dart';
 import 'package:homecare0x1/screens/caregiver_dashboard.dart';
+import 'package:homecare0x1/screens/caregiver_profile.dart';
 import 'package:homecare0x1/screens/client_list_screen.dart';
 import 'package:homecare0x1/screens/client_profile_screen.dart';
+import 'package:homecare0x1/screens/client_view_shift_history.dart';
 import 'package:homecare0x1/screens/emar_screen.dart';
+import 'package:homecare0x1/screens/family_care_notes.dart';
 import 'package:homecare0x1/screens/family_portal_screen.dart';
 import 'package:homecare0x1/screens/invoice_generation_screen.dart';
 import 'package:homecare0x1/screens/login_screen.dart';
+import 'package:homecare0x1/screens/payment_status.dart';
 import 'package:homecare0x1/screens/shift_assignment_screen.dart';
+import 'package:homecare0x1/screens/shift_list_screen.dart';
 import 'package:homecare0x1/screens/task_list_screen.dart';
 import 'package:homecare0x1/screens/user_profile_screen.dart';
 import 'package:homecare0x1/screens/visit_check_in_screen.dart';
 import 'package:homecare0x1/screens/visit_check_out_screen.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
-import 'package:homecare0x1/providers/user_provider.dart';
-import 'package:homecare0x1/providers/care_note_provider.dart';
-import 'package:homecare0x1/providers/medication_record_provider.dart';
-import 'package:homecare0x1/providers/shift_assignment_provider.dart';
-import 'package:homecare0x1/providers/task_provider.dart';
-import 'package:homecare0x1/providers/payment_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:homecare0x1/screens/payment_status.dart';
-import 'package:homecare0x1/screens/admin_notes_management_screen.dart';
-import 'package:homecare0x1/screens/family_care_notes.dart';
-import 'package:homecare0x1/screens/caregiver_profile.dart';
-import 'package:homecare0x1/screens/client_view_shift_history.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:homecare0x1/services/auth_service.dart';
 import 'firebase_options.dart';
+import 'setup.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,48 +42,10 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize mock users in Firestore (run once for testing)
-  await setupMockUsers();
+  // Initialize mock data in Firestore
+  await setupMockData();
 
   runApp(const HomecareApp());
-}
-
-// Setup mock users in Firestore (run once, safe for production)
-Future<void> setupMockUsers() async {
-  final authService = AuthService();
-  final users = [
-    {
-      'email': 'admin@example.com',
-      'password': 'admin123',
-      'role': 'admin',
-      'name': 'Business Owner',
-    },
-    {
-      'email': 'caregiver@example.com',
-      'password': 'care123',
-      'role': 'caregiver',
-      'name': 'Kind Nurse',
-    },
-    {
-      'email': 'family@example.com',
-      'password': 'fam123',
-      'role': 'family',
-      'name': 'Family Member',
-    },
-  ];
-
-  for (var user in users) {
-    try {
-      await authService.register(
-        email: user['email']!,
-        password: user['password']!,
-        role: user['role']!,
-        name: user['name']!,
-      );
-    } catch (e) {
-      print('Error setting up user ${user['email']}: $e');
-    }
-  }
 }
 
 class HomecareApp extends StatelessWidget {

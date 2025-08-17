@@ -34,6 +34,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
   void initState() {
     super.initState();
     _initializeAnimations();
+    print('Shift Assignment Screen Initialized');
   }
 
   void _initializeAnimations() {
@@ -72,6 +73,68 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
     _slideController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  // Method to handle refresh action
+  Future<void> _refreshData(BuildContext context) async {
+    final provider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: const [
+              CircularProgressIndicator(strokeWidth: 2),
+              SizedBox(width: 12),
+              Text('Refreshing data...'),
+            ],
+          ),
+          duration: const Duration(seconds: 10),
+          backgroundColor: AppTheme.neutral600,
+        ),
+      );
+
+      // Fetch all data
+      await Future.wait([
+        provider.fetchClients(),
+        provider.fetchCaregivers(),
+        provider.fetchShifts(),
+      ]);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Data refreshed successfully'),
+            ],
+          ),
+          backgroundColor: AppTheme.successGreen,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to refresh data: $e'),
+          backgroundColor: AppTheme.errorRed,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   Future<void> _showCreateShiftDialog() async {
@@ -300,9 +363,8 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
   }
 
   void _assignCaregiver(BuildContext context, Shift shift) {
-    final provider =
-        Provider.of<ShiftAssignmentProvider>(context, listen: false);
-    final availableCaregivers = provider.availableCaregivers;
+    final provider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+    final availableCaregivers = provider.availableCaregivers; 
 
     setState(() {
       _selectedShiftId = shift.id;
@@ -475,6 +537,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                   : const Icon(Icons.arrow_forward_ios,
                                       size: 16),
                               onTap: () {
+                                print('Selected Caregiver: ${caregiver.name}');
                                 setModalState(() {
                                   _selectedCaregiverId =
                                       isSelected ? null : caregiver.id;
@@ -811,11 +874,24 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
       showBackButton: true,
       onBackPressed: () =>
           Navigator.pushReplacementNamed(context, Routes.adminDashboard),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateShiftDialog,
-        backgroundColor: AppTheme.primaryBlue,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton:Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              heroTag: 'refreshButton',
+              onPressed: () => _refreshData(context),
+              backgroundColor: AppTheme.neutral600,
+              child: const Icon(Icons.refresh),
+            ),
+            const SizedBox(height: 16),
+            FloatingActionButton(
+              heroTag: 'addShiftButton',
+              onPressed: _showCreateShiftDialog,
+              backgroundColor: AppTheme.primaryBlue,
+              child: const Icon(Icons.add),
+            ),
+          ],
+        ),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
@@ -1002,7 +1078,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Kindly assign caregivers to the following pending shifts',
+                            'Kindly assign caregivers to shifts',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleLarge

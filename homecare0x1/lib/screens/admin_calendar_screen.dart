@@ -28,6 +28,7 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
   @override
   void initState() {
     super.initState();
+    print('Admin Calendar Screen Initialized');
     _focusedDay = DateTime.now();
     _selectedDay = _focusedDay;
     _animationController = AnimationController(
@@ -48,9 +49,8 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
   }
 
   void _loadEvents() {
-    final provider =
-        Provider.of<ShiftAssignmentProvider>(context, listen: false);
-    _events.clear();
+    final provider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+    
     for (final shift in provider.allShifts) {
       final day = DateTime(
           shift.startTime.year, shift.startTime.month, shift.startTime.day);

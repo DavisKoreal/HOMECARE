@@ -13,7 +13,7 @@ class Shift {
   DateTime endTime;
   String? caregiverId;
   String? caregiverName;
-  String status;
+  String status; // 'pending', 'in_session', 'completed', 'cancelled', 'request'
   Location? location;
 
   Shift({
@@ -76,6 +76,13 @@ class ShiftAssignmentProvider with ChangeNotifier {
       print('Error fetching caregivers: $e');
     }
   }
+ 
+  Future<List<Caregiver>> getAvailableCaregivers() async {
+    if (_caregivers.isEmpty) {
+      await fetchCaregivers();
+    }
+    return availableCaregivers;
+  }
 
   Future<void> fetchClients() async {
     try {
@@ -125,13 +132,10 @@ class ShiftAssignmentProvider with ChangeNotifier {
     return _shifts.where((shift) => shift.clientId == clientId).toList();
   }
 
-  bool _isShiftOverlap(DateTime startTime, DateTime endTime,
-      String? caregiverId, String clientId) {
+  bool _isShiftOverlap(DateTime startTime, DateTime endTime, String? caregiverId, String clientId) {
     for (var shift in _shifts) {
-      if ((caregiverId != null && shift.caregiverId == caregiverId) ||
-          shift.clientId == clientId) {
-        if (!(endTime.isBefore(shift.startTime) ||
-            startTime.isAfter(shift.endTime))) {
+      if ((caregiverId != null && shift.caregiverId == caregiverId) ||  shift.clientId == clientId) {
+        if (!(endTime.isBefore(shift.startTime) || startTime.isAfter(shift.endTime))) {
           return true;
         }
       }
@@ -146,10 +150,6 @@ class ShiftAssignmentProvider with ChangeNotifier {
     required DateTime endTime,
     required BuildContext context,
   }) async {
-    final client = _clients.firstWhere(
-      (c) => c.id == clientId && c.name == clientName,
-      orElse: () => throw Exception('Invalid client ID or name'),
-    );
     if (startTime.isAfter(endTime)) {
       throw Exception('Start time must be before end time');
     }
@@ -167,6 +167,9 @@ class ShiftAssignmentProvider with ChangeNotifier {
       startTime: startTime,
       endTime: endTime,
       status: 'request',
+      location: LocationProvider().getRandomLocation(),
+      caregiverId: null,
+      caregiverName: null,
     );
     try {
       await _firestore.collection('shifts').doc(shiftId).set({
@@ -175,6 +178,12 @@ class ShiftAssignmentProvider with ChangeNotifier {
         'startTime': Timestamp.fromDate(startTime),
         'endTime': Timestamp.fromDate(endTime),
         'status': 'request',
+        'location': {
+          'latitude': shift.location!.latitude,
+          'longitude': shift.location!.longitude,
+        },
+        'caregiverId': null,
+        'caregiverName': null,
       });
       _shifts.add(shift);
       notifyListeners();
@@ -311,11 +320,10 @@ class ShiftAssignmentProvider with ChangeNotifier {
 
   Future<void> assignShift(String shiftId, String caregiverId, String caregiverName) async {
     final shift = _shifts.firstWhere((shift) => shift.id == shiftId);
-    if (_isShiftOverlap(
-        shift.startTime, shift.endTime, caregiverId, shift.clientId)) {
-      throw Exception(
-          'Caregiver is already assigned to another shift at this time');
+    if (_isShiftOverlap(shift.startTime, shift.endTime, caregiverId, shift.clientId)) {
+      throw Exception('Caregiver is already assigned to another shift at this time');
     }
+    
     try {
       await _firestore.collection('shifts').doc(shiftId).update({
         'caregiverId': caregiverId,

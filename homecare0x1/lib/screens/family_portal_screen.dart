@@ -5,7 +5,7 @@ import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:homecare0x1/widgets/common/modern_button.dart';
+// import 'package:homecare0x1/widgets/common/modern_button.dart';
 
 class FamilyPortalScreen extends StatefulWidget {
   const FamilyPortalScreen({super.key});
@@ -69,7 +69,7 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
     super.dispose();
   }
 
-  Future<void> _showRequestShiftDialog(BuildContext context) async {
+  Future<void> _showRequestShiftDialog(BuildContext context) async { 
     DateTime? startTime = DateTime.now().add(const Duration(hours: 1));
     DateTime? endTime = startTime.add(const Duration(hours: 2));
     String? errorMessage;
@@ -627,9 +627,13 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                                       Provider.of<UserProvider>(context,
                                           listen: false);
                                   final shiftProvider =
-                                      Provider.of<ShiftAssignmentProvider>(
+                                      Provider.of<ShiftAssignmentProvider>( 
                                           context,
                                           listen: false);
+                                  if (userProvider.user == null) {
+                                    throw Exception(
+                                        'User not logged in. Please log in first.');
+                                  }
                                   await shiftProvider.requestShift(
                                     clientId: userProvider.user!.id,
                                     clientName: userProvider.user!.name,
@@ -660,7 +664,7 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                                             ),
                                             const SizedBox(width: 12),
                                             const Text(
-                                              'Caregiving session request submitted successfully',
+                                              'Care request submitted ',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w500,
                                               ),
@@ -699,7 +703,7 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                                   ),
                                   const SizedBox(width: 8),
                                   const Text(
-                                    'Submit Request',
+                                    'Submit',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -897,42 +901,42 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF7F8C8D),
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'View',
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward,
-                        color: color,
-                        size: 14,
-                      ),
-                    ],
-                  ),
-                ),
+                // Text(
+                //   subtitle,
+                //   style: const TextStyle(
+                //     color: Color(0xFF7F8C8D),
+                //     fontSize: 14,
+                //     height: 1.4,
+                //   ),
+                // ),
+                // const SizedBox(height: 16),
+                // Container(
+                //   padding:
+                //       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                //   decoration: BoxDecoration(
+                //     color: color.withOpacity(0.1),
+                //     borderRadius: BorderRadius.circular(20),
+                //   ),
+                //   child: Row(
+                //     mainAxisSize: MainAxisSize.min,
+                //     children: [
+                //       Text(
+                //         'View',
+                //         style: TextStyle(
+                //           color: color,
+                //           fontSize: 12,
+                //           fontWeight: FontWeight.w600,
+                //         ),
+                //       ),
+                //       const SizedBox(width: 4),
+                //       Icon(
+                //         Icons.arrow_forward,
+                //         color: color,
+                //         size: 14,
+                //       ),
+                //     ],
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -1221,44 +1225,43 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                     ),
                     const SizedBox(height: 16),
 
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildModernStat(
-                            title: 'Recent Visits',
-                            value: '4',
-                            percent: 0.8,
-                            color: const Color(0xFF3498DB),
-                            icon: Icons.event_available,
-                            animation: _statsAnimations[0],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildModernStat(
-                            title: 'Care Notes',
-                            value: '12',
-                            percent: 0.75,
-                            color: const Color(0xFF00A86B),
-                            icon: Icons.note_outlined,
-                            animation: _statsAnimations[1],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildModernStat(
-                            title: 'Messages',
-                            value: '5',
-                            percent: 0.5,
-                            color: const Color(0xFFE67E22),
-                            icon: Icons.message_outlined,
-                            animation: _statsAnimations[2],
-                          ),
-                        ),
-                      ],
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                            _buildModernStat(
+                              title: 'Recent Visits',
+                              value: '4',
+                              percent: 0.8,
+                              color: const Color(0xFF3498DB),
+                              icon: Icons.event_available,
+                              animation: _statsAnimations[0],
+                            ),
+                          const SizedBox(width: 16),
+                             _buildModernStat(
+                              title: 'Care Notes',
+                              value: '12',
+                              percent: 0.75,
+                              color: const Color(0xFF00A86B),
+                              icon: Icons.note_outlined,
+                              animation: _statsAnimations[1],
+                            ),
+                          const SizedBox(width: 16),
+                           _buildModernStat(
+                              title: 'Messages',
+                              value: '5',
+                              percent: 0.5,
+                              color: const Color(0xFFE67E22),
+                              icon: Icons.message_outlined,
+                              animation: _statsAnimations[2],
+                            ),
+                        ],
+                      ),
                     ),
 
                     const SizedBox(height: 32),
+        
 
                     // Quick Actions Section
                     const Text(
@@ -1280,7 +1283,7 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                       childAspectRatio: 0.85,
                       children: [
                         _buildModernActionCard(
-                          title: 'Request Caregiving Session',
+                          title: 'Request Care Session',
                           subtitle:
                               'Request a new caregiving session for your loved one',
                           icon: Icons.schedule,

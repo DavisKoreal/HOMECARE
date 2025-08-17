@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -17,10 +18,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late List<Animation<double>> _statsAnimations;
+  ShiftAssignmentProvider? shiftProvider; // Will be initialized in initState
 
   @override
   void initState() {
     super.initState();
+    // Use WidgetsBinding to ensure context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      shiftProvider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+      shiftProvider?.fetchClients();
+      shiftProvider?.fetchCaregivers();
+      shiftProvider?.fetchShifts();
+      print('Admin dashboard screen Initialized and the fetchers ran for the shift provider');
+      setState(() {}); // Update UI if needed
+    });
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -216,42 +227,42 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF7F8C8D),
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Open',
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward,
-                        color: color,
-                        size: 14,
-                      ),
-                    ],
-                  ),
-                ),
+                // Text(
+                //   subtitle,
+                //   style: const TextStyle(
+                //     color: Color(0xFF7F8C8D),
+                //     fontSize: 14,
+                //     height: 1.4,
+                //   ),
+                // ),
+                // const SizedBox(height: 16),
+                // Container(
+                //   padding:
+                //       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                //   decoration: BoxDecoration(
+                //     color: color.withOpacity(0.1),
+                //     borderRadius: BorderRadius.circular(20),
+                //   ),
+                //   child: Row(
+                //     mainAxisSize: MainAxisSize.min,
+                //     children: [
+                //       Text(
+                //         'Open',
+                //         style: TextStyle(
+                //           color: color,
+                //           fontSize: 12,
+                //           fontWeight: FontWeight.w600,
+                //         ),
+                //       ),
+                //       const SizedBox(width: 4),
+                //       Icon(
+                //         Icons.arrow_forward,
+                //         color: color,
+                //         size: 14,
+                //       ),
+                //     ],
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -551,41 +562,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildModernStat(
-                            title: 'Active Clients',
-                            value: '24',
-                            percent: 0.75,
-                            color: const Color(0xFF00A86B),
-                            icon: Icons.people_outline,
-                            animation: _statsAnimations[0],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildModernStat(
-                            title: 'Care Staff',
-                            value: '15',
-                            percent: 0.6,
-                            color: const Color(0xFF3498DB),
-                            icon: Icons.medical_services_outlined,
-                            animation: _statsAnimations[1],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildModernStat(
-                            title: 'Pending Tasks',
-                            value: '8',
-                            percent: 0.3,
-                            color: const Color(0xFFE67E22),
-                            icon: Icons.assignment_outlined,
-                            animation: _statsAnimations[2],
-                          ),
-                        ),
-                      ],
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                      _buildModernStat(
+                        title: 'Active Clients',
+                        value: shiftProvider?.clients.length.toString() ?? '0',
+                        percent: 0.75,
+                        color: const Color(0xFF00A86B),
+                        icon: Icons.people_outline,
+                        animation: _statsAnimations[0],
+                      ),
+                      const SizedBox(width: 16),
+                      _buildModernStat(
+                        title: 'Care Staff',
+                        value: shiftProvider?.availableCaregivers.length.toString() ?? '0',
+                        percent: 0.6,
+                        color: const Color(0xFF3498DB),
+                        icon: Icons.medical_services_outlined,
+                        animation: _statsAnimations[1],
+                      ),
+                      const SizedBox(width: 16),
+                      _buildModernStat(
+                        title: 'Pending Tasks',
+                        value: shiftProvider?.shifts.where((shift) => shift.status == 'pending').length.toString() ?? '0',
+                        percent: 0.3,
+                        color: const Color(0xFFE67E22),
+                        icon: Icons.assignment_outlined,
+                        animation: _statsAnimations[2],
+                      ),
+                    ],
+                      ),
                     ),
                     const SizedBox(height: 40),
                     Row(

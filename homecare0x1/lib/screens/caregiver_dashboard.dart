@@ -246,42 +246,42 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF7F8C8D),
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Open',
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward,
-                        color: color,
-                        size: 14,
-                      ),
-                    ],
-                  ),
-                ),
+                // Text(
+                //   subtitle,
+                //   style: const TextStyle(
+                //     color: Color(0xFF7F8C8D),
+                //     fontSize: 14,
+                //     height: 1.4,
+                //   ),
+                // ),
+                // const SizedBox(height: 16),
+                // Container(
+                //   padding:
+                //       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                //   decoration: BoxDecoration(
+                //     color: color.withOpacity(0.1),
+                //     borderRadius: BorderRadius.circular(20),
+                //   ),
+                //   child: Row(
+                //     mainAxisSize: MainAxisSize.min,
+                //     children: [
+                //       Text(
+                //         'Open',
+                //         style: TextStyle(
+                //           color: color,
+                //           fontSize: 12,
+                //           fontWeight: FontWeight.w600,
+                //         ),
+                //       ),
+                //       const SizedBox(width: 4),
+                //       Icon(
+                //         Icons.arrow_forward,
+                //         color: color,
+                //         size: 14,
+                //       ),
+                //     ],
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -958,41 +958,39 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildModernStat(
-                            title: 'Assigned Clients',
-                            value: '5',
-                            percent: 0.83,
-                            color: const Color(0xFF3498DB),
-                            icon: Icons.people_outline,
-                            animation: _statsAnimations[0],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildModernStat(
-                            title: 'Pending Tasks',
-                            value: '3',
-                            percent: 0.4,
-                            color: const Color(0xFFE67E22),
-                            icon: Icons.task_outlined,
-                            animation: _statsAnimations[1],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildModernStat(
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          _buildModernStat(
+                              title: 'Assigned Clients',
+                              value: '5',
+                              percent: 0.83,
+                              color: const Color(0xFF3498DB),
+                              icon: Icons.people_outline,
+                              animation: _statsAnimations[0],
+                            ),
+                          const SizedBox(width: 16),
+                          _buildModernStat(
+                              title: 'Pending Tasks',
+                              value: '3',
+                              percent: 0.4,
+                              color: const Color(0xFFE67E22),
+                              icon: Icons.task_outlined,
+                              animation: _statsAnimations[1],
+                            ),
+                          const SizedBox(width: 16),
+                          _buildModernStat(
                             title: 'Completed Tasks',
-                            value: '12',
-                            percent: 0.8,
-                            color: const Color(0xFF00A86B),
-                            icon: Icons.check_circle_outline,
-                            animation: _statsAnimations[2],
-                          ),
-                        ),
-                      ],
+                              value: '12',
+                              percent: 0.8,
+                              color: const Color(0xFF00A86B),
+                              icon: Icons.check_circle_outline,
+                              animation: _statsAnimations[2],
+                            ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 32),
                     const Text(
