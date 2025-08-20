@@ -7,6 +7,7 @@ import 'package:homecare0x1/widgets/common/modern_button.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'admin_calendar_screen.dart';
+import 'package:homecare0x1/models/shift.dart';
 
 class ShiftListScreen extends StatefulWidget {
   final DateTime selectedDay;

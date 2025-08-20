@@ -8,6 +8,7 @@ import 'package:homecare0x1/widgets/common/modern_button.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:homecare0x1/models/shift.dart';
 
 class CaregiverCalendarScreen extends StatefulWidget {
   const CaregiverCalendarScreen({super.key});

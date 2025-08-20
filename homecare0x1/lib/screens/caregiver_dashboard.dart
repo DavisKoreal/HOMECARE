@@ -7,6 +7,8 @@ import 'package:homecare0x1/providers/care_note_provider.dart';
 import 'package:homecare0x1/providers/medication_record_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:homecare0x1/models/shift.dart';
+import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 
 class CaregiverDashboardScreen extends StatefulWidget {
   const CaregiverDashboardScreen({super.key});
@@ -23,6 +25,8 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late List<Animation<double>> _statsAnimations;
+  List<Shift> caregivershifts = [];
+
 
   @override
   void initState() {
@@ -62,6 +66,12 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
     Future.delayed(const Duration(milliseconds: 500), () {
       _statsAnimationController.forward();
     });
+    // load caregiver shifts
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final shiftProvider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+    if (userProvider.user != null) {
+      caregivershifts = shiftProvider.getShiftsForCaregiver(userProvider.user!.id);
+    }
   }
 
   @override
@@ -293,7 +303,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
   List<Widget> _buildDashboardActions(BuildContext context) {
     return [
       _buildModernActionCard(
-        title: 'Caregiver Calendar',
+        title: 'Your Calendar',
         subtitle: 'View your assigned shifts',
         icon: Icons.calendar_today,
         color: const Color(0xFF1E88E5),
@@ -386,6 +396,8 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
 
   Future<bool> _requestLocationPermission(BuildContext context) async {
     try {
+      // this returns true as a workaround before I can explicitly write the imperative code for getting the location from the device
+      
       return true;
       var status = await Permission.location.status;
       if (status.isDenied || status.isPermanentlyDenied) {

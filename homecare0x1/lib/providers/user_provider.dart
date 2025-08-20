@@ -19,7 +19,7 @@ class UserProvider with ChangeNotifier {
           name: userData['name'],
           email: userData['email'],
         );
-        notifyListeners();
+        notifyListeners(); 
       }
     } catch (e) {
       print('Error fetching user: $e');

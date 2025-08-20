@@ -10,7 +10,12 @@ class TaskProvider with ChangeNotifier {
 
   Future<void> fetchTasks() async {
     try {
-      final snapshot = await _firestore.collection('tasks').get();
+      // final snapshot = await _firestore.collection('tasks').get();
+      final snapshot = await _firestore
+        .collection('tasks')
+        .orderBy('createdAt', descending: true)
+        .limit(500)
+        .get();
       _tasks.clear();
       _tasks.addAll(snapshot.docs.map((doc) => Task(
         id: doc.id,

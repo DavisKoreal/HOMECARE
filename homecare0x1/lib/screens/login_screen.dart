@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           setState(() {
             _errorMessage = 'Invalid email or password';
           });
-        }
+        } 
       } on auth.FirebaseAuthException catch (e) {
         setState(() {
           _isLoading = false;

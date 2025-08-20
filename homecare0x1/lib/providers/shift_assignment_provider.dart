@@ -4,30 +4,8 @@ import 'package:homecare0x1/models/client.dart';
 import 'package:homecare0x1/providers/location_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:provider/provider.dart';
-
-class Shift {
-  final String id;
-  final String clientId;
-  String clientName;
-  DateTime startTime;
-  DateTime endTime;
-  String? caregiverId;
-  String? caregiverName;
-  String status; // 'pending', 'in_session', 'completed', 'cancelled', 'request'
-  Location? location;
-
-  Shift({
-    required this.id,
-    required this.clientId,
-    required this.clientName,
-    required this.startTime,
-    required this.endTime,
-    this.caregiverId,
-    this.caregiverName,
-    required this.status,
-    this.location,
-  });
-}
+import 'package:homecare0x1/models/shift.dart';
+import 'package:homecare0x1/models/location.dart';
 
 class Caregiver {
   final String id;
@@ -103,7 +81,13 @@ class ShiftAssignmentProvider with ChangeNotifier {
 
   Future<void> fetchShifts() async {
     try {
-      final snapshot = await _firestore.collection('shifts').get();
+      // final snapshot = await _firestore.collection('shifts').get();
+      // this will fetch the shifts ordered by creation date and limit to 500
+      final snapshot = await _firestore
+        .collection('shifts')
+        .orderBy('createdAt', descending: true)
+        .limit(500)
+        .get();
       _shifts.clear();
       _shifts.addAll(snapshot.docs.map((doc) => Shift(
         id: doc.id,

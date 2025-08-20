@@ -6,6 +6,8 @@ import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:homecare0x1/models/shift.dart';
 
 class ShiftAssignmentScreen extends StatefulWidget {
   const ShiftAssignmentScreen({super.key});
@@ -749,7 +751,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
   }
 
   Widget _buildFilterChips() {
-    final filters = ['All', 'Urgent', 'Today', 'This Week', 'Requests'];
+    final filters = ['All', 'Assigned', 'Complete', 'Requests', 'Today','This Week'];
 
     return Container(
       height: 50,
@@ -900,19 +902,23 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
             builder: (context, provider, child) {
               final unassignedShifts = provider.unassignedShifts;
               final requestShifts = provider.requestShifts;
-
-              // Combine and filter shifts based on search query and filter
               final allShifts = [...unassignedShifts, ...requestShifts];
+              final now = DateTime.now();
+              final startOfDay = DateTime(now.year, now.month, now.day);
+              final startOfWeek = startOfDay.subtract(Duration(days: now.weekday - 1));
+              final endOfWeek = startOfWeek.add(const Duration(days: 7));
+
               final filteredShifts = allShifts.where((shift) {
-                final matchesSearch = _searchQuery.isEmpty ||
-                    shift.clientName
-                        .toLowerCase()
-                        .contains(_searchQuery.toLowerCase());
+                final matchesSearch = _searchQuery.isEmpty || shift.clientName.toLowerCase().contains(_searchQuery.toLowerCase());
+                //     final filters = ['All', 'Assigned', 'Complete', 'Requests', 'Today','This Week'];
+
                 final matchesFilter = _selectedFilter == 'All' ||
-                    (_selectedFilter == 'Requests' &&
-                        shift.status == 'request') ||
-                    (_selectedFilter != 'Requests' &&
-                        shift.status != 'request');
+                    (_selectedFilter == 'Requests' && shift.status == 'request') ||
+                    (_selectedFilter == 'Assigned' && shift.status == 'pending') ||
+                    (_selectedFilter == 'Today' && shift.startTime.isAfter(startOfDay) && shift.startTime.isBefore(startOfDay.add(const Duration(days: 1)))) ||
+                    (_selectedFilter == 'This Week' && shift.startTime.isAfter(startOfWeek) && shift.startTime.isBefore(endOfWeek))||
+                    (_selectedFilter == 'Complete' && shift.status == 'complete');
+
                 return matchesSearch && matchesFilter;
               }).toList();
 
@@ -1120,7 +1126,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                             child: _buildEmptyState(
                               _searchQuery.isNotEmpty
                                   ? 'No shifts match your search'
-                                  : 'No unassigned shifts',
+                                  : 'No shifts match your filter',
                               Icons.assignment_turned_in,
                             ),
                           )

@@ -1,12 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:homecare0x1/models/location.dart';
 
-class Location {
-  double latitude;
-  double longitude;
-
-  Location({required this.latitude, required this.longitude});
-}
 
 class LocationProvider with ChangeNotifier {
   final List<Location> _locations = [

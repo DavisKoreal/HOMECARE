@@ -5,6 +5,8 @@ import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:homecare0x1/models/shift.dart';
+import 'package:homecare0x1/models/location.dart';
 
 class VisitCheckInScreen extends StatefulWidget {
   final Shift? selectedShift;

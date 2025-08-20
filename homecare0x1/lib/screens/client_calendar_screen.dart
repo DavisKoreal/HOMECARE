@@ -7,6 +7,7 @@ import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:homecare0x1/models/shift.dart';
 
 class ClientCalendarScreen extends StatefulWidget {
   const ClientCalendarScreen({super.key});
