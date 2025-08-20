@@ -1,37 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
+import 'dart:math';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
+
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     with TickerProviderStateMixin {
+  // State variables
   late AnimationController _animationController;
   late AnimationController _statsAnimationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late List<Animation<double>> _statsAnimations;
-  ShiftAssignmentProvider? shiftProvider; // Will be initialized in initState
+  int _activeClients = 0;
+  int _activeCaregivers = 0;
+  int _pendingTasks = 0;
+  bool _isLoading = true;
+  String? _errorMessage;
+  OverlayEntry? _overlayEntry;
+  Random random = Random(DateTime.now().millisecondsSinceEpoch);
 
   @override
   void initState() {
     super.initState();
-    // Use WidgetsBinding to ensure context is available
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      shiftProvider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
-      shiftProvider?.fetchClients();
-      shiftProvider?.fetchCaregivers();
-      shiftProvider?.fetchShifts();
-      print('Admin dashboard screen Initialized and the fetchers ran for the shift provider');
-      setState(() {}); // Update UI if needed
-    });
+    _initializeAnimations();
+    _fetchData();
+    
+  }
+
+  void _initializeAnimations() {
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -40,7 +45,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
@@ -48,29 +52,130 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       begin: const Offset(0, 0.3),
       end: Offset.zero,
     ).animate(CurvedAnimation(
-        parent: _animationController, curve: Curves.easeOutCubic));
-
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
     _statsAnimations = List.generate(3, (index) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
           parent: _statsAnimationController,
-          curve: Interval(
-            index * 0.2,
-            0.6 + (index * 0.2),
-            curve: Curves.elasticOut,
-          ),
+          curve: Interval(index * 0.2, 0.6 + (index * 0.2), curve: Curves.elasticOut),
         ),
       );
     });
-
     _animationController.forward();
     Future.delayed(const Duration(milliseconds: 500), () {
       _statsAnimationController.forward();
     });
   }
 
+  void _showOverlay(String message, {bool isError = false}) {
+    _removeOverlay();
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        bottom: 50,
+        left: 20,
+        right: 20,
+        child: Material(
+          elevation: 8,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isError ? Colors.red[700] : Colors.green[700],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isError ? Icons.error_outline : Icons.info_outline,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context).insert(_overlayEntry!);
+    Future.delayed(const Duration(seconds: 3), _removeOverlay);
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  Future<void> _fetchData() async {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      List<String> messages = [
+        'Hi, I am fetching your latest data...hold on for a second',
+        'Loading information...',
+        'Hello, retrieving caregiver details...',
+        'Hang on. I am updating information for you...',
+        'Fetching the latest updates for you...',
+        'Please wait while I gather the latest data...',
+        'Just a moment, I am loading the latest information...',
+        'Retrieving the latest updates for you...',
+      ];
+      // choose a random message from the list
+      String randomMessage = messages[random.nextInt(messages.length)];
+      _showOverlay(randomMessage);
+    });
+
+    try {
+      final shiftProvider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+      await Future.wait([
+        shiftProvider.fetchClients(),
+        shiftProvider.fetchCaregivers(),
+        shiftProvider.fetchShifts(),
+      ]);
+
+      setState(() {
+        _activeClients = shiftProvider.clients.length;
+        _activeCaregivers = shiftProvider.availableCaregivers.length;
+        _pendingTasks = shiftProvider.shifts.where((shift) => shift.status == 'pending').length;
+        _isLoading = false;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        List<String> successMessages = [
+          'Data loaded successfully!',
+          'Information retrieved successfully!',
+          'Great. Details fetched successfully!',
+          'All systems operational!',
+          'Data updated successfully!',
+          'Information refreshed successfully!',  
+          'Details loaded successfully!',
+          'All data is up-to-date!',
+        ];
+        // choose a random success message
+        final successMessage = successMessages[random.nextInt(successMessages.length)];
+         // show success message
+        _showOverlay(successMessage);
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to load data: $e';
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showOverlay(_errorMessage!, isError: true);
+      });
+    }
+  }
+
   @override
   void dispose() {
+    _removeOverlay();
     _animationController.dispose();
     _statsAnimationController.dispose();
     super.dispose();
@@ -116,11 +221,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       height: 70,
                       width: 70,
                       child: TweenAnimationBuilder<double>(
-                        duration: Duration(
-                            milliseconds:
-                                1000 + (animation.value * 500).round()),
-                        tween:
-                            Tween(begin: 0.0, end: percent * animation.value),
+                        duration: Duration(milliseconds: 1000 + (animation.value * 500).round()),
+                        tween: Tween(begin: 0.0, end: percent * animation.value),
                         builder: (context, value, child) {
                           return CircularProgressIndicator(
                             value: value,
@@ -144,16 +246,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 ),
                 const SizedBox(height: 16),
                 TweenAnimationBuilder<int>(
-                  duration: Duration(
-                      milliseconds: 1000 + (animation.value * 500).round()),
+                  duration: Duration(milliseconds: 1000 + (animation.value * 500).round()),
                   tween: IntTween(begin: 0, end: int.parse(value)),
                   builder: (context, value, child) {
                     return Text(
                       value.toString(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2C3E50),
+                        color: Color(0xFF2C3E50),
                       ),
                     );
                   },
@@ -161,8 +262,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 const SizedBox(height: 4),
                 Text(
                   title,
-                  style: TextStyle(
-                    color: const Color(0xFF7F8C8D),
+                  style: const TextStyle(
+                    color: Color(0xFF7F8C8D),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -227,42 +328,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Text(
-                //   subtitle,
-                //   style: const TextStyle(
-                //     color: Color(0xFF7F8C8D),
-                //     fontSize: 14,
-                //     height: 1.4,
-                //   ),
-                // ),
-                // const SizedBox(height: 16),
-                // Container(
-                //   padding:
-                //       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                //   decoration: BoxDecoration(
-                //     color: color.withOpacity(0.1),
-                //     borderRadius: BorderRadius.circular(20),
-                //   ),
-                //   child: Row(
-                //     mainAxisSize: MainAxisSize.min,
-                //     children: [
-                //       Text(
-                //         'Open',
-                //         style: TextStyle(
-                //           color: color,
-                //           fontSize: 12,
-                //           fontWeight: FontWeight.w600,
-                //         ),
-                //       ),
-                //       const SizedBox(width: 4),
-                //       Icon(
-                //         Icons.arrow_forward,
-                //         color: color,
-                //         size: 14,
-                //       ),
-                //     ],
-                //   ),
-                // ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: Color(0xFF7F8C8D),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
               ],
             ),
           ),
@@ -282,8 +355,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       ),
       _buildModernActionCard(
         title: 'Shift Management',
-        subtitle:
-            'Assign tasks to caregivers and track their progress in real-time',
+        subtitle: 'Assign tasks to caregivers and track their progress in real-time',
         icon: Icons.schedule_outlined,
         color: const Color(0xFF00A86B),
         onTap: () => Navigator.pushNamed(context, Routes.shiftAssignment),
@@ -314,9 +386,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         subtitle: 'Generate detailed reports and view performance metrics',
         icon: Icons.analytics_outlined,
         color: const Color(0xFFE67E22),
-        onTap: () {
-          // Add navigation for reports
-        },
+        onTap: () {},
       ),
     ];
   }
@@ -331,9 +401,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Row(
               children: [
                 Container(
@@ -342,11 +410,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     color: Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.logout,
-                    color: Colors.red,
-                    size: 20,
-                  ),
+                  child: const Icon(Icons.logout, color: Colors.red, size: 20),
                 ),
                 const SizedBox(width: 12),
                 const Text('Logout Confirmation'),
@@ -366,9 +430,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 child: const Text('Logout'),
               ),
@@ -376,8 +438,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           ),
         );
         if (shouldExit ?? false) {
-          final userProvider =
-              Provider.of<UserProvider>(context, listen: false);
+          final userProvider = Provider.of<UserProvider>(context, listen: false);
           userProvider.clearUser();
           Navigator.pushReplacementNamed(context, Routes.login);
         }
@@ -439,211 +500,203 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   Icons.person_outline,
                   color: Color(0xFF7F8C8D),
                 ),
-                onPressed: () =>
-                    Navigator.pushNamed(context, Routes.userProfile),
+                onPressed: () => Navigator.pushNamed(context, Routes.userProfile),
               ),
             ),
           ],
         ),
-        body: RefreshIndicator(
-          onRefresh: () async =>
-              await Future.delayed(const Duration(seconds: 1)),
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF00A86B),
-                            Color(0xFF00C975),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF00A86B).withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+                ? Center(child: Text(_errorMessage!))
+                : RefreshIndicator(
+                    onRefresh: _fetchData,
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(32),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF00A86B), Color(0xFF00C975)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFF00A86B).withOpacity(0.3),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      "Welcome Back, Admin!",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Welcome Back, Admin!',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 28,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'Managing healthcare excellence, one patient at a time',
+                                                style: TextStyle(
+                                                  color: Colors.white.withOpacity(0.9),
+                                                  fontSize: 16,
+                                                  height: 1.4,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                          child: const Icon(
+                                            Icons.dashboard_outlined,
+                                            color: Colors.white,
+                                            size: 32,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      "Managing healthcare excellence, one patient at a time",
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.9),
-                                        fontSize: 16,
-                                        height: 1.4,
+                                    const SizedBox(height: 20),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.schedule, color: Colors.white, size: 16),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Last updated: ${DateTime.now().toString().substring(11, 16)}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Icon(
-                                  Icons.dashboard_outlined,
-                                  color: Colors.white,
-                                  size: 32,
+                              const SizedBox(height: 32),
+                              const Text(
+                                'Key Metrics',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2C3E50),
                                 ),
                               ),
+                              const SizedBox(height: 16),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Row(
+                                  children: [
+                                    _buildModernStat(
+                                      title: 'Active Clients',
+                                      value: _activeClients.toString(),
+                                      percent: 0.75,
+                                      color: const Color(0xFF00A86B),
+                                      icon: Icons.people_outline,
+                                      animation: _statsAnimations[0],
+                                    ),
+                                    const SizedBox(width: 16),
+                                    _buildModernStat(
+                                      title: 'Care Staff',
+                                      value: _activeCaregivers.toString(),
+                                      percent: 0.6,
+                                      color: const Color(0xFF3498DB),
+                                      icon: Icons.medical_services_outlined,
+                                      animation: _statsAnimations[1],
+                                    ),
+                                    const SizedBox(width: 16),
+                                    _buildModernStat(
+                                      title: 'Pending Tasks',
+                                      value: _pendingTasks.toString(),
+                                      percent: 0.3,
+                                      color: const Color(0xFFE67E22),
+                                      icon: Icons.assignment_outlined,
+                                      animation: _statsAnimations[2],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 40),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Quick Actions',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2C3E50),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF00A86B).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Text(
+                                      'All systems operational',
+                                      style: TextStyle(
+                                        color: Color(0xFF00A86B),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              GridView.count(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 0.85,
+                                children: _buildDashboardActions(context),
+                              ),
+                              const SizedBox(height: 32),
                             ],
                           ),
-                          const SizedBox(height: 20),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.schedule,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Last updated: ${DateTime.now().toString().substring(11, 16)}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    const Text(
-                      'Key Metrics',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                      _buildModernStat(
-                        title: 'Active Clients',
-                        value: shiftProvider?.clients.length.toString() ?? '0',
-                        percent: 0.75,
-                        color: const Color(0xFF00A86B),
-                        icon: Icons.people_outline,
-                        animation: _statsAnimations[0],
-                      ),
-                      const SizedBox(width: 16),
-                      _buildModernStat(
-                        title: 'Care Staff',
-                        value: shiftProvider?.availableCaregivers.length.toString() ?? '0',
-                        percent: 0.6,
-                        color: const Color(0xFF3498DB),
-                        icon: Icons.medical_services_outlined,
-                        animation: _statsAnimations[1],
-                      ),
-                      const SizedBox(width: 16),
-                      _buildModernStat(
-                        title: 'Pending Tasks',
-                        value: shiftProvider?.shifts.where((shift) => shift.status == 'pending').length.toString() ?? '0',
-                        percent: 0.3,
-                        color: const Color(0xFFE67E22),
-                        icon: Icons.assignment_outlined,
-                        animation: _statsAnimations[2],
-                      ),
-                    ],
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Quick Actions',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C3E50),
-                          ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00A86B).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            'All systems operational',
-                            style: TextStyle(
-                              color: Color(0xFF00A86B),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount:
-                          MediaQuery.of(context).size.width > 600 ? 3 : 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.85,
-                      children: _buildDashboardActions(context),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+                  ),
       ),
     );
   }

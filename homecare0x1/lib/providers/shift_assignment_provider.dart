@@ -50,6 +50,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
         isAvailable: doc['isAvailable'],
       )).toList());
       notifyListeners();
+      print('Caregivers fetched: ${_caregivers.length}');
     } catch (e) {
       print('Error fetching caregivers: $e');
     }
@@ -73,6 +74,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
         address: doc['address'],
         carePlan: doc['carePlan'],
       )).toList());
+      print('Clients fetched: ${_clients.length}');
       notifyListeners();
     } catch (e) {
       print('Error fetching clients: $e');
@@ -85,7 +87,6 @@ class ShiftAssignmentProvider with ChangeNotifier {
       // this will fetch the shifts ordered by creation date and limit to 500
       final snapshot = await _firestore
         .collection('shifts')
-        .orderBy('createdAt', descending: true)
         .limit(500)
         .get();
       _shifts.clear();
@@ -102,6 +103,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
             ? Location(latitude: doc['location']['latitude'], longitude: doc['location']['longitude'])
             : null,
       )).toList());
+      print('Shifts fetched: ${_shifts.length}');
       notifyListeners();
     } catch (e) {
       print('Error fetching shifts: $e');
