@@ -30,7 +30,7 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
   bool _isLoading = true;
   String? _errorMessage;
   OverlayEntry? _overlayEntry;
-  Random random = Random(DateTime.now().millisecondsSinceEpoch);
+  // Random random = Random(DateTime.now().millisecondsSinceEpoch);
 
   @override
   void initState() {
@@ -99,6 +99,7 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
   }
 
   Future<void> _loadEvents() async {
+    Random random = Random(DateTime.now().millisecondsSinceEpoch);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       
       List<String> messages = [
@@ -114,6 +115,7 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
 
     try {
       final provider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+      Random random = Random(DateTime.now().millisecondsSinceEpoch);
       await provider.fetchShifts();
       setState(() {
         _events.clear();
@@ -127,12 +129,12 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         List<String> successMessages = [
-          'Calendar loaded successfully!',
-          'Shifts retrieved successfully!',
+          'Your calendar has been loaded successfully!',
+          'Shifts retrieved successfully! Click date to view details.',
           'All shifts are up-to-date!',
-          'Calendar is ready for use!',
-          'Shifts loaded successfully!',
-          'Your calendar is now updated!',
+          'Calendar is ready for use! Click on a date to see shifts.',
+          'Shifts loaded successfully! View them by clicking a date.',
+          'Your calendar is now updated! Tap on a date',
         ];
         final message = provider.allShifts.isEmpty
             ? 'No shifts available'

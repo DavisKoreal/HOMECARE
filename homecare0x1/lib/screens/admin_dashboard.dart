@@ -26,7 +26,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   bool _isLoading = true;
   String? _errorMessage;
   OverlayEntry? _overlayEntry;
-  Random random = Random(DateTime.now().millisecondsSinceEpoch);
+
 
   @override
   void initState() {
@@ -115,6 +115,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   Future<void> _fetchData() async {
+    Random random = Random(DateTime.now().millisecondsSinceEpoch);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       List<String> messages = [
         'Hi, I am fetching your latest data...hold on for a second',
@@ -133,6 +134,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
     try {
       final shiftProvider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+      Random random = Random(DateTime.now().millisecondsSinceEpoch);
+
       await Future.wait([
         shiftProvider.fetchClients(),
         shiftProvider.fetchCaregivers(),
@@ -347,43 +350,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   List<Widget> _buildDashboardActions(BuildContext context) {
     return [
       _buildModernActionCard(
-        title: 'View Calendar',
-        subtitle: 'View and manage your schedule',
+        title: 'Calendar',
+        subtitle: 'View schedule',
         icon: Icons.calendar_today,
         color: const Color(0xFF1E88E5),
         onTap: () => Navigator.pushNamed(context, Routes.adminCalendar),
       ),
       _buildModernActionCard(
-        title: 'Shift Management',
-        subtitle: 'Assign tasks to caregivers and track their progress in real-time',
+        title: 'Shifts',
+        subtitle: 'Assign tasks',
         icon: Icons.schedule_outlined,
         color: const Color(0xFF00A86B),
         onTap: () => Navigator.pushNamed(context, Routes.shiftAssignment),
       ),
       _buildModernActionCard(
-        title: 'Manage Notes',
-        subtitle: 'Access and authorize caregiver notes',
+        title: 'Care Notes',
+        subtitle: 'View notes',
         icon: Icons.event_note_outlined,
         color: const Color(0xFF3498DB),
         onTap: () => Navigator.pushNamed(context, Routes.adminNotesManagement),
       ),
       _buildModernActionCard(
-        title: 'Client Directory',
-        subtitle: 'Access comprehensive client profiles and medical records',
+        title: 'Clients',
+        subtitle: 'Client records',
         icon: Icons.people_outline,
         color: const Color(0xFF3498DB),
         onTap: () => Navigator.pushNamed(context, Routes.clientList),
       ),
       _buildModernActionCard(
-        title: 'System Audit',
-        subtitle: 'Monitor system activity and security logs in real-time',
+        title: 'System',
+        subtitle: 'Monitor activity',
         icon: Icons.security_outlined,
         color: const Color(0xFF9B59B6),
         onTap: () => Navigator.pushNamed(context, Routes.auditLog),
       ),
       _buildModernActionCard(
-        title: 'Reports & Analytics',
-        subtitle: 'Generate detailed reports and view performance metrics',
+        title: 'Analytics',
+        subtitle: 'View metrics',
         icon: Icons.analytics_outlined,
         color: const Color(0xFFE67E22),
         onTap: () {},
@@ -684,7 +687,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               GridView.count(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
-                                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3: 2,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
                                 childAspectRatio: 0.85,
