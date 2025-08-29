@@ -6,7 +6,37 @@ class AuthService {
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<User?> login(String email, String password) async {
+  // Future<User?> login(String email, String password) async {
+  //   try {
+  //     // Authenticate with Firebase Authentication
+  //     final credential = await _auth.signInWithEmailAndPassword(
+  //       email: email,
+  //       password: password,
+  //     );
+
+  //     // Fetch user data from Firestore
+  //     final docSnapshot =
+  //         await _firestore.collection('users').doc(credential.user!.uid).get();
+  //     if (docSnapshot.exists) {
+  //       print("A document snapshot exists");
+  //       final userData = docSnapshot.data()!;
+  //       return User(
+  //         id: userData['id'] as String,
+  //         role: userData['role'] as String,
+  //         name: userData['name'] as String,
+  //         email: userData['email'] as String,
+  //       );
+  //     }
+  //     throw Exception('User data not found in Firestore');
+  //   } on auth.FirebaseAuthException catch (e) {
+  //     throw e; // Re-throw for handling in UI
+  //   } catch (e) {
+  //     print('Login error: $e');
+  //     throw Exception('Failed to login: $e');
+  //   }
+  // }
+
+    Future<User?> login(String email, String password) async {
     try {
       // Authenticate with Firebase Authentication
       final credential = await _auth.signInWithEmailAndPassword(

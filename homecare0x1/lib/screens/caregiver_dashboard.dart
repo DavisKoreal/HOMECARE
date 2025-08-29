@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:homecare0x1/models/shift.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
+import 'package:homecare0x1/actions/overlay.dart';
 
 class CaregiverDashboardScreen extends StatefulWidget {
   const CaregiverDashboardScreen({super.key});
@@ -26,11 +27,13 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
   late Animation<Offset> _slideAnimation;
   late List<Animation<double>> _statsAnimations;
   List<Shift> caregivershifts = [];
+  late OverlayUtils _overlayUtils;
 
 
   @override
   void initState() {
     super.initState();
+    _overlayUtils = OverlayUtils();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -396,9 +399,10 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
 
   Future<bool> _requestLocationPermission(BuildContext context) async {
     try {
-      // this returns true as a workaround before I can explicitly write the imperative code for getting the location from the device
-      
+      // this returns true as a workaround before I can explicitly write the imperative code for getting the location from the device 
       return true;
+
+
       var status = await Permission.location.status;
       if (status.isDenied || status.isPermanentlyDenied) {
         status = await Permission.location.request();
@@ -424,9 +428,10 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error accessing location permissions')),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text('Error accessing location permissions')),
+        // );
+        _overlayUtils.showOverlay(context, "Error accesing your location", isError: true);
       }
       return false;
     }
@@ -686,9 +691,11 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
 
     final confirmed = await _confirmCheckIn(context);
     if (confirmed && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Successfully checked in')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Successfully checked in')),
+      // );
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      _overlayUtils.showOverlay(context, "${userProvider.user?.name} ,you have succesfully checked in to your shift. ");
       Navigator.pushNamed(context, Routes.visitCheckIn);
     }
   }
@@ -696,9 +703,11 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
   void _handleCheckOut(BuildContext context) async {
     final confirmed = await _confirmCheckOut(context);
     if (confirmed && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Successfully checked out')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Successfully checked out')),
+      // );
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      _overlayUtils.showOverlay(context, "${userProvider.user?.name} ,you have succesfully checked out from your shift. ");
       Navigator.pushNamed(context, Routes.visitCheckOut);
     }
   }
@@ -706,8 +715,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
   void _handleAddCareNote(BuildContext context) async {
     final noteText = await _addCareNote(context);
     if (noteText != null && context.mounted) {
-      final careNoteProvider =
-          Provider.of<CareNoteProvider>(context, listen: false);
+      final careNoteProvider = Provider.of<CareNoteProvider>(context, listen: false);
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       // careNoteProvider.addNote(
       //   CareNote(
