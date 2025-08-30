@@ -370,7 +370,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                   setState(() {
                     errorMessage = 'Failed to create shift';
                   });
-                  _overlayUtils.showOverlay(context, "Shift has not been created. Kindly try again. ")
+                  _overlayUtils.showOverlay(context, "Shift has not been created. Kindly try again. ");
                 }
               } catch (e) {
                 // Update error message in the dialog.

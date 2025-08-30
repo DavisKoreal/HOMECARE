@@ -167,8 +167,8 @@ class ShiftAssignmentProvider with ChangeNotifier {
       if ((caregiverId != null && shift.caregiverId == caregiverId) ||
           shift.clientId == clientId) {
         // Check for time overlap
-        if (!(endTime.isBefore(shift.startTime) ||
-            startTime.isAfter(shift.endTime))) {
+        if (!(endTime.isBefore(shift.startTime) || startTime.isAfter(shift.endTime))) {
+          print("Overlap has been detected for caregiverId: $caregiverId and clientId: $clientId in the shift from ${shift.startTime} to ${shift.endTime}");
           return true; // Overlap detected
         }
       }
