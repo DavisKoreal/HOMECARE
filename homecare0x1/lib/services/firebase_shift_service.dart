@@ -6,28 +6,7 @@ import 'package:homecare0x1/models/location.dart';
 import 'package:homecare0x1/providers/location_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:provider/provider.dart';
-
-// Caregiver model to represent caregiver data from Firestore
-class Caregiver {
-  final String id; // Unique identifier for the caregiver
-  final String name; // Name of the caregiver
-  final bool isAvailable; // Availability status of the caregiver
-
-  Caregiver({
-    required this.id,
-    required this.name,
-    required this.isAvailable,
-  });
-
-  // Factory method to create a Caregiver object from Firestore document data
-  factory Caregiver.fromMap(Map<String, dynamic> map, String id) {
-    return Caregiver(
-      id: id,
-      name: map['name'],
-      isAvailable: map['isAvailable'],
-    );
-  }
-}
+import 'package:homecare0x1/models/caregiver.dart';
 
 // FirebaseShiftService class for managing shift-related operations with Firestore
 class FirebaseShiftService {
@@ -175,13 +154,13 @@ class FirebaseShiftService {
   /// Checks if a new shift overlaps with existing shifts for a caregiver or client
   /// Returns true if there is an overlap, false otherwise
   Future<bool> _isShiftOverlap(DateTime startTime, DateTime endTime, String? caregiverId, String clientId) async {
-    final shifts = await getAllShifts();
+    // final shifts = await getAllShifts();
+    // get all shifts associated with supplied caregiver ID
+    final shifts = await getShiftsForCaregiver(caregiverId ?? '');
     for (var shift in shifts) {
       // Check for overlap with caregiver or client shifts
-      if ((caregiverId != null && shift.caregiverId == caregiverId) || shift.clientId == clientId) {
-        if (!(endTime.isBefore(shift.startTime) || startTime.isAfter(shift.endTime))) {
-          return true; // Overlap detected
-        }
+      if (!(endTime.isBefore(shift.startTime) || startTime.isAfter(shift.endTime))) {
+        return true; // Overlap detected
       }
     }
     return false; // No overlap
@@ -406,14 +385,26 @@ class FirebaseShiftService {
 
   /// Assigns a caregiver to a shift
   /// Returns "success" on successful assignment, "error" on failure
-  Future<String> assignShift(
-      String shiftId, String caregiverId, String caregiverName) async {
+  Future<String> assignShift( String shiftId, String caregiverId, String caregiverName) async {
     try {
-      // Find the shift to assign
-      final shifts = await getAllShifts();
-      final shift = shifts.firstWhere(
-        (s) => s.id == shiftId,
-        orElse: () => throw Exception('Shift not found'),
+      final doc = await _firestore.collection(_shiftsCollection).doc(shiftId).get();
+      if (!doc.exists) {
+        throw Exception('Shift not found');
+      }
+      final shift = Shift(
+        id: doc.id,
+        clientId: doc['clientId'],
+        clientName: doc['clientName'],
+        startTime: (doc['startTime'] as Timestamp).toDate(),
+        endTime: (doc['endTime'] as Timestamp).toDate(),
+        caregiverId: doc['caregiverId'],
+        caregiverName: doc['caregiverName'],
+        status: doc['status'],
+        location: doc['location'] != null
+            ? Location(
+                latitude: doc['location']['latitude'],
+                longitude: doc['location']['longitude'])
+            : null,
       );
 
       // Check for shift overlaps

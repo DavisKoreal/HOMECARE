@@ -8,6 +8,7 @@ import 'package:homecare0x1/widgets/common/modern_button.dart';
 import 'package:intl/intl.dart';
 import 'package:homecare0x1/models/client.dart';
 import 'package:homecare0x1/actions/overlay.dart';
+import 'package:homecare0x1/models/caregiver.dart';
 
 // Widget for managing shift assignments in the homecare application.
 class ShiftAssignmentScreen extends StatefulWidget {
@@ -35,6 +36,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
   bool _isAssigning = false; // Flag to indicate if an assignment is in progress.
   String? _selectedShiftId; // ID of the currently selected shift for assignment.
   String? _selectedCaregiverId; // ID of the currently selected caregiver.
+  bool _isLoading = true; // Flag to indicate if data is being loaded.
 
   // Text controller for the search bar input.
   final TextEditingController _searchController = TextEditingController();
@@ -107,7 +109,10 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
         _availableCaregivers = caregivers;
         _clients = clients;
         _allShifts = shifts;
+        _isLoading = false; // Data loading complete.
       });
+      // Show success notification after data is loaded.
+      _overlayUtils.showOverlay(context, 'Your information has been loaded successfully!');
     } catch (e) {
       // Log error and show error notification if data fetching fails.
       print('Error fetching initial data: $e');
@@ -153,243 +158,6 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
       // Show error notification if refreshing fails.
       _overlayUtils.showOverlay(context, 'Failed to refresh data: $e', isError: true);
     }
-  }
-
-  // Shows a dialog for creating a new shift.
-  Future<void> _showCreateShiftDialog() async {
-    // Controllers and variables for the dialog inputs.
-    final clientController = TextEditingController();
-    String? selectedClientId;
-    String? selectedCaregiverId;
-    DateTime? startTime = DateTime.now().add(const Duration(hours: 1));
-    DateTime? endTime = startTime.add(const Duration(hours: 2));
-    String? errorMessage;
-
-    // Display the dialog for creating a new shift.
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        // Apply rounded corners for a modern look.
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Create New Shift'),
-        content: StatefulBuilder(
-          builder: (context, setState) => SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Dropdown for selecting a client.
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Client',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: selectedClientId,
-                  items: _clients
-                      .map((client) => DropdownMenuItem<String>(
-                            value: client.id,
-                            child: Text(client.name),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedClientId = value;
-                      clientController.text = value != null
-                          ? _clients.firstWhere((c) => c.id == value).name
-                          : '';
-                      errorMessage = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Dropdown for selecting a caregiver (optional).
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Caregiver (Optional)',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: selectedCaregiverId,
-                  items: [
-                    const DropdownMenuItem<String>(
-                      value: null,
-                      child: Text('None'),
-                    ),
-                    ..._availableCaregivers
-                        .map((caregiver) => DropdownMenuItem<String>(
-                              value: caregiver.id,
-                              child: Text(caregiver.name),
-                            ))
-                        .toList(),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedCaregiverId = value;
-                      errorMessage = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Button to select start date and time.
-                ModernButton(
-                  text: 'Select Start Time',
-                  icon: Icons.access_time,
-                  onPressed: () async {
-                    // Show date picker followed by time picker.
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: startTime!,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (date != null) {
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: TimeOfDay.fromDateTime(startTime!),
-                      );
-                      if (time != null) {
-                        setState(() {
-                          startTime = DateTime(
-                            date.year,
-                            date.month,
-                            date.day,
-                            time.hour,
-                            time.minute,
-                          );
-                          endTime = startTime!.add(const Duration(hours: 2));
-                          errorMessage = null;
-                        });
-                      }
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Button to select end date and time.
-                ModernButton(
-                  text: 'Select End Time',
-                  icon: Icons.access_time,
-                  onPressed: () async {
-                    // Show date picker followed by time picker.
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: endTime!,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (date != null) {
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: TimeOfDay.fromDateTime(endTime!),
-                      );
-                      if (time != null) {
-                        setState(() {
-                          endTime = DateTime(
-                            date.year,
-                            date.month,
-                            date.day,
-                            time.hour,
-                            time.minute,
-                          );
-                          errorMessage = null;
-                        });
-                      }
-                    }
-                  },
-                ),
-                // Display error message if validation fails.
-                if (errorMessage != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    errorMessage!,
-                    style: const TextStyle(color: AppTheme.errorRed),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          // Cancel button to dismiss the dialog.
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          // Button to create the shift.
-          ElevatedButton(
-            onPressed: () async {
-              // Validate inputs before creating the shift.
-              if (selectedClientId == null) {
-                setState(() {
-                  errorMessage = 'Please select a client';
-                });
-                return;
-              }
-              if (startTime == null || endTime == null) {
-                setState(() {
-                  errorMessage = 'Please select both start and end times';
-                });
-                return;
-              }
-              if (startTime!.isBefore(DateTime.now())) {
-                setState(() {
-                  errorMessage = 'Start time must be in the future';
-                });
-                return;
-              }
-              if (startTime!.isAfter(endTime!)) {
-                setState(() {
-                  errorMessage = 'Start time must be before end time';
-                });
-                return;
-              }
-              try {
-                // Retrieve client and caregiver names.
-                final clientName = _clients
-                    .firstWhere((c) => c.id == selectedClientId)
-                    .name;
-                final caregiverName = selectedCaregiverId != null
-                    ? _availableCaregivers
-                        .firstWhere((c) => c.id == selectedCaregiverId)
-                        .name
-                    : null;
-                // Add the shift using FirebaseShiftService.
-                final result = await _shiftService.addShift(
-                  clientId: selectedClientId!,
-                  clientName: clientName,
-                  startTime: startTime!,
-                  endTime: endTime!,
-                  context: context,
-                  caregiverId: selectedCaregiverId,
-                  caregiverName: caregiverName,
-                );
-                if (result == "success") {
-                  // Close the dialog and refresh data.
-                  Navigator.pop(context);
-                  await _fetchInitialData();
-                  // Show success notification.
-                  _overlayUtils.showOverlay(context, 'Shift created successfully');
-                } else {
-                  setState(() {
-                    errorMessage = 'Failed to create shift';
-                  });
-                  _overlayUtils.showOverlay(context, "Shift has not been created. Kindly try again. ");
-                }
-              } catch (e) {
-                // Update error message in the dialog.
-                setState(() {
-                  errorMessage = e.toString();
-                });
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryBlue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Create Shift'),
-          ),
-        ],
-      ),
-    );
   }
 
   // Shows a modal bottom sheet for assigning a caregiver to a shift.
@@ -499,14 +267,10 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: isSelected
-                                    ? AppTheme.primaryBlue
-                                    : AppTheme.neutral600.withOpacity(0.2),
+                                color: isSelected? AppTheme.primaryBlue: AppTheme.neutral600.withOpacity(0.2),
                                 width: isSelected ? 2 : 1,
                               ),
-                              color: isSelected
-                                  ? AppTheme.primaryBlue.withOpacity(0.05)
-                                  : Colors.white,
+                              color: isSelected? AppTheme.primaryBlue.withOpacity(0.05): Colors.white,
                             ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(
@@ -549,7 +313,9 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'Experience: 3+ years',
+                                    caregiver.startExperience != null
+                                        ? 'Experience since ${DateFormat('yyyy').format(caregiver.startExperience!)}'
+                                        : 'Experience info not available',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: AppTheme.neutral600,
@@ -566,8 +332,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                               onTap: () {
                                 print('Selected Caregiver: ${caregiver.name}');
                                 setModalState(() {
-                                  _selectedCaregiverId =
-                                      isSelected ? null : caregiver.id;
+                                  _selectedCaregiverId = isSelected ? null : caregiver.id;
                                 });
                               },
                             ),
@@ -615,11 +380,11 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                               : () async {
                                   setState(() {
                                     _isAssigning = true;
+                                    print("Just changed the assigning state variable to true");
                                   });
 
-                                  final selectedCaregiver =
-                                      _availableCaregivers.firstWhere(
-                                          (c) => c.id == _selectedCaregiverId);
+                                  final selectedCaregiver =_availableCaregivers.firstWhere((c) => c.id == _selectedCaregiverId);
+                                    print("The chosen caregiver passed into when the selected caregiver is not null is $selectedCaregiver");
 
                                   try {
                                     // Assign the shift using FirebaseShiftService.
@@ -628,6 +393,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                       selectedCaregiver.id,
                                       selectedCaregiver.name,
                                     );
+                                    print("The following is the result of trying to assign using the shift service: $result");
 
                                     if (result == "success") {
                                       setState(() {
@@ -636,16 +402,16 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                         _selectedCaregiverId = null;
                                       });
 
-                                      // Refresh data after successful assignment.
-                                      await _fetchInitialData();
-
                                       // Close the modal.
                                       Navigator.pop(context);
 
+                                      // Refresh data after successful assignment.
+                                      await _fetchInitialData();
+
                                       // Show success notification.
-                                      _overlayUtils.showOverlay(context,
-                                          'Successfully assigned ${selectedCaregiver.name} to ${shift.clientName}\'s shift');
+                                      _overlayUtils.showOverlay(context, 'Successfully assigned ${selectedCaregiver.name} to ${shift.clientName}\'s shift');
                                     } else {
+                                       _overlayUtils.showOverlay(context, 'Failed to assign shift: $result', isError: true);
                                       throw Exception('Failed to assign shift');
                                     }
                                   } catch (e) {
@@ -653,8 +419,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                       _isAssigning = false;
                                     });
                                     // Show error notification.
-                                    _overlayUtils.showOverlay(
-                                        context, e.toString(), isError: true);
+                                    _overlayUtils.showOverlay(context, e.toString(), isError: true);
                                   }
                                 },
                           style: ElevatedButton.styleFrom(
@@ -902,8 +667,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
       title: 'Shift Assignment',
       showBackButton: true,
       // Navigate to admin dashboard when back button is pressed.
-      onBackPressed: () =>
-          Navigator.pushReplacementNamed(context, Routes.adminDashboard),
+      onBackPressed: () => Navigator.pushReplacementNamed(context, Routes.adminDashboard),
       // Floating action buttons for refreshing data and adding a shift.
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -914,18 +678,12 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
             backgroundColor: AppTheme.neutral600,
             child: const Icon(Icons.refresh),
           ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: 'addShiftButton',
-            onPressed: _showCreateShiftDialog,
-            backgroundColor: AppTheme.primaryBlue,
-            child: const Icon(Icons.add),
-          ),
         ],
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: SlideTransition(
+        // show circular progress if in the isloading state
+        child: _isLoading? Center(child: CircularProgressIndicator()):SlideTransition(
           position: _slideAnimation,
           child: SingleChildScrollView(
             child: Column(
