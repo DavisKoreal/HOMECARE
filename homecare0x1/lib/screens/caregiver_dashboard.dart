@@ -1,22 +1,26 @@
+
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:homecare0x1/models/care_note.dart';
 import 'package:homecare0x1/models/medication_record.dart';
-import 'package:homecare0x1/providers/care_note_provider.dart';
 import 'package:homecare0x1/providers/medication_record_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:homecare0x1/models/shift.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:homecare0x1/actions/overlay.dart';
+import 'package:uuid/uuid.dart';
+import 'package:homecare0x1/services/firebase_care_note_service.dart';
 
+// Caregiver Dashboard Screen
+// Displays a dashboard for caregivers with stats, quick actions, and recent activities.
+// Includes functionality to add care notes via a comprehensive tabbed dialog.
 class CaregiverDashboardScreen extends StatefulWidget {
   const CaregiverDashboardScreen({super.key});
 
   @override
-  State<CaregiverDashboardScreen> createState() =>
-      _CaregiverDashboardScreenState();
+  State<CaregiverDashboardScreen> createState() => _CaregiverDashboardScreenState();
 }
 
 class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
@@ -29,29 +33,34 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
   List<Shift> caregivershifts = [];
   late OverlayUtils _overlayUtils;
 
-
   @override
   void initState() {
     super.initState();
+    // Initialize OverlayUtils for notifications
     _overlayUtils = OverlayUtils();
+    // Set up animation controller for fade and slide effects
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
+    // Set up animation controller for stats animations
     _statsAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
+    // Define fade animation
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
+    // Define slide animation
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
     ).animate(CurvedAnimation(
         parent: _animationController, curve: Curves.easeOutCubic));
 
+    // Generate animations for stats cards
     _statsAnimations = List.generate(3, (index) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
@@ -65,11 +74,12 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       );
     });
 
+    // Start animations
     _animationController.forward();
     Future.delayed(const Duration(milliseconds: 500), () {
       _statsAnimationController.forward();
     });
-    // load caregiver shifts
+    // Load caregiver shifts
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final shiftProvider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
     if (userProvider.user != null) {
@@ -79,11 +89,14 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
 
   @override
   void dispose() {
+    // Clean up animation controllers and overlay
     _animationController.dispose();
     _statsAnimationController.dispose();
+    _overlayUtils.dispose();
     super.dispose();
   }
 
+  // Builds a stat card with animated progress indicator
   Widget _buildModernStat({
     required String title,
     required String value,
@@ -125,10 +138,8 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                       width: 70,
                       child: TweenAnimationBuilder<double>(
                         duration: Duration(
-                            milliseconds:
-                                1000 + (animation.value * 500).round()),
-                        tween:
-                            Tween(begin: 0.0, end: percent * animation.value),
+                            milliseconds: 1000 + (animation.value * 500).round()),
+                        tween: Tween(begin: 0.0, end: percent * animation.value),
                         builder: (context, value, child) {
                           return CircularProgressIndicator(
                             value: value,
@@ -184,6 +195,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
     );
   }
 
+  // Builds an action card for quick actions
   Widget _buildModernActionCard({
     required String title,
     required String subtitle,
@@ -258,43 +270,6 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                     color: Color(0xFF2C3E50),
                   ),
                 ),
-                const SizedBox(height: 8),
-                // Text(
-                //   subtitle,
-                //   style: const TextStyle(
-                //     color: Color(0xFF7F8C8D),
-                //     fontSize: 14,
-                //     height: 1.4,
-                //   ),
-                // ),
-                // const SizedBox(height: 16),
-                // Container(
-                //   padding:
-                //       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                //   decoration: BoxDecoration(
-                //     color: color.withOpacity(0.1),
-                //     borderRadius: BorderRadius.circular(20),
-                //   ),
-                //   child: Row(
-                //     mainAxisSize: MainAxisSize.min,
-                //     children: [
-                //       Text(
-                //         'Open',
-                //         style: TextStyle(
-                //           color: color,
-                //           fontSize: 12,
-                //           fontWeight: FontWeight.w600,
-                //         ),
-                //       ),
-                //       const SizedBox(width: 4),
-                //       Icon(
-                //         Icons.arrow_forward,
-                //         color: color,
-                //         size: 14,
-                //       ),
-                //     ],
-                //   ),
-                // ),
               ],
             ),
           ),
@@ -303,6 +278,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
     );
   }
 
+  // Builds the list of quick action cards
   List<Widget> _buildDashboardActions(BuildContext context) {
     return [
       _buildModernActionCard(
@@ -345,6 +321,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
     ];
   }
 
+  // Shows a confirmation dialog for logout
   Future<bool> _confirmLogout(BuildContext context) async {
     return await showDialog<bool>(
           context: context,
@@ -397,12 +374,9 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         false;
   }
 
+  // Requests location permission from the user
   Future<bool> _requestLocationPermission(BuildContext context) async {
     try {
-      // this returns true as a workaround before I can explicitly write the imperative code for getting the location from the device 
-      return true;
-
-
       var status = await Permission.location.status;
       if (status.isDenied || status.isPermanentlyDenied) {
         status = await Permission.location.request();
@@ -411,32 +385,27 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         return true;
       } else {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                  'Location permission is required to check. Using fake acceptance now'),
-              action: status.isPermanentlyDenied
-                  ? SnackBarAction(
-                      label: 'Open Settings',
-                      onPressed: () => openAppSettings(),
-                    )
-                  : null,
-            ),
+          _overlayUtils.showOverlay(
+            context,
+            'Location permission is required to check-in.',
+            isError: true,
           );
         }
         return false;
       }
     } catch (e) {
       if (context.mounted) {
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   const SnackBar(content: Text('Error accessing location permissions')),
-        // );
-        _overlayUtils.showOverlay(context, "Error accesing your location", isError: true);
+        _overlayUtils.showOverlay(
+          context,
+          'Error accessing location permissions: $e',
+          isError: true,
+        );
       }
       return false;
     }
   }
 
+  // Shows a confirmation dialog for check-in
   Future<bool> _confirmCheckIn(BuildContext context) async {
     return await showDialog<bool>(
           context: context,
@@ -488,6 +457,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         false;
   }
 
+  // Shows a confirmation dialog for check-out
   Future<bool> _confirmCheckOut(BuildContext context) async {
     return await showDialog<bool>(
           context: context,
@@ -539,65 +509,632 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         false;
   }
 
-  Future<String?> _addCareNote(BuildContext context) async {
-    final TextEditingController controller = TextEditingController();
-    return await showDialog<String>(
+  // Shows an improved dialog to collect all CareNote fields
+  Future<Map<String, dynamic>?> _showAddCareNoteDialog(BuildContext context) async {
+    // Controllers for text fields
+    final healthStatusController = TextEditingController();
+    final activitiesController = TextEditingController();
+    final observationsController = TextEditingController();
+    final medicationAdherenceController = TextEditingController();
+    final moodController = TextEditingController();
+    final noteController = TextEditingController();
+    final clientIdController = TextEditingController();
+    final shiftIdController = TextEditingController();
+
+    // State for boolean fields
+    bool isVisibleToClient = false;
+    bool isLate = false;
+
+    // Page controller for tabs
+    final PageController pageController = PageController();
+    int currentPage = 0;
+
+    return await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF3498DB).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          contentPadding: EdgeInsets.zero,
+          title: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF3498DB), Color(0xFF5DADE2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: const Icon(
-                Icons.note_add,
-                color: Color(0xFF3498DB),
-                size: 20,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
             ),
-            const SizedBox(width: 12),
-            const Text('Add Care Note'),
-          ],
-        ),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Enter care note or observation',
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                Navigator.pop(context, controller.text.trim());
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3498DB),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.note_add,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Add Care Note',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            child: const Text('Submit'),
+          ),
+          content: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: Column(
+              children: [
+                // Tab indicator
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: currentPage >= 0 ? const Color(0xFF3498DB) : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: currentPage >= 1 ? const Color(0xFF3498DB) : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: currentPage >= 2 ? const Color(0xFF3498DB) : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Page content
+                Expanded(
+                  child: PageView(
+                    controller: pageController,
+                    onPageChanged: (page) => setState(() => currentPage = page),
+                    children: [
+                      // Page 1: Basic Information
+                      _buildCareNotePage1(
+                        clientIdController,
+                        shiftIdController,
+                        healthStatusController,
+                        moodController,
+                      ),
+                      // Page 2: Activities and Observations
+                      _buildCareNotePage2(
+                        activitiesController,
+                        observationsController,
+                        medicationAdherenceController,
+                      ),
+                      // Page 3: Notes and Settings
+                      _buildCareNotePage3(
+                        noteController,
+                        isVisibleToClient,
+                        isLate,
+                        setState,
+                      ),
+                    ],
+                  ),
+                ),
+                // Navigation buttons
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      if (currentPage > 0)
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              pageController.previousPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              side: const BorderSide(color: Color(0xFF3498DB)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Previous',
+                              style: TextStyle(color: Color(0xFF3498DB)),
+                            ),
+                          ),
+                        ),
+                      if (currentPage > 0) const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (currentPage < 2) {
+                              // Validate current page before proceeding
+                              if (_validateCurrentPage(currentPage, [
+                                clientIdController.text,
+                                shiftIdController.text,
+                                healthStatusController.text,
+                                moodController.text,
+                                activitiesController.text,
+                                observationsController.text,
+                                medicationAdherenceController.text,
+                                noteController.text,
+                              ])) {
+                                pageController.nextPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              } else {
+                                _overlayUtils.showOverlay(
+                                  context,
+                                  'Please fill in all required fields.',
+                                  isError: true,
+                                );
+                              }
+                            } else {
+                              // Final submission
+                              if (_validateAllCareNoteFields([
+                                healthStatusController.text,
+                                activitiesController.text,
+                                observationsController.text,
+                                medicationAdherenceController.text,
+                                moodController.text,
+                                noteController.text,
+                                clientIdController.text,
+                                shiftIdController.text,
+                              ])) {
+                                Navigator.pop(context, {
+                                  'healthStatus': healthStatusController.text.trim(),
+                                  'activities': activitiesController.text.trim(),
+                                  'observations': observationsController.text.trim(),
+                                  'medicationAdherence': medicationAdherenceController.text.trim(),
+                                  'mood': moodController.text.trim(),
+                                  'note': noteController.text.trim(),
+                                  'clientId': clientIdController.text.trim(),
+                                  'shiftId': shiftIdController.text.trim(),
+                                  'isVisibleToClient': isVisibleToClient,
+                                  'isLate': isLate,
+                                });
+                              } else {
+                                _overlayUtils.showOverlay(
+                                  context,
+                                  'Please fill in all required fields.',
+                                  isError: true,
+                                );
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3498DB),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(currentPage < 2 ? 'Next' : 'Submit'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: const BorderSide(color: Colors.red),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Page 1: Basic Information
+  Widget _buildCareNotePage1(
+    TextEditingController clientIdController,
+    TextEditingController shiftIdController,
+    TextEditingController healthStatusController,
+    TextEditingController moodController,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Basic Information',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Please provide the essential details for this care note.',
+            style: TextStyle(
+              color: Color(0xFF7F8C8D),
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildImprovedTextField(
+            controller: clientIdController,
+            label: 'Client ID',
+            icon: Icons.person_outline,
+            hint: 'Enter client identifier',
+            isRequired: true,
+          ),
+          const SizedBox(height: 16),
+          _buildImprovedTextField(
+            controller: shiftIdController,
+            label: 'Shift ID',
+            icon: Icons.schedule,
+            hint: 'Enter shift identifier',
+            isRequired: true,
+          ),
+          const SizedBox(height: 16),
+          _buildImprovedTextField(
+            controller: healthStatusController,
+            label: 'Health Status',
+            icon: Icons.favorite_outline,
+            hint: 'Describe current health status',
+            maxLines: 2,
+            isRequired: true,
+          ),
+          const SizedBox(height: 16),
+          _buildImprovedTextField(
+            controller: moodController,
+            label: 'Mood Assessment',
+            icon: Icons.mood,
+            hint: 'Describe patient mood and demeanor',
+            isRequired: true,
           ),
         ],
       ),
     );
   }
 
+  // Page 2: Activities and Observations
+  Widget _buildCareNotePage2(
+    TextEditingController activitiesController,
+    TextEditingController observationsController,
+    TextEditingController medicationAdherenceController,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Activities & Observations',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Document activities performed and important observations.',
+            style: TextStyle(
+              color: Color(0xFF7F8C8D),
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildImprovedTextField(
+            controller: activitiesController,
+            label: 'Activities Performed',
+            icon: Icons.directions_run,
+            hint: 'List activities completed during visit',
+            maxLines: 3,
+            isRequired: true,
+          ),
+          const SizedBox(height: 16),
+          _buildImprovedTextField(
+            controller: observationsController,
+            label: 'Clinical Observations',
+            icon: Icons.visibility_outlined,
+            hint: 'Note any important observations',
+            maxLines: 3,
+            isRequired: true,
+          ),
+          const SizedBox(height: 16),
+          _buildImprovedTextField(
+            controller: medicationAdherenceController,
+            label: 'Medication Adherence',
+            icon: Icons.medication_liquid,
+            hint: 'Document medication compliance',
+            maxLines: 2,
+            isRequired: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Page 3: Notes and Settings
+  Widget _buildCareNotePage3(
+    TextEditingController noteController,
+    bool isVisibleToClient,
+    bool isLate,
+    StateSetter setState,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Additional Notes & Settings',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Add any additional notes and configure visibility settings.',
+            style: TextStyle(
+              color: Color(0xFF7F8C8D),
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildImprovedTextField(
+            controller: noteController,
+            label: 'Additional Notes',
+            icon: Icons.note,
+            hint: 'Any additional observations or comments',
+            maxLines: 4,
+            isRequired: true,
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Settings',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text(
+                    'Visible to Client',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Allow client to view this care note',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  value: isVisibleToClient,
+                  onChanged: (value) => setState(() => isVisibleToClient = value),
+                  activeColor: const Color(0xFF3498DB),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  title: const Text(
+                    'Late Entry',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Mark this as a late entry',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  value: isLate,
+                  onChanged: (value) => setState(() => isLate = value),
+                  activeColor: const Color(0xFFE67E22),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Builds an improved TextField widget with better styling
+  Widget _buildImprovedTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required String hint,
+    int maxLines = 1,
+    bool isRequired = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RichText(
+          text: TextSpan(
+            text: label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2C3E50),
+            ),
+            children: isRequired
+                ? [
+                    const TextSpan(
+                      text: ' *',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ]
+                : [],
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(
+              color: Color(0xFFBDC3C7),
+              fontSize: 14,
+            ),
+            prefixIcon: Icon(
+              icon,
+              color: const Color(0xFF7F8C8D),
+              size: 20,
+            ),
+            filled: true,
+            fillColor: Colors.grey[50],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF3498DB), width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Validates fields for the current page
+  bool _validateCurrentPage(int page, List<String> allFields) {
+    switch (page) {
+      case 0: // Basic Information
+        return allFields[6].trim().isNotEmpty && // clientId
+               allFields[7].trim().isNotEmpty && // shiftId
+               allFields[0].trim().isNotEmpty && // healthStatus
+               allFields[4].trim().isNotEmpty;   // mood
+      case 1: // Activities and Observations
+        return allFields[1].trim().isNotEmpty && // activities
+               allFields[2].trim().isNotEmpty && // observations
+               allFields[3].trim().isNotEmpty;   // medicationAdherence
+      case 2: // Notes and Settings
+        return allFields[5].trim().isNotEmpty;   // note
+      default:
+        return false;
+    }
+  }
+
+  // Validates all care note fields
+  bool _validateAllCareNoteFields(List<String> fields) {
+    return fields.every((field) => field.trim().isNotEmpty);
+  }
+
+  // Creates a CareNote object from dialog data
+  CareNote _createCareNoteFromData(Map<String, dynamic> data) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    return CareNote(
+      id: const Uuid().v4(),
+      clientId: data['clientId'],
+      caregiverId: userProvider.user?.id ?? 'unknown',
+      shiftId: data['shiftId'],
+      healthStatus: data['healthStatus'],
+      activities: data['activities'],
+      observations: data['observations'],
+      medicationAdherence: data['medicationAdherence'],
+      mood: data['mood'],
+      note: data['note'],
+      timestamp: DateTime.now(),
+      isVisibleToClient: data['isVisibleToClient'],
+      isLate: data['isLate'],
+    );
+  }
+
+  // Saves the CareNote to Firebase
+  Future<void> _saveCareNote(BuildContext context, CareNote careNote) async {
+    final service = FirebaseCareNoteService();
+    try {
+      await service.addCareNote(careNote);
+      _overlayUtils.showOverlay(context, 'Care note added successfully');
+    } catch (e) {
+      _overlayUtils.showOverlay(context, 'Failed to add care note: $e', isError: true);
+    }
+  }
+
+  // Handles the Care Note action
+  void _handleAddCareNote(BuildContext context) async {
+    final careNoteData = await _showAddCareNoteDialog(context);
+    if (careNoteData != null && context.mounted) {
+      final careNote = _createCareNoteFromData(careNoteData);
+      await _saveCareNote(context, careNote);
+      if (context.mounted) {
+        Navigator.pushNamed(context, Routes.careNotes);
+      }
+    }
+  }
+
+  // Shows a dialog to log medication
   Future<Map<String, String>?> _logMedication(BuildContext context) async {
     final TextEditingController medController = TextEditingController();
     final TextEditingController doseController = TextEditingController();
@@ -669,6 +1206,12 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                   'dosage': doseController.text.trim(),
                   'notes': notesController.text.trim(),
                 });
+              } else {
+                _overlayUtils.showOverlay(
+                  context,
+                  'Medication name and dosage are required.',
+                  isError: true,
+                );
               }
             },
             style: ElevatedButton.styleFrom(
@@ -685,54 +1228,36 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
     );
   }
 
+  // Handles check-in action
   void _handleCheckIn(BuildContext context) async {
     final hasPermission = await _requestLocationPermission(context);
     if (!hasPermission || !context.mounted) return;
 
     final confirmed = await _confirmCheckIn(context);
     if (confirmed && context.mounted) {
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(content: Text('Successfully checked in')),
-      // );
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      _overlayUtils.showOverlay(context, "${userProvider.user?.name} ,you have succesfully checked in to your shift. ");
+      _overlayUtils.showOverlay(
+        context,
+        "${userProvider.user?.name}, you have successfully checked in to your shift.",
+      );
       Navigator.pushNamed(context, Routes.visitCheckIn);
     }
   }
 
+  // Handles check-out action
   void _handleCheckOut(BuildContext context) async {
     final confirmed = await _confirmCheckOut(context);
     if (confirmed && context.mounted) {
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(content: Text('Successfully checked out')),
-      // );
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      _overlayUtils.showOverlay(context, "${userProvider.user?.name} ,you have succesfully checked out from your shift. ");
+      _overlayUtils.showOverlay(
+        context,
+        "${userProvider.user?.name}, you have successfully checked out from your shift.",
+      );
       Navigator.pushNamed(context, Routes.visitCheckOut);
     }
   }
 
-  void _handleAddCareNote(BuildContext context) async {
-    final noteText = await _addCareNote(context);
-    if (noteText != null && context.mounted) {
-      final careNoteProvider = Provider.of<CareNoteProvider>(context, listen: false);
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      // careNoteProvider.addNote(
-      //   CareNote(
-      //     id: (careNoteProvider.notes.length + 1).toString(),
-      //     clientId: '1',
-      //     caregiverId: userProvider.user?.id ?? 'caregiver1',
-      //     note: noteText,
-      //     timestamp: DateTime.now(),
-      //   ),
-      // );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Care note added successfully')),
-      );
-      Navigator.pushNamed(context, Routes.careNotes);
-    }
-  }
-
+  // Handles medication logging
   void _handleLogMedication(BuildContext context) async {
     final medication = await _logMedication(context);
     if (medication != null && context.mounted) {
@@ -748,9 +1273,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
           notes: medication['notes'] ?? '',
         ),
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Medication logged successfully')),
-      );
+      _overlayUtils.showOverlay(context, 'Medication logged successfully');
       Navigator.pushNamed(context, Routes.emar);
     }
   }
@@ -855,15 +1378,13 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                   Icons.person_outline,
                   color: Color(0xFF7F8C8D),
                 ),
-                onPressed: () =>
-                    Navigator.pushNamed(context, Routes.userProfile),
+                onPressed: () => Navigator.pushNamed(context, Routes.userProfile),
               ),
             ),
           ],
         ),
         body: RefreshIndicator(
-          onRefresh: () async =>
-              await Future.delayed(const Duration(seconds: 1)),
+          onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: SlideTransition(
@@ -984,31 +1505,31 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                       child: Row(
                         children: [
                           _buildModernStat(
-                              title: 'Assigned Clients',
-                              value: '5',
-                              percent: 0.83,
-                              color: const Color(0xFF3498DB),
-                              icon: Icons.people_outline,
-                              animation: _statsAnimations[0],
-                            ),
+                            title: 'Assigned Clients',
+                            value: '5',
+                            percent: 0.83,
+                            color: const Color(0xFF3498DB),
+                            icon: Icons.people_outline,
+                            animation: _statsAnimations[0],
+                          ),
                           const SizedBox(width: 16),
                           _buildModernStat(
-                              title: 'Pending Tasks',
-                              value: '3',
-                              percent: 0.4,
-                              color: const Color(0xFFE67E22),
-                              icon: Icons.task_outlined,
-                              animation: _statsAnimations[1],
-                            ),
+                            title: 'Pending Tasks',
+                            value: '3',
+                            percent: 0.4,
+                            color: const Color(0xFFE67E22),
+                            icon: Icons.task_outlined,
+                            animation: _statsAnimations[1],
+                          ),
                           const SizedBox(width: 16),
                           _buildModernStat(
                             title: 'Completed Tasks',
-                              value: '12',
-                              percent: 0.8,
-                              color: const Color(0xFF00A86B),
-                              icon: Icons.check_circle_outline,
-                              animation: _statsAnimations[2],
-                            ),
+                            value: '12',
+                            percent: 0.8,
+                            color: const Color(0xFF00A86B),
+                            icon: Icons.check_circle_outline,
+                            animation: _statsAnimations[2],
+                          ),
                         ],
                       ),
                     ),
@@ -1138,12 +1659,10 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                             ),
                             child: TextButton(
                               onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content:
-                                        Text('Contacting emergency support...'),
-                                    backgroundColor: Colors.red,
-                                  ),
+                                _overlayUtils.showOverlay(
+                                  context,
+                                  'Contacting emergency support...',
+                                  isError: true,
                                 );
                               },
                               child: const Text(
@@ -1169,6 +1688,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
     );
   }
 
+  // Builds a recent activity item
   Widget _buildActivityItem({
     required String title,
     required String subtitle,
