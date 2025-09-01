@@ -143,7 +143,10 @@ class FirebaseShiftService {
     try {
       // Fetch all shifts and filter by clientId
       final shifts = await getAllShifts();
-      return shifts.where((shift) => shift.clientId == clientId).toList();
+      final clientShifts = shifts.where((shift) => shift.clientId == clientId).toList();
+      // sort having the most recent shift first
+      clientShifts.sort((a, b) => b.startTime.compareTo(a.startTime));
+      return clientShifts;
     } catch (e) {
       // Log error and return empty list on failure
       print('Error fetching client shifts: $e');

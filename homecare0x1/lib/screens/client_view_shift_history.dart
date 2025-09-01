@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/constants.dart';
-import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/models/shift.dart';
+import 'package:homecare0x1/services/firebase_shift_service.dart';
 
 class ClientViewShiftHistoryScreen extends StatefulWidget {
   const ClientViewShiftHistoryScreen({super.key});
@@ -145,7 +145,7 @@ class _ClientViewShiftHistoryScreenState
               _buildInfoRow(
                 icon: Icons.location_on,
                 label: 'Location',
-                value: shift.location.toString(),
+                value: 'Lat: ${shift.location!.latitude}, Lon: ${shift.location!.longitude}',
                 color: const Color(0xFF9B59B6),
               ),
             ],
@@ -208,9 +208,7 @@ class _ClientViewShiftHistoryScreenState
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
-    final shiftProvider = Provider.of<ShiftAssignmentProvider>(context);
     final clientId = userProvider.user?.id ?? '';
-    final shifts = shiftProvider.getShiftsForClient(clientId);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -267,7 +265,10 @@ class _ClientViewShiftHistoryScreenState
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
+        onRefresh: () async {
+          setState(() {}); // Trigger rebuild to refresh shifts
+          await Future.delayed(const Duration(seconds: 1));
+        },
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: SlideTransition(
@@ -286,36 +287,69 @@ class _ClientViewShiftHistoryScreenState
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (shifts.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                  FutureBuilder<List<Shift>>(
+                    future: FirebaseShiftService.instance.getShiftsForClient(clientId),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'No visit history available',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF7F8C8D),
+                          child: const Center(
+                            child: Text(
+                              'Error loading shifts',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF7F8C8D),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    )
-                  else
-                    Column(
-                      children: shifts
-                          .map((shift) => _buildShiftCard(shift))
-                          .toList(),
-                    ),
+                        );
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'No visit history available',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF7F8C8D),
+                              ),
+                            ),
+                          ),
+                        );
+                      } else {
+                        final shifts = snapshot.data!;
+                        return Column(
+                          children: shifts
+                              .map((shift) => _buildShiftCard(shift))
+                              .toList(),
+                        );
+                      }
+                    },
+                  ),
                 ],
               ),
             ),
