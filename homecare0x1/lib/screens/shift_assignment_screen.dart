@@ -829,11 +829,11 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                       Icon(
                         Icons.assignment_late,
                         color: AppTheme.accentOrange,
-                        size: 24,
+                        size: 16,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Kindly assign caregivers to shifts',
+                        'Kindly assign caregivers',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
