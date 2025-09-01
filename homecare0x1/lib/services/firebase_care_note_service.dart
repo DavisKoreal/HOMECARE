@@ -1,88 +1,91 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:homecare0x1/models/care_note.dart';
+import 'package:homecare0x1/models/caregiver.dart';
 
-// Firebase Care Note Service
-// Handles CRUD operations for CareNotes in Firestore.
-// Stores data in a 'care_notes' collection with each document using the CareNote's ID.
-class FirebaseCareNoteService {
-  // Firestore instance
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+// Service class for handling Firebase Firestore operations related to care notes
+class FirebaseCareNotesService {
+  // Firestore collection reference for care notes
+  final CollectionReference _careNotesCollection =
+      FirebaseFirestore.instance.collection('care_notes');
 
-  // Reference to the care_notes collection
-  CollectionReference get _careNotesCollection => _firestore.collection('care_notes');
+  // Constant for the maximum number of care notes to retrieve
+  static const int _careNotesLimit = 500;
 
-  // Adds a new CareNote to Firestore
-  Future<void> addCareNote(CareNote careNote) async {
+  /// Fetches up to 500 care notes for a specific client from Firestore
+  /// [clientId] - The ID of the client whose notes are to be retrieved
+  /// Returns a list of CareNote objects, limited to 500 entries
+  /// Throws an exception if the fetch operation fails (e.g., missing index)
+  Future<List<CareNote>> getCareNotes(String clientId) async {
     try {
-      await _careNotesCollection.doc(careNote.id).set(_careNoteToMap(careNote));
-    } catch (e) {
-      throw Exception('Failed to add care note: $e');
-    }
-  }
-
-  // Retrieves all CareNotes for a specific client, ordered by timestamp
-  Future<List<CareNote>> getCareNotesForClient(String clientId) async {
-    try {
-      final querySnapshot = await _careNotesCollection
+      print(  'Fetching care notes for clientId: $clientId');
+      print('Using care notes limit: $_careNotesLimit');
+      // Query Firestore for care notes matching the clientId, visible to client,
+      // ordered by timestamp, and limited to 500 entries
+      QuerySnapshot querySnapshot = await _careNotesCollection
           .where('clientId', isEqualTo: clientId)
-          .orderBy('timestamp', descending: true)
+          .limit(_careNotesLimit)
           .get();
-      return querySnapshot.docs
-          .map((doc) => _careNoteFromMap(doc.data() as Map<String, dynamic>, doc.id))
-          .toList();
+
+      // Map Firestore documents to CareNote objects
+      List<CareNote> carenotesList = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return CareNote(
+          id: doc.id,
+          clientId: data['clientId'] as String,
+          caregiverId: data['caregiverId'] as String,
+          shiftId: data['shiftId'] as String,
+          healthStatus: data['healthStatus'] as String,
+          activities: data['activities'] as String,
+          observations: data['observations'] as String,
+          medicationAdherence: data['medicationAdherence'] as String,
+          mood: data['mood'] as String,
+          note: data['note'] as String,
+          timestamp: (data['timestamp'] as Timestamp).toDate(),
+          isVisibleToClient: data['isVisibleToClient'] as bool,
+          isLate: data['isLate'] as bool? ?? false,
+        );
+      }).toList();
+      print('Fetched ${carenotesList.length} care notes from Firestore.');
+
+      // return care notes that are visible to the client
+      return carenotesList.where((note) => note.isVisibleToClient).toList();
+
     } catch (e) {
+      // Log error for debugging purposes
+      print('Error fetching care notes: $e');
+      // Provide specific error message for missing index
+      if (e.toString().contains('requires an index')) {
+        throw Exception(
+            'Unable to load care notes due to a missing Firestore index. Please contact support or try again later.');
+      }
       throw Exception('Failed to fetch care notes: $e');
     }
   }
 
-  // Retrieves a single CareNote by ID
-  Future<CareNote?> getCareNoteById(String id) async {
+  /// Adds a new care note to Firestore
+  /// [note] - The CareNote object to be added
+  /// Throws an exception if the add operation fails
+  Future<void> addCareNote(CareNote note) async {
     try {
-      final docSnapshot = await _careNotesCollection.doc(id).get();
-      if (docSnapshot.exists) {
-        return _careNoteFromMap(docSnapshot.data() as Map<String, dynamic>, id);
-      }
-      return null;
+      // Add care note data to Firestore collection
+      await _careNotesCollection.add({
+        'clientId': note.clientId,
+        'caregiverId': note.caregiverId,
+        'shiftId': note.shiftId,
+        'healthStatus': note.healthStatus,
+        'activities': note.activities,
+        'observations': note.observations,
+        'medicationAdherence': note.medicationAdherence,
+        'mood': note.mood,
+        'note': note.note,
+        'timestamp': Timestamp.fromDate(note.timestamp),
+        'isVisibleToClient': note.isVisibleToClient,
+        'isLate': note.isLate,
+      });
     } catch (e) {
-      throw Exception('Failed to fetch care note: $e');
+      // Log error for debugging purposes
+      print('Error adding care note: $e');
+      throw Exception('Failed to add care note: $e');
     }
-  }
-
-  // Converts a CareNote object to a Firestore-compatible map
-  Map<String, dynamic> _careNoteToMap(CareNote careNote) {
-    return {
-      'id': careNote.id,
-      'clientId': careNote.clientId,
-      'caregiverId': careNote.caregiverId,
-      'shiftId': careNote.shiftId,
-      'healthStatus': careNote.healthStatus,
-      'activities': careNote.activities,
-      'observations': careNote.observations,
-      'medicationAdherence': careNote.medicationAdherence,
-      'mood': careNote.mood,
-      'note': careNote.note,
-      'timestamp': Timestamp.fromDate(careNote.timestamp),
-      'isVisibleToClient': careNote.isVisibleToClient,
-      'isLate': careNote.isLate,
-    };
-  }
-
-  // Converts a Firestore document map to a CareNote object
-  CareNote _careNoteFromMap(Map<String, dynamic> map, String id) {
-    return CareNote(
-      id: map['id'] ?? id,
-      clientId: map['clientId'],
-      caregiverId: map['caregiverId'],
-      shiftId: map['shiftId'],
-      healthStatus: map['healthStatus'],
-      activities: map['activities'],
-      observations: map['observations'],
-      medicationAdherence: map['medicationAdherence'],
-      mood: map['mood'],
-      note: map['note'],
-      timestamp: (map['timestamp'] as Timestamp).toDate(),
-      isVisibleToClient: map['isVisibleToClient'] ?? false,
-      isLate: map['isLate'] ?? false,
-    );
   }
 }

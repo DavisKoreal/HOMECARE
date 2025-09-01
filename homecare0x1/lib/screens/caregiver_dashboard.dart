@@ -11,7 +11,7 @@ import 'package:homecare0x1/models/shift.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:homecare0x1/actions/overlay.dart';
 import 'package:uuid/uuid.dart';
-import 'package:homecare0x1/services/firebase_care_note_service.dart';
+import 'package:homecare0x1/services/firebase_care_note_service.dart'; 
 
 // Caregiver Dashboard Screen
 // Displays a dashboard for caregivers with stats, quick actions, and recent activities.
@@ -1113,7 +1113,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
 
   // Saves the CareNote to Firebase
   Future<void> _saveCareNote(BuildContext context, CareNote careNote) async {
-    final service = FirebaseCareNoteService();
+    final service = FirebaseCareNotesService(); 
     try {
       await service.addCareNote(careNote);
       _overlayUtils.showOverlay(context, 'Care note added successfully');

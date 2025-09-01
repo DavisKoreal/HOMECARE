@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:intl/intl.dart';
-import 'package:homecare0x1/constants.dart';
-import 'package:homecare0x1/models/care_note.dart'; // Assuming CareNote is in this file
+import 'package:homecare0x1/models/care_note.dart';
+import 'package:homecare0x1/services/firebase_care_note_service.dart';
+import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
+// Screen to display care notes for a specific client, using UserProvider for clientId
 class FamilyCareNotesScreen extends StatefulWidget {
   const FamilyCareNotesScreen({super.key});
 
@@ -13,43 +16,26 @@ class FamilyCareNotesScreen extends StatefulWidget {
 
 class _FamilyCareNotesScreenState extends State<FamilyCareNotesScreen>
     with TickerProviderStateMixin {
+  // Animation controllers and variables
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // Sample care notes data (replace with actual data source)
-  final List<CareNote> _careNotes = [
-    CareNote(
-      clientId: 'client_1',
-      caregiverId: 'caregiver_1',
-      shiftId: 'shift_1',
-      healthStatus: 'Stable',
-      activities: 'Morning walk, meal preparation',
-      observations: 'Client was cooperative and alert',
-      medicationAdherence: 'All medications taken as prescribed',
-      mood: 'Positive',
-      note: 'Client enjoyed the morning activities',
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      isVisibleToClient: true,
-    ),
-    CareNote(
-      clientId: 'client_1',
-      caregiverId: 'caregiver_2',
-      shiftId: 'shift_2',
-      healthStatus: 'Good',
-      activities: 'Physical therapy session',
-      observations: 'Slight fatigue observed post-session',
-      medicationAdherence: 'Partial adherence, missed evening dose',
-      mood: 'Neutral',
-      note: 'Recommended shorter sessions',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      isVisibleToClient: true,
-    ),
-  ];
+  // Data and service variables
+  final FirebaseCareNotesService _careNotesService = FirebaseCareNotesService();
+  List<CareNote> _careNotes = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
+    _fetchCareNotes();
+  }
+
+  /// Initializes animations for fade and slide effects
+  void _initializeAnimations() {
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -67,12 +53,41 @@ class _FamilyCareNotesScreenState extends State<FamilyCareNotesScreen>
     _animationController.forward();
   }
 
+  /// Fetches care notes from Firebase using the clientId from UserProvider
+  Future<void> _fetchCareNotes() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      // Access UserProvider to get the current user's ID
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final user = userProvider.user;
+      if (user == null || user.role != 'family') {
+        throw Exception('User not logged in or not authorized');
+      }
+
+      // Use user.id as clientId (assuming family member's ID is the clientId)
+      final notes = await _careNotesService.getCareNotes(user.id);
+      setState(() {
+        _careNotes = notes;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
   }
 
+  /// Builds a card widget for a single care note
   Widget _buildCareNoteCard(CareNote note) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -92,50 +107,7 @@ class _FamilyCareNotesScreenState extends State<FamilyCareNotesScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF00A86B).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.note,
-                    color: Color(0xFF00A86B),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    DateFormat('MMM dd, yyyy • hh:mm a').format(note.timestamp),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                ),
-                if (note.isLate)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.errorRed,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'Late',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            _buildHeaderRow(note),
             const SizedBox(height: 16),
             _buildInfoRow(
               icon: Icons.health_and_safety,
@@ -184,6 +156,54 @@ class _FamilyCareNotesScreenState extends State<FamilyCareNotesScreen>
     );
   }
 
+  /// Builds the header row for a care note card with timestamp and late indicator
+  Widget _buildHeaderRow(CareNote note) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF00A86B).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(
+            Icons.note,
+            color: Color(0xFF00A86B),
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            DateFormat('MMM dd, yyyy • hh:mm a').format(note.timestamp),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+        ),
+        if (note.isLate)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.errorRed,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Text(
+              'Late',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Builds an info row for a care note card with icon, label, and value
   Widget _buildInfoRow({
     required IconData icon,
     required String label,
@@ -234,64 +254,131 @@ class _FamilyCareNotesScreenState extends State<FamilyCareNotesScreen>
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: true,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF00A86B).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.note,
-                color: Color(0xFF00A86B),
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Care Notes',
-              style: TextStyle(
-                color: Color(0xFF2C3E50),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
+  /// Builds the app bar with title and filter action
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      automaticallyImplyLeading: true,
+      title: Row(
+        children: [
           Container(
-            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
+              color: const Color(0xFF00A86B).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.filter_list,
-                color: Color(0xFF7F8C8D),
-              ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Filter functionality coming soon...'),
-                  ),
-                );
-              },
+            child: const Icon(
+              Icons.note,
+              color: Color(0xFF00A86B),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Text(
+            'Care Notes',
+            style: TextStyle(
+              color: Color(0xFF2C3E50),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
       ),
+      actions: [
+        Container(
+          margin: const EdgeInsets.only(right: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F9FA),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(
+              Icons.filter_list,
+              color: Color(0xFF7F8C8D),
+            ),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Filter functionality coming soon...'),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds the main content area based on loading state or data availability
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (_errorMessage != null) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            _errorMessage!,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color(0xFF7F8C8D),
+            ),
+          ),
+        ),
+      );
+    } else if (_careNotes.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: const Center(
+          child: Text(
+            'No care notes available',
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF7F8C8D),
+            ),
+          ),
+        ),
+      );
+    } else {
+      return Column(
+        children: _careNotes
+            .where((note) => note.isVisibleToClient)
+            .map((note) => _buildCareNoteCard(note))
+            .toList(),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: _buildAppBar(),
       body: RefreshIndicator(
-        onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
+        onRefresh: _fetchCareNotes,
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: SlideTransition(
@@ -310,37 +397,7 @@ class _FamilyCareNotesScreenState extends State<FamilyCareNotesScreen>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (_careNotes.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'No care notes available',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF7F8C8D),
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    Column(
-                      children: _careNotes
-                          .where((note) => note.isVisibleToClient)
-                          .map((note) => _buildCareNoteCard(note))
-                          .toList(),
-                    ),
+                  _buildContent(),
                 ],
               ),
             ),
