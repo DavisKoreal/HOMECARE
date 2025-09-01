@@ -137,6 +137,74 @@ Future<void> setupMockData() async {
     }
   }
 
+  // Caregiver Profiles
+  final caregiverProfiles = [
+    if (caregiverId != null)
+      {
+        'id': caregiverId,
+        'name': 'Kind Nurse',
+        'role': 'Senior Caregiver',
+        'experience': '8 years',
+        'certifications': ['CNA', 'CPR', 'First Aid'],
+        'phone': '+1 (555) 123-4567',
+        'email': 'kind.nurse@example.com',
+        'bio': 'Dedicated caregiver with a passion for providing compassionate care to seniors. Experienced in managing daily activities, medication administration, and emotional support.',
+        'availability': ['Monday-Friday', '9 AM - 5 PM'],
+        'rating': 4.8,
+        'reviews': 42,
+      },
+    {
+      'id': 'cg2',
+      'name': 'Liam Brown',
+      'role': 'Care Assistant',
+      'experience': '5 years',
+      'certifications': ['CPR', 'Home Health Aide'],
+      'phone': '+1 (555) 234-5678',
+      'email': 'liam.brown@example.com',
+      'bio': 'Experienced caregiver specializing in mobility assistance and daily living support.',
+      'availability': ['Monday-Wednesday', '8 AM - 4 PM'],
+      'rating': 4.5,
+      'reviews': 30,
+    },
+    {
+      'id': 'cg3',
+      'name': 'Olivia Davis',
+      'role': 'Nurse Aide',
+      'experience': '3 years',
+      'certifications': ['CNA', 'First Aid'],
+      'phone': '+1 (555) 345-6789',
+      'email': 'olivia.davis@example.com',
+      'bio': 'Compassionate caregiver focused on patient comfort and well-being.',
+      'availability': ['Thursday-Saturday', '10 AM - 6 PM'],
+      'rating': 4.2,
+      'reviews': 25,
+    },
+  ];
+
+  for (var profile in caregiverProfiles) {
+    try {
+      final profileRef = firestore.collection('caregiver_profiles').doc(profile['id'] as String);
+      final existingProfile = await profileRef.get();
+      if (!existingProfile.exists) {
+        await profileRef.set({
+          'name': profile['name'],
+          'role': profile['role'],
+          'experience': profile['experience'],
+          'certifications': profile['certifications'],
+          'phone': profile['phone'],
+          'email': profile['email'],
+          'bio': profile['bio'],
+          'availability': profile['availability'],
+          'rating': profile['rating'],
+          'reviews': profile['reviews'],
+        });
+        print('Added caregiver profile ${profile['name']}');
+      }
+    } catch (e) {
+      print('Error adding caregiver profile ${profile['name']}: $e');
+    }
+  }
+
   // Shifts
   final shifts = [
     if (caregiverId != null)
@@ -144,11 +212,11 @@ Future<void> setupMockData() async {
         'id': 's1',
         'clientId': 'f1',
         'clientName': 'John Doe',
-        'startTime': Timestamp.fromDate(DateTime.now().add(const Duration(days: 1, hours: 9))),
-        'endTime': Timestamp.fromDate(DateTime.now().add(const Duration(days: 1, hours: 11))),
-        'caregiverId': null,
-        'caregiverName': null,
-        'status': 'pending',
+        'startTime': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1, hours: 9))),
+        'endTime': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1, hours: 11))),
+        'caregiverId': caregiverId,
+        'caregiverName': 'Kind Nurse',
+        'status': 'completed',
         'location': {
           'latitude': 37.7749,
           'longitude': -122.4194,
@@ -182,6 +250,21 @@ Future<void> setupMockData() async {
       'caregiverId': null,
       'caregiverName': null,
     },
+    if (caregiverId != null)
+      {
+        'id': 's4',
+        'clientId': 'f1',
+        'clientName': 'John Doe',
+        'startTime': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 2, hours: 9))),
+        'endTime': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 2, hours: 11))),
+        'caregiverId': 'cg2',
+        'caregiverName': 'Liam Brown',
+        'status': 'completed',
+        'location': {
+          'latitude': 37.7749,
+          'longitude': -122.4194,
+        },
+      },
   ];
 
   for (var shift in shifts) {
@@ -220,7 +303,7 @@ Future<void> setupMockData() async {
         'id': 'cn2',
         'clientId': 'f1',
         'caregiverId': caregiverId,
-        'shiftId': 's2',
+        'shiftId': 's4',
         'healthStatus': 'Slight fatigue reported',
         'activities': 'Helped with bathing and exercises',
         'observations': 'Client needed extra rest',

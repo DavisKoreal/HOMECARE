@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:homecare0x1/theme/app_theme.dart';
-import 'package:homecare0x1/constants.dart';
+import 'package:homecare0x1/models/caregiver_profile.dart';
+import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:homecare0x1/services/firebase_shift_service.dart';
+import 'package:provider/provider.dart';
 
 class CaregiverProfileScreen extends StatefulWidget {
   const CaregiverProfileScreen({super.key});
@@ -11,24 +13,149 @@ class CaregiverProfileScreen extends StatefulWidget {
 
 class _CaregiverProfileScreenState extends State<CaregiverProfileScreen>
     with TickerProviderStateMixin {
+  @override
+  Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final clientId = userProvider.user?.id;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF3498DB).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.person,
+                color: Color(0xFF3498DB),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Caregivers',
+              style: TextStyle(
+                color: Color(0xFF2C3E50),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(
+                Icons.message,
+                color: Color(0xFF7F8C8D),
+              ),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Opening messaging...'),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      body: clientId == null
+          ? const Center(child: Text('No client logged in'))
+          : FutureBuilder<List<CaregiverProfile>>(
+              future: FirebaseShiftService.instance.getCaregiversForClient(clientId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Error loading caregivers'));
+                }
+                final caregivers = snapshot.data ?? [];
+                if (caregivers.isEmpty) {
+                  return const Center(child: Text('No caregivers found'));
+                }
+                return RefreshIndicator(
+                  onRefresh: () async => setState(() {}),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: caregivers.length,
+                    itemBuilder: (context, index) {
+                      final caregiver = caregivers[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Color(0xFF3498DB),
+                            child: Icon(Icons.person, color: Colors.white),
+                          ),
+                          title: Text(
+                            caregiver.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(caregiver.role),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star, color: Colors.yellow, size: 16),
+                              const SizedBox(width: 4),
+                              Text('${caregiver.rating} (${caregiver.reviews})'),
+                            ],
+                          ),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => Dialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: SizedBox(
+                                  height: MediaQuery.of(context).size.height * 0.8,
+                                  child: _CaregiverDetailView(caregiver: caregiver),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
+class _CaregiverDetailView extends StatefulWidget {
+  final CaregiverProfile caregiver;
+
+  const _CaregiverDetailView({required this.caregiver});
+
+  @override
+  State<_CaregiverDetailView> createState() => _CaregiverDetailViewState();
+}
+
+class _CaregiverDetailViewState extends State<_CaregiverDetailView>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-
-  // Sample caregiver data (replace with actual data source)
-  final Map<String, dynamic> _caregiverData = {
-    'name': 'Sarah Johnson',
-    'role': 'Senior Caregiver',
-    'experience': '8 years',
-    'certifications': ['CNA', 'CPR', 'First Aid'],
-    'phone': '+1 (555) 123-4567',
-    'email': 'sarah.johnson@careprovider.com',
-    'bio':
-        'Dedicated caregiver with a passion for providing compassionate care to seniors. Experienced in managing daily activities, medication administration, and emotional support.',
-    'availability': ['Monday-Friday', '9 AM - 5 PM'],
-    'rating': 4.8,
-    'reviews': 42,
-  };
 
   @override
   void initState() {
@@ -99,7 +226,7 @@ class _CaregiverProfileScreenState extends State<CaregiverProfileScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _caregiverData['name'],
+                  widget.caregiver.name,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -108,7 +235,7 @@ class _CaregiverProfileScreenState extends State<CaregiverProfileScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _caregiverData['role'],
+                  widget.caregiver.role,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 16,
@@ -124,7 +251,7 @@ class _CaregiverProfileScreenState extends State<CaregiverProfileScreen>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${_caregiverData['rating']} (${_caregiverData['reviews']} reviews)',
+                      '${widget.caregiver.rating} (${widget.caregiver.reviews} reviews)',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.9),
                         fontSize: 14,
@@ -254,7 +381,7 @@ class _CaregiverProfileScreenState extends State<CaregiverProfileScreen>
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: (_caregiverData['certifications'] as List<String>)
+              children: widget.caregiver.certifications
                   .map((cert) => Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
@@ -326,7 +453,7 @@ class _CaregiverProfileScreenState extends State<CaregiverProfileScreen>
             const SizedBox(height: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: (_caregiverData['availability'] as List<String>)
+              children: widget.caregiver.availability
                   .map((slot) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Row(
@@ -357,110 +484,54 @@ class _CaregiverProfileScreenState extends State<CaregiverProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: true,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF3498DB).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.person,
-                color: Color(0xFF3498DB),
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Caregiver Profile',
-              style: TextStyle(
-                color: Color(0xFF2C3E50),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.message,
-                color: Color(0xFF7F8C8D),
-              ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Opening messaging...'),
+    return SingleChildScrollView(
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProfileHeader(),
+                const SizedBox(height: 32),
+                const Text(
+                  'Caregiver Details',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
                   ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProfileHeader(),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'Caregiver Details',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildInfoCard(
-                    title: 'Experience',
-                    value: _caregiverData['experience'],
-                    icon: Icons.work_history,
-                    color: const Color(0xFF9B59B6),
-                  ),
-                  _buildInfoCard(
-                    title: 'Phone',
-                    value: _caregiverData['phone'],
-                    icon: Icons.phone,
-                    color: const Color(0xFF16A085),
-                  ),
-                  _buildInfoCard(
-                    title: 'Email',
-                    value: _caregiverData['email'],
-                    icon: Icons.email,
-                    color: const Color(0xFFF39C12),
-                  ),
-                  _buildInfoCard(
-                    title: 'Bio',
-                    value: _caregiverData['bio'],
-                    icon: Icons.info,
-                    color: const Color(0xFF00A86B),
-                  ),
-                  _buildCertificationsList(),
-                  _buildAvailabilityList(),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                _buildInfoCard(
+                  title: 'Experience',
+                  value: widget.caregiver.experience,
+                  icon: Icons.work_history,
+                  color: const Color(0xFF9B59B6),
+                ),
+                _buildInfoCard(
+                  title: 'Phone',
+                  value: widget.caregiver.phone,
+                  icon: Icons.phone,
+                  color: const Color(0xFF16A085),
+                ),
+                _buildInfoCard(
+                  title: 'Email',
+                  value: widget.caregiver.email,
+                  icon: Icons.email,
+                  color: const Color(0xFFF39C12),
+                ),
+                _buildInfoCard(
+                  title: 'Bio',
+                  value: widget.caregiver.bio,
+                  icon: Icons.info,
+                  color: const Color(0xFF00A86B),
+                ),
+                _buildCertificationsList(),
+                _buildAvailabilityList(),
+              ],
             ),
           ),
         ),

@@ -463,7 +463,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 child: const Icon(
                   Icons.health_and_safety,
                   color: Color(0xFF00A86B),
-                  size: 24,
+                  size: 21,
                 ),
               ),
               const SizedBox(width: 12),
@@ -471,7 +471,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 'HomeCare Admin',
                 style: TextStyle(
                   color: Color(0xFF2C3E50),
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),

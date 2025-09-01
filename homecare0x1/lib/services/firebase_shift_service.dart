@@ -7,11 +7,14 @@ import 'package:homecare0x1/providers/location_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/models/caregiver.dart';
+import 'package:homecare0x1/models/caregiver_profile.dart';
 
 // FirebaseShiftService class for managing shift-related operations with Firestore
 class FirebaseShiftService {
   // Singleton instance to ensure only one instance of the service exists
   static final FirebaseShiftService instance = FirebaseShiftService._constructor();
+  // initialize variable to hold caregiver profiles collection name
+  final String _caregiverProfilesCollection = 'caregiver_profiles';
   
   // Firestore instance for database operations
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -23,6 +26,56 @@ class FirebaseShiftService {
 
   // Private constructor for singleton pattern
   FirebaseShiftService._constructor();
+
+  // Fetch a caregiver profile by ID
+  Future<CaregiverProfile?> getCaregiverProfile(String caregiverId) async {
+    try {
+      final doc = await _firestore.collection(_caregiverProfilesCollection).doc(caregiverId).get();
+      if (doc.exists) {
+        return CaregiverProfile.fromMap(doc.data()!, doc.id);
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching caregiver profile: $e');
+      return null;
+    }
+  }
+
+  // Fetch caregivers who worked with a specific client
+  Future<List<CaregiverProfile>> getCaregiversForClient(String clientId) async {
+    try {
+      final shifts = await getShiftsForClient(clientId);
+      // Get unique caregiver IDs from shifts
+      final caregiverIds = shifts
+          .where((shift) => shift.caregiverId != null)
+          .map((shift) => shift.caregiverId!)
+          .toSet()
+          .toList();
+      // Fetch profiles for each caregiver
+      final profiles = <CaregiverProfile>[];
+      for (var caregiverId in caregiverIds) {
+        final profile = await getCaregiverProfile(caregiverId);
+        if (profile != null) {
+          profiles.add(profile);
+        }
+      }
+      return profiles;
+    } catch (e) {
+      print('Error fetching caregivers for client: $e');
+      return [];
+    }
+  }
+
+  // Add or update a caregiver profile
+  Future<String> upsertCaregiverProfile(CaregiverProfile profile) async {
+    try {
+      await _firestore.collection(_caregiverProfilesCollection).doc(profile.id).set(profile.toMap());
+      return "success";
+    } catch (e) {
+      print('Error upserting caregiver profile: $e');
+      return "error";
+    }
+  }
 
   /// Fetches all available caregivers from Firestore
   /// Returns a list of Caregiver objects filtered by availability

@@ -170,48 +170,6 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
           ),
           actions: [
             Container(
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8F9FA),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: Stack(
-                  children: [
-                    const Icon(
-                      Icons.notifications_outlined,
-                      color: Color(0xFF7F8C8D),
-                    ),
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: const Text(
-                          '2',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                onPressed: () => Navigator.pushNamed(context, Routes.messages),
-              ),
-            ),
-            Container(
               margin: const EdgeInsets.only(right: 16),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8F9FA),
@@ -362,7 +320,7 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                             icon: Icons.event_available,
                             animation: _statsAnimations[0],
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 8),
                           ModernStat(
                             title: 'Care Notes',
                             value: '12',
@@ -371,7 +329,7 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                             icon: Icons.note_outlined,
                             animation: _statsAnimations[1],
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 8),
                           ModernStat(
                             title: 'Messages',
                             value: '5',
@@ -401,21 +359,21 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
                       childAspectRatio: 0.85,
                       children: [
                         ModernActionCard(
-                          title: 'Request Care Session',
+                          title: 'Request Session',
                           subtitle:
-                              'Request a new caregiving session for your loved one',
+                              'Schedule care session',
                           icon: Icons.schedule,
                           color: AppTheme.secondaryTeal,
                           onTap: () => showRequestShiftDialog(context),
                         ),
                         ModernActionCard(
                           title: 'Care Notes',
-                          subtitle: 'View detailed notes from your caregiver',
+                          subtitle: 'View caregiver notes',
                           icon: Icons.note,
                           color: const Color(0xFF00A86B),
                           onTap: () => Navigator.pushNamed(
@@ -424,16 +382,16 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                         ),
                         ModernActionCard(
                           title: 'Visit History',
-                          subtitle: 'Track all recent visits and activities',
+                          subtitle: 'Track activities',
                           icon: Icons.history,
                           color: const Color(0xFFE67E22),
                           onTap: () => Navigator.pushNamed(
                               context, Routes.clientViewShiftHistory),
                         ),
                         ModernActionCard(
-                          title: 'Caregiver Profile',
+                          title: 'Caregiver Profiles',
                           subtitle:
-                              'View your caregiver\'s details and contact information',
+                              'Know your caregivers',
                           icon: Icons.person,
                           color: const Color(0xFF3498DB),
                           onTap: () => Navigator.pushNamed(
@@ -450,7 +408,7 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                         Expanded(
                           child: ModernActionCard(
                             title: 'Payment Status',
-                            subtitle: 'View billing and payment information',
+                            subtitle: 'Billing info',
                             icon: Icons.payment,
                             color: const Color(0xFF16A085),
                             onTap: () => Navigator.pushNamed(
@@ -461,7 +419,7 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                         Expanded(
                           child: ModernActionCard(
                             title: 'Support Testing',
-                            subtitle: 'Get help and contact our support team',
+                            subtitle: 'Contact support',
                             icon: Icons.support_agent,
                             color: const Color(0xFFF39C12),
                             onTap: () => Navigator.pushNamed(
@@ -505,14 +463,6 @@ class _FamilyPortalScreenState extends State<FamilyPortalScreen>
                             time: '2 hours ago',
                             icon: Icons.note_add,
                             color: const Color(0xFF00A86B),
-                          ),
-                          const Divider(height: 1),
-                          ActivityItem(
-                            title: 'Message received',
-                            subtitle: 'Your caregiver sent you an update',
-                            time: '4 hours ago',
-                            icon: Icons.message,
-                            color: const Color(0xFF9B59B6),
                           ),
                           const Divider(height: 1),
                           ActivityItem(

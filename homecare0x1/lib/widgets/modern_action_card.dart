@@ -53,7 +53,7 @@ class ModernActionCard extends StatelessWidget {
                       child: Icon(
                         icon,
                         color: color,
-                        size: 28,
+                        size: 20,
                       ),
                     ),
                     if (badge != null) ...[
@@ -77,11 +77,11 @@ class ModernActionCard extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2C3E50),
                   ),
@@ -91,7 +91,7 @@ class ModernActionCard extends StatelessWidget {
                   subtitle,
                   style: const TextStyle(
                     color: Color(0xFF7F8C8D),
-                    fontSize: 14,
+                    fontSize: 10,
                     height: 1.4,
                   ),
                 ),

@@ -49,8 +49,8 @@ class ModernStat extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     SizedBox(
-                      height: 70,
-                      width: 70,
+                      height: 50,
+                      width: 50,
                       child: TweenAnimationBuilder<double>(
                         duration: Duration(
                             milliseconds:
@@ -78,7 +78,7 @@ class ModernStat extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
                 TweenAnimationBuilder<int>(
                   duration: Duration(
                       milliseconds: 1000 + (animation.value * 500).round()),
@@ -87,7 +87,7 @@ class ModernStat extends StatelessWidget {
                     return Text(
                       value.toString(),
                       style: const TextStyle(
-                        fontSize: 28,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF2C3E50),
                       ),
