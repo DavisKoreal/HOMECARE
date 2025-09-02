@@ -31,6 +31,7 @@ import 'package:homecare0x1/screens/task_list_screen.dart';
 import 'package:homecare0x1/screens/user_profile_screen.dart';
 import 'package:homecare0x1/screens/visit_check_in_screen.dart';
 import 'package:homecare0x1/screens/visit_check_out_screen.dart';
+import 'package:homecare0x1/screens/caregiver_complete_profile.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
@@ -127,6 +128,9 @@ class HomecareApp extends StatelessWidget {
             case Routes.familyCareNotes:
               return MaterialPageRoute(
                   builder: (_) => const FamilyCareNotesScreen());
+            case Routes.caregiverCompleteProfile:
+              return MaterialPageRoute(
+                  builder: (_) => const CaregiverCompleteProfileScreen());
             case Routes.caregiverProfile:
               return MaterialPageRoute(
                   builder: (_) => const CaregiverProfileScreen());

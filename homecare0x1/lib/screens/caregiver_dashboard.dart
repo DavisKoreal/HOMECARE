@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
@@ -11,7 +10,9 @@ import 'package:homecare0x1/models/shift.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:homecare0x1/actions/overlay.dart';
 import 'package:uuid/uuid.dart';
-import 'package:homecare0x1/services/firebase_care_note_service.dart'; 
+import 'package:homecare0x1/services/firebase_care_note_service.dart';
+import 'package:homecare0x1/services/firebase_caregiver_service.dart';
+import 'package:homecare0x1/models/caregiver_profile.dart';
 
 // Caregiver Dashboard Screen
 // Displays a dashboard for caregivers with stats, quick actions, and recent activities.
@@ -32,6 +33,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
   late List<Animation<double>> _statsAnimations;
   List<Shift> caregivershifts = [];
   late OverlayUtils _overlayUtils;
+  bool isProfileComplete = true;
 
   @override
   void initState() {
@@ -85,6 +87,29 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
     if (userProvider.user != null) {
       caregivershifts = shiftProvider.getShiftsForCaregiver(userProvider.user!.id);
     }
+    _fetchProfileCompleteness();
+  }
+
+  Future<void> _fetchProfileCompleteness() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final caregiverService = FirebaseCaregiverService.instance;
+    final profile = await caregiverService.getCaregiverProfile(userProvider.user!.id);
+    if (mounted) {
+      setState(() {
+        isProfileComplete = profile != null && _isProfileFullyFilled(profile);
+      });
+    }
+  }
+
+  bool _isProfileFullyFilled(CaregiverProfile profile) {
+    return profile.name.isNotEmpty &&
+           profile.role.isNotEmpty &&
+           profile.experience.isNotEmpty &&
+           profile.certifications.isNotEmpty &&
+           profile.phone.isNotEmpty &&
+           profile.email.isNotEmpty &&
+           profile.bio.isNotEmpty &&
+           profile.availability.isNotEmpty;
   }
 
   @override
@@ -1113,7 +1138,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
 
   // Saves the CareNote to Firebase
   Future<void> _saveCareNote(BuildContext context, CareNote careNote) async {
-    final service = FirebaseCareNotesService(); 
+    final service = FirebaseCareNotesService();
     try {
       await service.addCareNote(careNote);
       _overlayUtils.showOverlay(context, 'Care note added successfully');
@@ -1276,6 +1301,82 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       _overlayUtils.showOverlay(context, 'Medication logged successfully');
       Navigator.pushNamed(context, Routes.emar);
     }
+  }
+
+  // Builds a profile completion card
+  Widget _buildProfileCompletionCard({bool isSecondary = false}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(isSecondary ? 0.05 : 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.orange.withOpacity(isSecondary ? 0.2 : 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(isSecondary ? 0.15 : 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.warning,
+              color: Colors.orange,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isSecondary ? 'Reminder: Complete Your Profile' : 'Complete Your Profile',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isSecondary
+                      ? 'Complete your profile to ensure you can be assigned shifts.'
+                      : 'Please fill your profile so that you can be assigned care shifts.',
+                  style: const TextStyle(
+                    color: Colors.orange,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.orange,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, Routes.caregiverCompleteProfile);
+              },
+              child: const Text(
+                'Complete Now',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -1489,6 +1590,10 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                         ],
                       ),
                     ),
+                    if (!isProfileComplete) ...[
+                      const SizedBox(height: 20),
+                      _buildProfileCompletionCard(),
+                    ],
                     const SizedBox(height: 32),
                     const Text(
                       'Today\'s Overview',
@@ -1533,6 +1638,10 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                         ],
                       ),
                     ),
+                    if (!isProfileComplete) ...[
+                      const SizedBox(height: 20),
+                      _buildProfileCompletionCard(isSecondary: true),
+                    ],
                     const SizedBox(height: 32),
                     const Text(
                       'Quick Actions',

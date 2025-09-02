@@ -149,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       child: const Icon(
                         Icons.favorite, // Replaced invalid Icons.healt
                         color: Colors.white,
-                        size: 40,
+                        size: 23,
                       ),
                     ),
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/models/shift.dart';
 import 'package:homecare0x1/services/firebase_shift_service.dart';
+import 'package:homecare0x1/services/firebase_caregiver_service.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
@@ -42,6 +43,8 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
   final TextEditingController _searchController = TextEditingController();
   // Instance of FirebaseShiftService for Firestore data operations.
   final FirebaseShiftService _shiftService = FirebaseShiftService.instance;
+  // initialize caregiver service 
+  final FirebaseCaregiverService _caregiverService = FirebaseCaregiverService.instance;
   // Instance of OverlayUtils for displaying notification overlays.
   late OverlayUtils _overlayUtils;
 
@@ -101,7 +104,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
   Future<void> _fetchInitialData() async {
     try {
       // Fetch caregivers, clients, and shifts concurrently.
-      final caregivers = await _shiftService.getAvailableCaregivers();
+      final caregivers = await _caregiverService.getAvailableCaregivers();
       final clients = await _shiftService.getAllClients();
       final shifts = await _shiftService.getAllShifts();
       setState(() {
@@ -140,7 +143,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
 
       // Fetch all data concurrently using Future.wait.
       final results = await Future.wait([
-        _shiftService.getAvailableCaregivers(),
+        _caregiverService.getAvailableCaregivers(),
         _shiftService.getAllClients(),
         _shiftService.getAllShifts(),
       ]);

@@ -1,3 +1,4 @@
+// Updated file: lib/services/firebase_shift_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/models/client.dart';
@@ -7,18 +8,17 @@ import 'package:homecare0x1/providers/location_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/models/caregiver.dart';
+import 'package:homecare0x1/services/firebase_caregiver_service.dart';
 import 'package:homecare0x1/models/caregiver_profile.dart';
 
 // FirebaseShiftService class for managing shift-related operations with Firestore
 class FirebaseShiftService {
   // Singleton instance to ensure only one instance of the service exists
   static final FirebaseShiftService instance = FirebaseShiftService._constructor();
-  // initialize variable to hold caregiver profiles collection name
-  final String _caregiverProfilesCollection = 'caregiver_profiles';
-  
+
   // Firestore instance for database operations
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   // Collection names for Firestore
   final String _caregiversCollection = 'caregivers';
   final String _clientsCollection = 'clients';
@@ -26,20 +26,6 @@ class FirebaseShiftService {
 
   // Private constructor for singleton pattern
   FirebaseShiftService._constructor();
-
-  // Fetch a caregiver profile by ID
-  Future<CaregiverProfile?> getCaregiverProfile(String caregiverId) async {
-    try {
-      final doc = await _firestore.collection(_caregiverProfilesCollection).doc(caregiverId).get();
-      if (doc.exists) {
-        return CaregiverProfile.fromMap(doc.data()!, doc.id);
-      }
-      return null;
-    } catch (e) {
-      print('Error fetching caregiver profile: $e');
-      return null;
-    }
-  }
 
   // Fetch caregivers who worked with a specific client
   Future<List<CaregiverProfile>> getCaregiversForClient(String clientId) async {
@@ -52,45 +38,9 @@ class FirebaseShiftService {
           .toSet()
           .toList();
       // Fetch profiles for each caregiver
-      final profiles = <CaregiverProfile>[];
-      for (var caregiverId in caregiverIds) {
-        final profile = await getCaregiverProfile(caregiverId);
-        if (profile != null) {
-          profiles.add(profile);
-        }
-      }
-      return profiles;
+      return await FirebaseCaregiverService.instance.getCaregiversForClient(caregiverIds);
     } catch (e) {
       print('Error fetching caregivers for client: $e');
-      return [];
-    }
-  }
-
-  // Add or update a caregiver profile
-  Future<String> upsertCaregiverProfile(CaregiverProfile profile) async {
-    try {
-      await _firestore.collection(_caregiverProfilesCollection).doc(profile.id).set(profile.toMap());
-      return "success";
-    } catch (e) {
-      print('Error upserting caregiver profile: $e');
-      return "error";
-    }
-  }
-
-  /// Fetches all available caregivers from Firestore
-  /// Returns a list of Caregiver objects filtered by availability
-  Future<List<Caregiver>> getAvailableCaregivers() async {
-    try {
-      // Query the caregivers collection
-      final snapshot = await _firestore.collection(_caregiversCollection).get();
-      // Map documents to Caregiver objects and filter by isAvailable
-      return snapshot.docs
-          .map((doc) => Caregiver.fromMap(doc.data(), doc.id))
-          .where((cg) => cg.isAvailable)
-          .toList();
-    } catch (e) {
-      // Log error and return empty list on failure
-      print('Error fetching available caregivers: $e');
       return [];
     }
   }
