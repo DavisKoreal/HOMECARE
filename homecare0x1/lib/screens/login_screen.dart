@@ -3,6 +3,7 @@ import 'package:homecare0x1/services/auth_service.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:provider/provider.dart';
+import 'package:homecare0x1/screens/signup_screen.dart'; // Add this import for SignUpScreen
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -483,6 +484,36 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           ],
                         ),
                       ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Sign up link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: const Color(0xFF7F8C8D),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                            );
+                          },
+                          child: Text(
+                            'Sign Up',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: const Color(0xFF00A86B),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 32),

@@ -10,6 +10,7 @@ class CaregiverProfile {
   final List<String> availability;
   final double rating;
   final int reviews;
+  final bool approved;
 
   CaregiverProfile({
     required this.id,
@@ -23,6 +24,7 @@ class CaregiverProfile {
     required this.availability,
     required this.rating,
     required this.reviews,
+    this.approved = false,
   });
 
   factory CaregiverProfile.fromMap(Map<String, dynamic> map, String id) {
@@ -38,6 +40,7 @@ class CaregiverProfile {
       availability: List<String>.from(map['availability'] ?? []),
       rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
       reviews: (map['reviews'] as num?)?.toInt() ?? 0,
+      approved: map['approved'] ?? false,
     );
   }
 
@@ -53,6 +56,7 @@ class CaregiverProfile {
       'availability': availability,
       'rating': rating,
       'reviews': reviews,
+      'approved': approved,
     };
   }
 }
