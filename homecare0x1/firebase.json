@@ -23,7 +23,7 @@
                                   }
                 },
     "hosting":  {
-                    "public":  "homecare0x1/build/web",
+                    "public":  "build/web",
                     "ignore":  [
                                    "firebase.json",
                                    "**/.*",
