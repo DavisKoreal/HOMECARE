@@ -1,0 +1,342 @@
+﻿Diagnostics run at: 2025-09-17 03:52:30Z
+Repository root: C:\Users\Administrator\Desktop\HOMECARE\homecare0x1
+Report folder: C:\Users\Administrator\Desktop\HOMECARE\homecare0x1\firebase_diagnostics_20250917-035230
+
+== Tool availability ==
+flutter: FOUND
+Manage your Flutter app development.
+
+Common commands:
+
+  flutter create <output directory>
+    Create a new Flutter project in the specified directory.
+
+  flutter run [options]
+    Run your Flutter application on an attached device or in an emulator.
+
+Usage: flutter <command> [arguments]
+
+Global options:
+-h, --help                  Print this usage information.
+-v, --verbose               Noisy logging, including all shell commands executed.
+                            If used with "--help", shows hidden options. If used with "flutter doctor", shows additional diagnostic information. (Use "-vv" to force verbose logging in those cases.)
+-d, --device-id             Target device id or name (prefixes allowed).
+    --version               Reports the version of this tool.
+    --enable-analytics      Enable telemetry reporting each time a flutter or dart command runs.
+    --disable-analytics     Disable telemetry reporting each time a flutter or dart command runs, until it is re-enabled.
+    --suppress-analytics    Suppress analytics reporting for the current CLI invocation.
+
+Available commands:
+
+Flutter SDK
+  bash-completion   Output command line shell completion setup scripts.
+  channel           List or switch Flutter channels.
+  config            Configure Flutter settings.
+  doctor            Show information about the installed tooling.
+  downgrade         Downgrade Flutter to the last active version for the current channel.
+  precache          Populate the Flutter tool's cache of binary artifacts.
+  upgrade           Upgrade your copy of Flutter.
+
+Project
+  analyze           Analyze the project's Dart code.
+  assemble          Assemble and build Flutter resources.
+  build             Build an executable app or install bundle.
+  clean             Delete the build/ and .dart_tool/ directories.
+  create            Create a new Flutter project.
+  drive             Builds and installs the app, and runs a Dart program that connects to the app, often to run externally facing integration tests, such as with package:test and package:flutter_driver.
+  gen-l10n          Generate localizations for the current project.
+  pub               Commands for managing Flutter packages.
+  run               Run your Flutter app on an attached device.
+  test              Run Flutter unit tests for the current project.
+
+Tools & Devices
+  attach            Attach to a running app.
+  custom-devices    List, reset, add and delete custom devices.
+  devices           List all connected devices.
+  emulators         List, launch and create emulators.
+  install           Install a Flutter app on an attached device.
+  logs              Show log output for running Flutter apps.
+  screenshot        Take a screenshot from a connected device.
+  symbolize         Symbolize a stack trace from an AOT-compiled Flutter app.
+
+Run "flutter help <command>" for more information about a command.
+Run "flutter help -v" for verbose help output, including less commonly used options.
+
+firebase-cli: FOUND
+Usage:  [options] [command]
+
+Options:
+  -V, --version                                                                     output the version number
+  -P, --project <alias_or_project_id>                                               the Firebase project to use for this command
+  --account <email>                                                                 the Google account to use for authorization
+  -j, --json                                                                        output JSON instead of text, also triggers non-interactive mode
+  --token <token>                                                                   DEPRECATED - will be removed in a future major version - supply an auth token for this command
+  --non-interactive                                                                 error out of the command instead of waiting for prompts
+  -i, --interactive                                                                 force prompts to be displayed
+  --debug                                                                           print verbose debug output and keep a debug log file
+  -c, --config <path>                                                               path to the firebase.json file to use for configuration
+  -h, --help                                                                        display help for command
+
+Commands:
+  appdistribution:distribute [options] <release-binary-file>                        upload a release binary and optionally distribute it to testers and run automated tests
+  appdistribution:testers:list [group]                                              list testers in project
+  appdistribution:testers:add [options] [emails...]                                 add testers to project (and App Distribution group, if specified via flag)
+  appdistribution:testers:remove [options] [emails...]                              remove testers from a project (or App Distribution group, if specified via flag)
+  appdistribution:groups:list|appdistribution:group:list                            list App Distribution groups
+  appdistribution:groups:create|appdistribution:group:create <displayName> [alias]  create an App Distribution group
+  appdistribution:groups:delete|appdistribution:group:delete <alias>                delete an App Distribution group
+  apps:create [options] [platform] [displayName]                                    create a new Firebase app. [platform] can be IOS, ANDROID or WEB (case insensitive)
+  apps:list [platform]                                                              list the registered apps of a Firebase project. Optionally filter apps by [platform]: IOS, ANDROID or WEB (case insensitive)
+  apps:init [options] [platform] [appId]                                            automatically download and create config of a Firebase app
+  apps:sdkconfig [options] [platform] [appId]                                       print the Google Services config of a Firebase app. [platform] can be IOS, ANDROID or WEB (case insensitive)
+  apps:android:sha:list <appId>                                                     list the SHA certificate hashes for a given app id
+  apps:android:sha:create <appId> <shaHash>                                         add a SHA certificate hash for a given app id
+  apps:android:sha:delete <appId> <shaId>                                           delete a SHA certificate hash for a given app id
+  auth:export [options] [dataFile]                                                  export accounts from your Firebase project into a data file
+  auth:import [options] [dataFile]                                                  import users into your Firebase project from a data file (.csv or .json)
+  crashlytics:symbols:upload [options] <symbolFiles...>                             upload symbols for native code, to symbolicate stack traces
+  crashlytics:mappingfile:generateid [options]                                      generate a mapping file id and write it to an Android resource file, which will be built into the app
+  crashlytics:mappingfile:upload [options] <mappingFile>                            upload a ProGuard/R8-compatible mapping file to deobfuscate stack traces
+  database:get [options] <path>                                                     fetch and print JSON data at the specified path
+  database:import [options] <path> [infile]                                         non-atomically import the contents of a JSON file to the specified path in Realtime Database
+  database:instances:create [options] <instanceName>                                create a Realtime Database instance
+  database:instances:list [options]                                                 list realtime database instances, optionally filtered by a specified location
+  database:profile [options]                                                        profile the Realtime Database and generate a usage report
+  database:push [options] <path> [infile]                                           add a new JSON object to a list of data in your Firebase
+  database:remove [options] <path>                                                  remove data from your Firebase at the specified path
+  database:set [options] <path> [infile]                                            store JSON data at the specified path via STDIN, arg, or file
+  database:settings:get [options] <path>                                            read the realtime database setting at path
+  database:settings:set [options] <path> <value>                                    set the Realtime Database setting at path
+  database:update [options] <path> [infile]                                         update some of the keys for the defined path in your Realtime Database
+  deploy [options]                                                                  deploy code and assets to your Firebase project
+  emulators:exec [options] <script>                                                 start the local Firebase emulators, run a test script, then shut down the emulators
+  emulators:export [options] <path>                                                 export data from running emulators
+  emulators:start [options]                                                         start the local Firebase emulators
+  experiments:list                                                                  list all experiments, along with a description of each experiment and whether it is currently enabled
+  experiments:describe <experiment>                                                 describe what an experiment does when enabled
+  experiments:enable <experiment>                                                   enable an experiment on this machine
+  experiments:disable <experiment>                                                  disable an experiment on this machine
+  ext                                                                               display information on how to use ext commands and extensions installed to your project
+  ext:configure [options] <extensionInstanceId>                                     configure an existing extension instance
+  ext:info [options] <extensionName>                                                display information about an extension by name (extensionName@x.y.z for a specific version)
+  ext:export [options]                                                              export all Extension instances installed on a project to a local Firebase directory
+  ext:install [options] [extensionRefOrLocalPath]                                   add an extension to firebase.json
+  ext:list                                                                          list all the extensions that are installed in your Firebase project
+  ext:uninstall [options] <extensionInstanceId>                                     uninstall an extension that is installed in your Firebase project by instance ID
+  ext:update [options] <extensionInstanceId> [updateSource]                         update an existing extension instance to the latest version, or to a specific version if provided
+  ext:sdk:install [options] <extensionName>                                         get an SDK for this extension. The SDK will be put in the 'generated' directory
+  ext:dev:init                                                                      initialize files for writing an extension in the current directory
+  ext:dev:list <publisherId>                                                        list all extensions uploaded under publisher ID
+  ext:dev:register                                                                  register a publisher ID; run this before publishing your first extension
+  ext:dev:deprecate [options] <extensionRef> [versionPredicate]                     deprecate extension versions that match the version predicate
+  ext:dev:undeprecate <extensionRef> <versionPredicate>                             undeprecate extension versions that match the version predicate
+  ext:dev:upload [options] <extensionRef>                                           upload a new version of an extension
+  ext:dev:usage <publisherId>                                                       get usage statistics for an extension
+  firestore:delete [options] [path]                                                 delete data from a Cloud Firestore database
+  firestore:bulkdelete [options]                                                    managed bulk delete service to delete data from one or more collection groups
+  firestore:indexes [options]                                                       list indexes in a Cloud Firestore database
+  firestore:locations                                                               list possible locations for your Cloud Firestore database
+  firestore:operations:cancel [options] <operationName>                             cancels a long-running Cloud Firestore admin operation
+  firestore:operations:describe [options] <operationName>                           retrieves information about a Cloud Firestore admin operation
+  firestore:operations:list [options]                                               list pending Cloud Firestore admin operations and their status
+  firestore:databases:list                                                          list the Cloud Firestore databases on your project
+  firestore:databases:get [database]                                                get information about a Cloud Firestore database
+  firestore:databases:create [options] <database>                                   create a database in your Firebase project
+  firestore:databases:update [options] <database>                                   update a database in your Firebase project. Must specify at least one property to update
+  firestore:databases:delete [options] <database>                                   delete a database in your Cloud Firestore project
+  firestore:databases:restore [options]                                             restore a Firestore database from a backup
+  firestore:backups:list [options]                                                  list all Cloud Firestore backups in a given location
+  firestore:backups:get <backup>                                                    get a Cloud Firestore database backup
+  firestore:backups:delete [options] <backup>                                       delete a backup under your Cloud Firestore database
+  firestore:backups:schedules:list [options]                                        list backup schedules under your Cloud Firestore database
+  firestore:backups:schedules:create [options]                                      create a backup schedule under your Cloud Firestore database
+  firestore:backups:schedules:update [options] <backupSchedule>                     update a backup schedule under your Cloud Firestore database
+  firestore:backups:schedules:delete [options] <backupSchedule>                     delete a backup schedule under your Cloud Firestore database
+  functions:config:clone [options]                                                  clone environment config from another project
+  functions:config:export                                                           export environment config as environment variables in dotenv format
+  functions:config:get [path]                                                       fetch environment config stored at the given path
+  functions:config:set [values...]                                                  set environment config with key=value syntax
+  functions:config:unset [keys...]                                                  unset environment config at the specified path(s)
+  functions:delete [options] [filters...]                                           delete one or more Cloud Functions by name or group name.
+  functions:log [options]                                                           read logs from deployed functions
+  functions:shell [options]                                                         launch full Node shell with emulated functions
+  functions:list                                                                    list all deployed functions in your Firebase project
+  functions:secrets:access <KEY>[@version>                                          access secret value given secret and its version. Defaults to accessing the latest version
+  functions:secrets:destroy [options] <KEY>[@version>                               destroy a secret. Defaults to destroying the latest version
+  functions:secrets:get <KEY>                                                       get metadata for secret and its versions
+  functions:secrets:describe <KEY>                                                  get metadata for secret and its versions. Alias for functions:secrets:get to align with gcloud
+  functions:secrets:prune [options]                                                 destroy unused secrets
+  functions:secrets:set [options] <KEY>                                             create or update a secret for use in Cloud Functions for Firebase
+  functions:artifacts:setpolicy [options]                                           set up a cleanup policy for Cloud Run functions container images in Artifact Registry to automatically delete old function images
+  help [command]                                                                    display help information
+  hosting:channel:create [options] [channelId]                                      create a Firebase Hosting channel
+  hosting:channel:delete [options] <channelId>                                      delete a Firebase Hosting channel
+  hosting:channel:deploy [options] [channelId]                                      deploy to a specific Firebase Hosting channel
+  hosting:channel:list [options]                                                    list all Firebase Hosting channels for your project
+  hosting:channel:open [options] [channelId]                                        opens the URL for a Firebase Hosting channel
+  hosting:clone <source> <targetChannel>                                            clone a version from one site to another
+  hosting:disable [options]                                                         stop serving web traffic to your Firebase Hosting site
+  hosting:sites:create [options] [siteId]                                           create a Firebase Hosting site
+  hosting:sites:delete [options] <siteId>                                           delete a Firebase Hosting site
+  hosting:sites:get <siteId>                                                        print info about a Firebase Hosting site
+  hosting:sites:list                                                                list Firebase Hosting sites
+  init [feature]                                                                    interactively configure the current directory as a Firebase project directory
+  apphosting:backends:list                                                          list Firebase App Hosting backends
+  apphosting:backends:create [options]                                              create a Firebase App Hosting backend
+  apphosting:backends:get <backend>                                                 print info about a Firebase App Hosting backend
+  apphosting:backends:delete [options] <backend>                                    delete a Firebase App Hosting backend
+  apphosting:secrets:set [options] <secretName>                                     create or update a secret for use in Firebase App Hosting
+  apphosting:secrets:grantaccess [options] <secretNames>                            Grant service accounts, users, or groups permissions to the provided secret(s). Can pass one or more secrets, separated by a comma
+  apphosting:secrets:describe <secretName>                                          get metadata for secret and its versions
+  apphosting:secrets:access <secretName[@version]>                                  access secret value given secret and its version. Defaults to accessing the latest version
+  apphosting:rollouts:create [options] <backendId>                                  create a rollout using a build for an App Hosting backend
+  login [options]                                                                   log the CLI into Firebase
+  login:add [options] [email]                                                       authorize the CLI for an additional account
+  login:ci [options]                                                                generate an access token for use in non-interactive environments
+  login:list                                                                        list authorized CLI accounts
+  login:use <email>                                                                 set the default account to use for this project directory or the global default account if not in a Firebase project directory
+  logout [email]                                                                    log the CLI out of Firebase
+  experimental:mcp                                                                  Start an MCP server with access to the current working directory's project and resources.
+  open [link]                                                                       quickly open a browser to relevant project resources
+  projects:addfirebase [projectId]                                                  add Firebase resources to a Google Cloud Platform project
+  projects:create [options] [projectId]                                             creates a new Google Cloud Platform project, then adds Firebase resources to the project
+  projects:list                                                                     list all Firebase projects you have access to
+  remoteconfig:get [options]                                                        get a Firebase project's Remote Config template
+  remoteconfig:rollback [options]                                                   roll back a project's published Remote Config template to the one specified by the provided version number
+  remoteconfig:versions:list [options]                                              get a list of Remote Config template versions that have been published for a Firebase project
+  serve [options]                                                                   start a local server for your static assets
+  setup:emulators:database                                                          download the database emulator
+  setup:emulators:firestore                                                         download the firestore emulator
+  setup:emulators:pubsub                                                            download the pubsub emulator
+  setup:emulators:storage                                                           download the storage emulator
+  setup:emulators:ui                                                                download the ui emulator
+  setup:emulators:dataconnect                                                       download the dataconnect emulator
+  dataconnect:services:list                                                         list all deployed Data Connect services
+  dataconnect:sql:diff [serviceId]                                                  display the differences between a local Data Connect schema and your CloudSQL database's current schema
+  dataconnect:sql:setup [serviceId]                                                 set up your CloudSQL database
+  dataconnect:sql:migrate [options] [serviceId]                                     migrate your CloudSQL database's schema to match your local Data Connect schema
+  dataconnect:sql:grant [options] [serviceId]                                       grants the SQL role <role> to the provided user or service account <email>
+  dataconnect:sql:shell [serviceId]                                                 start a shell connected directly to your Data Connect service's linked CloudSQL instance
+  dataconnect:sdk:generate [options]                                                generate typed SDKs for your Data Connect connectors
+  target [type]                                                                     display configured deploy targets for the current project
+  target:apply <type> <name> <resources...>                                         apply a deploy target to a resource
+  target:clear <type> <target>                                                      clear all resources from a named resource target
+  target:remove <type> <resource>                                                   remove a resource target
+  use [options] [alias_or_project_id]                                               set an active Firebase project for your working directory
+
+git: FOUND
+usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]
+           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]
+           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]
+           <command> [<args>]
+
+These are common Git commands used in various situations:
+
+start a working area (see also: git help tutorial)
+   clone      Clone a repository into a new directory
+   init       Create an empty Git repository or reinitialize an existing one
+
+work on the current change (see also: git help everyday)
+   add        Add file contents to the index
+   mv         Move or rename a file, a directory, or a symlink
+   restore    Restore working tree files
+   rm         Remove files from the working tree and from the index
+
+examine the history and state (see also: git help revisions)
+   bisect     Use binary search to find the commit that introduced a bug
+   diff       Show changes between commits, commit and working tree, etc
+   grep       Print lines matching a pattern
+   log        Show commit logs
+   show       Show various types of objects
+   status     Show the working tree status
+
+grow, mark and tweak your common history
+   backfill   Download missing objects in a partial clone
+   branch     List, create, or delete branches
+   commit     Record changes to the repository
+   merge      Join two or more development histories together
+   rebase     Reapply commits on top of another base tip
+   reset      Reset current HEAD to the specified state
+   switch     Switch branches
+   tag        Create, list, delete or verify a tag object signed with GPG
+
+collaborate (see also: git help workflows)
+   fetch      Download objects and refs from another repository
+   pull       Fetch from and integrate with another repository or a local branch
+   push       Update remote refs along with associated objects
+
+'git help -a' and 'git help -g' list available subcommands and some
+concept guides. See 'git help <command>' or 'git help <concept>'
+to read about a specific subcommand or concept.
+See 'git help git' for an overview of the system.
+
+== Firebase config files ==
+Found firebase.json at: C:\Users\Administrator\Desktop\HOMECARE\homecare0x1\firebase.json
+firebase.json (raw):
+{"flutter":{"platforms":{"android":{"default":{"projectId":"arandomtestproject","appId":"1:312607240262:android:c00d42d0cf942885cf5a47","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"arandomtestproject","configurations":{"android":"1:312607240262:android:c00d42d0cf942885cf5a47","ios":"1:312607240262:ios:e8ffa8d28b7f6479cf5a47","macos":"1:312607240262:ios:e8ffa8d28b7f6479cf5a47","web":"1:312607240262:web:8f81709adc848df5cf5a47","windows":"1:312607240262:web:8422d2924b39a15bcf5a47"}}}}},"hosting":{"public":"build/web","ignore":["firebase.json","**/.*","**/node_modules/**"],"rewrites":[{"source":"**","destination":"/index.html"}]}}
+
+hosting.public: build/web
+
+.firebaserc NOT FOUND in repo root.
+
+== build/web inspection ==
+Found build/web at: C:\Users\Administrator\Desktop\HOMECARE\homecare0x1\build\web
+Top-level files and folders (first 100):
+  .dart_tool                                            9/17/2025 2:43:55 AM
+  .idea                                                 9/17/2025 2:35:04 AM
+  assets                                                9/17/2025 2:07:37 AM
+  canvaskit                                             9/17/2025 2:05:15 AM
+  icons                                                 9/17/2025 2:07:46 AM
+  lib                                                   9/17/2025 2:35:04 AM
+  test                                                  9/17/2025 2:35:04 AM
+  web                                                   9/17/2025 2:35:04 AM
+  .gitignore                                        754 9/17/2025 2:35:03 AM
+  .last_build_id                                     32 9/17/2025 2:07:57 AM
+  .metadata                                         964 9/17/2025 2:35:04 AM
+  analysis_options.yaml                            1448 9/17/2025 2:35:04 AM
+  arandomtestproject.iml                            859 9/17/2025 2:35:04 AM
+  favicon.png                                       917  8/9/2025 2:41:28 PM
+  flutter.js                                       8535  8/9/2025 2:43:36 PM
+  flutter_bootstrap.js                             8860 9/17/2025 2:05:15 AM
+  flutter_service_worker.js                        8226 9/17/2025 2:07:56 AM
+  index.html                                       1477 9/17/2025 2:05:15 AM
+  index.html.bak-2025-08-03-114522                 1427  8/9/2025 2:41:28 PM
+  main.dart.js                                  3108337 9/17/2025 2:07:25 AM
+  manifest.json                                     953  8/9/2025 2:41:28 PM
+  pubspec.lock                                     6071 9/17/2025 2:35:10 AM
+  pubspec.yaml                                     3934 9/17/2025 2:35:04 AM
+  README.md                                         577 9/17/2025 2:35:04 AM
+  version.json                                       92 9/17/2025 2:07:36 AM
+SCaffold indicators:
+  - pubspec.yaml present (likely scaffolded Flutter project)
+  - lib\main.dart present (scaffolded project inside build/web)
+  - web/index.html found
+Total size (approx): 24.14 MB
+Created backup ZIP: C:\Users\Administrator\Desktop\HOMECARE\homecare0x1\firebase_diagnostics_20250917-035230\build-web-backup_20250917-035230.zip
+
+== Git status ==
+Current branch: main
+Working tree has changes (git status --porcelain output):
+ M homecare0x1/fix_homecare.ps1
+ M homecare0x1/pubspec.lock
+?? .firebaserc
+?? .github/
+?? .gitignore
+?? firebase.json
+?? homecare0x1/firebase_diagnostics_20250917-035230/
+Git remote -v:
+origin	https://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@github.com/DavisKoreal/HOMECARE.git (fetch)
+origin	https://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@github.com/DavisKoreal/HOMECARE.git (push)
+
+== Suggested manual actions (review before running automated fixes) ==
+1) Inspect the created backup: C:\Users\Administrator\Desktop\HOMECARE\homecare0x1\firebase_diagnostics_20250917-035230\build-web-backup_20250917-035230.zip
+2) If the build/web folder contains a scaffold (pubspec.yaml, lib/main.dart), consider deleting only that scaffold (after backup).
+   Example (manual): Remove pubspec.yaml and lib/ from build/web OR delete build/web entirely after ensuring you have a backup and your real project at root/homecare0x1 is intact.
+3) Ensure firebase.json 'hosting.public' points to the real Flutter build output, e.g. 'homecare0x1/build/web' or 'build/web' depending on where 'flutter build web' writes the output.
+4) To build and deploy your real app (manual):
+   - flutter build web
+   - firebase deploy --only hosting
+5) If you want an automated fixer script (delete scaffold, update firebase.json), reply and I'll provide that. This collector is intentionally non-destructive.
+

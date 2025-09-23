@@ -75,6 +75,8 @@ class FirebaseShiftService {
           .collection(_shiftsCollection)
           .limit(500)
           .get();
+          // print that this function was called
+      print('Fetched ${snapshot.docs.length} shifts from Firestore as all the shifts');
       // Map documents to Shift objects
       return snapshot.docs.map((doc) => Shift(
             id: doc.id,

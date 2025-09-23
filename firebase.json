@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "source": "homecare0x1/build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "frameworksBackend": {
+      "region": "us-east1"
+    }
+  }
+}

@@ -409,6 +409,8 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       if (status.isGranted) {
         return true;
       } else {
+        // the line below has been commented out as it was repetitive
+        // status = await Permission.location.request();
         if (context.mounted) {
           _overlayUtils.showOverlay(
             context,
@@ -453,7 +455,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text('Check-In Confirmation'),
+                const Text('Confirmation'),
               ],
             ),
             content: const Text(
@@ -1426,48 +1428,48 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
             ],
           ),
           actions: [
-            Container(
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8F9FA),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: Stack(
-                  children: [
-                    const Icon(
-                      Icons.notifications_outlined,
-                      color: Color(0xFF7F8C8D),
-                    ),
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: const Text(
-                          '3',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                onPressed: () => Navigator.pushNamed(context, Routes.messages),
-              ),
-            ),
+            // Container(
+            //   margin: const EdgeInsets.only(right: 8),
+            //   decoration: BoxDecoration(
+            //     color: const Color(0xFFF8F9FA),
+            //     borderRadius: BorderRadius.circular(12),
+            //   ),
+            //   child: IconButton(
+            //     icon: Stack(
+            //       children: [
+            //         const Icon(
+            //           Icons.notifications_outlined,
+            //           color: Color(0xFF7F8C8D),
+            //         ),
+            //         Positioned(
+            //           right: 0,
+            //           top: 0,
+            //           child: Container(
+            //             padding: const EdgeInsets.all(2),
+            //             decoration: const BoxDecoration(
+            //               color: Colors.red,
+            //               shape: BoxShape.circle,
+            //             ),
+            //             constraints: const BoxConstraints(
+            //               minWidth: 12,
+            //               minHeight: 12,
+            //             ),
+            //             child: const Text(
+            //               '3',
+            //               style: TextStyle(
+            //                 color: Colors.white,
+            //                 fontSize: 8,
+            //                 fontWeight: FontWeight.bold,
+            //               ),
+            //               textAlign: TextAlign.center,
+            //             ),
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //     onPressed: () => Navigator.pushNamed(context, Routes.messages),
+            //   ),
+            // ),
             Container(
               margin: const EdgeInsets.only(right: 16),
               decoration: BoxDecoration(

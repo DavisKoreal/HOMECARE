@@ -205,7 +205,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
       startTime: startTime,
       endTime: endTime,
       status: 'request',
-      location: LocationProvider().getRandomLocation(),
+      location: LocationProvider().getRandomLocation(), 
       caregiverId: null,
       caregiverName: null,
     );

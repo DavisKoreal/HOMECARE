@@ -41,3 +41,12 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# Firebase diagnostics
+firebase_diagnostics_*/**/*
+
+# Firebase diagnostics
+*firebase_diagnostics_*/
+*firebase_diagnostics_*
+

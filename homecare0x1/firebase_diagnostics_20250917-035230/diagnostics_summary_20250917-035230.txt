@@ -1,0 +1,3 @@
+﻿Diagnostics summary created at: C:\Users\Administrator\Desktop\HOMECARE\homecare0x1\firebase_diagnostics_20250917-035230\diagnostics_20250917-035230.txt
+Backup of build/web (if any) at: C:\Users\Administrator\Desktop\HOMECARE\homecare0x1\firebase_diagnostics_20250917-035230\build-web-backup_20250917-035230.zip
+Run 'notepad C:\Users\Administrator\Desktop\HOMECARE\homecare0x1\firebase_diagnostics_20250917-035230\diagnostics_20250917-035230.txt' to view the full diagnostics.

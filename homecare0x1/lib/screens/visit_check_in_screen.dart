@@ -3,6 +3,7 @@ import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/providers/location_provider.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:homecare0x1/services/firebase_shift_service.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/models/shift.dart';
@@ -26,6 +27,7 @@ class _VisitCheckInScreenState extends State<VisitCheckInScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late List<Animation<double>> _cardAnimations;
+  final caregiverShifts = [];
 
   @override
   void initState() {
@@ -353,12 +355,20 @@ class _VisitCheckInScreenState extends State<VisitCheckInScreen>
 
   @override
   Widget build(BuildContext context) {
-    final shiftProvider = Provider.of<ShiftAssignmentProvider>(context);
+    // final shiftProvider = Provider.of<ShiftAssignmentProvider>(context);
+    final shiftProvider = FirebaseShiftService.instance;
     final userProvider = Provider.of<UserProvider>(context);
     final locationProvider = Provider.of<LocationProvider>(context);
-    final caregiverShifts = userProvider.user != null
-        ? shiftProvider.getShiftsForCaregiver(userProvider.user!.id)
-        : [];
+    
+    if (caregiverShifts.isEmpty && userProvider.user != null) {
+      shiftProvider.getShiftsForCaregiver(userProvider.user!.id).then((shifts) {
+      setState(() {
+        caregiverShifts.addAll(shifts);
+        print('Fetched ${shifts.length} shifts for caregiver list acting as a state variable');
+      });
+    });
+    }
+  
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -529,9 +539,14 @@ class _VisitCheckInScreenState extends State<VisitCheckInScreen>
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              setState(() {
+                              setState(() async {
                                 _selectedLocation =
-                                    locationProvider.getRandomLocation();
+                                    await locationProvider.getLocation().then((locData) {
+                                  return Location(
+                                    latitude: locData['Location']['Latitude'],
+                                    longitude: locData['Location']['Longitude'],
+                                  ); 
+                                });
                               });
                             },
                             style: ElevatedButton.styleFrom(
