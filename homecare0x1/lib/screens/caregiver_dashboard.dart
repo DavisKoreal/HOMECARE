@@ -96,7 +96,14 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
     final profile = await caregiverService.getCaregiverProfile(userProvider.user!.id);
     if (mounted) {
       setState(() {
-        isProfileComplete = profile != null && _isProfileFullyFilled(profile);
+        isProfileComplete = ((profile != null) && (_isProfileFullyFilled(profile))&&(_isProfileApproved(profile)));
+        _overlayUtils.showOverlay(
+          context,
+          isProfileComplete
+              ? 'Profile is complete.'
+              : 'Please complete your profile for better opportunities.',
+          isError: !isProfileComplete,
+        );
       });
     }
   }
@@ -110,6 +117,10 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
            profile.email.isNotEmpty &&
            profile.bio.isNotEmpty &&
            profile.availability.isNotEmpty;
+  }
+
+  bool _isProfileApproved(CaregiverProfile profile) {
+    return profile.approved;
   }
 
   @override
@@ -314,14 +325,14 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         onTap: () => Navigator.pushNamed(context, Routes.caregiverCalendar),
       ),
       _buildModernActionCard(
-        title: 'Check-In',
+        title: 'Clock In',
         subtitle: 'Start your visit with location tracking',
         icon: Icons.login,
         color: const Color(0xFF00A86B),
         onTap: () => _handleCheckIn(context),
       ),
       _buildModernActionCard(
-        title: 'Check-Out',
+        title: 'Clock Out',
         subtitle: 'End your visit and save time logs',
         icon: Icons.logout,
         color: const Color(0xFFE67E22),
@@ -333,7 +344,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         icon: Icons.note_add,
         color: const Color(0xFF3498DB),
         onTap: () => _handleAddCareNote(context),
-        badge: '2',
+        // badge: '2',
       ),
       _buildModernActionCard(
         title: 'Medications',
@@ -341,7 +352,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         icon: Icons.medical_services,
         color: const Color(0xFF9B59B6),
         onTap: () => _handleLogMedication(context),
-        badge: '1',
+        // badge: '1',
       ),
     ];
   }

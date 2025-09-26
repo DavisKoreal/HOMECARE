@@ -130,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 60),
+                    const SizedBox(height: 40),
 
                     // Health-inspired logo/icon
                     Container(
@@ -154,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
 
                     // App title
                     Text(
@@ -177,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           ),
                     ),
 
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 30),
 
                     // Login form card
                     Container(

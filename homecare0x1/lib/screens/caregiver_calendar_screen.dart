@@ -69,7 +69,7 @@ class _CaregiverCalendarScreenState extends State<CaregiverCalendarScreen>
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
+    // final userProvider = Provider.of<UserProvider>(context);
     return ModernScreenLayout(
       title: 'Caregiver Calendar',
       showBackButton: true,
@@ -148,7 +148,7 @@ class _CaregiverCalendarScreenState extends State<CaregiverCalendarScreen>
                             children: [
                               if (shift.status == 'pending')
                                 ModernButton(
-                                  text: 'Check In',
+                                  text: 'Clock In',
                                   icon: Icons.login,
                                   onPressed: () => Navigator.pushNamed(
                                     context,
@@ -158,7 +158,7 @@ class _CaregiverCalendarScreenState extends State<CaregiverCalendarScreen>
                                 ),
                               if (shift.status == 'in_session')
                                 ModernButton(
-                                  text: 'Check Out',
+                                  text: 'Clock Out',
                                   icon: Icons.logout,
                                   onPressed: () => Navigator.pushNamed(
                                     context,
