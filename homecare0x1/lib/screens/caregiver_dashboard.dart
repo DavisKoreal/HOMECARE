@@ -13,7 +13,6 @@ import 'package:uuid/uuid.dart';
 import 'package:homecare0x1/services/firebase_care_note_service.dart';
 import 'package:homecare0x1/services/firebase_caregiver_service.dart';
 import 'package:homecare0x1/models/caregiver_profile.dart';
-
 // Caregiver Dashboard Screen
 // Displays a dashboard for caregivers with stats, quick actions, and recent activities.
 // Includes functionality to add care notes via a comprehensive tabbed dialog.
@@ -381,7 +380,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text('Logout Confirmation'),
+                const Text('Confirm'),
               ],
             ),
             content: const Text(
@@ -727,28 +726,11 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                         child: ElevatedButton(
                           onPressed: () {
                             if (currentPage < 2) {
-                              // Validate current page before proceeding
-                              if (_validateCurrentPage(currentPage, [
-                                clientIdController.text,
-                                shiftIdController.text,
-                                healthStatusController.text,
-                                moodController.text,
-                                activitiesController.text,
-                                observationsController.text,
-                                medicationAdherenceController.text,
-                                noteController.text,
-                              ])) {
+                              // Validate current page before proceedi
                                 pageController.nextPage(
                                   duration: const Duration(milliseconds: 300),
                                   curve: Curves.easeInOut,
                                 );
-                              } else {
-                                _overlayUtils.showOverlay(
-                                  context,
-                                  'Please fill in all required fields.',
-                                  isError: true,
-                                );
-                              }
                             } else {
                               // Final submission
                               if (_validateAllCareNoteFields([
@@ -1103,25 +1085,6 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         ),
       ],
     );
-  }
-
-  // Validates fields for the current page
-  bool _validateCurrentPage(int page, List<String> allFields) {
-    switch (page) {
-      case 0: // Basic Information
-        return allFields[6].trim().isNotEmpty && // clientId
-               allFields[7].trim().isNotEmpty && // shiftId
-               allFields[0].trim().isNotEmpty && // healthStatus
-               allFields[4].trim().isNotEmpty;   // mood
-      case 1: // Activities and Observations
-        return allFields[1].trim().isNotEmpty && // activities
-               allFields[2].trim().isNotEmpty && // observations
-               allFields[3].trim().isNotEmpty;   // medicationAdherence
-      case 2: // Notes and Settings
-        return allFields[5].trim().isNotEmpty;   // note
-      default:
-        return false;
-    }
   }
 
   // Validates all care note fields
