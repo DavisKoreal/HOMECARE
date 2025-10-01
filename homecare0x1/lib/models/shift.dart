@@ -10,6 +10,8 @@ class Shift {
   String? caregiverName;
   String status; // 'pending', 'in_session', 'completed', 'cancelled', 'request'
   Location? location; // Optional location for the shift
+  bool? broadcast;
+
 
   Shift({
     required this.id,
@@ -21,5 +23,6 @@ class Shift {
     this.caregiverName,
     required this.status,
     this.location,
+    this.broadcast,
   });
 }

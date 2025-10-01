@@ -348,15 +348,16 @@ class _AdminNotesManagementScreenState extends State<AdminNotesManagementScreen>
                   child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Manage Daily Notes',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 8),
+                      // This has been purposely omitted as the screen title is already present in the AppBar
+                      // Text(
+                      //   'Manage Daily Notes',
+                      //   style: TextStyle(
+                      //     color: Colors.white,
+                      //     fontSize: 28,
+                      //     fontWeight: FontWeight.bold,
+                      //   ),
+                      // ),
+                      // SizedBox(height: 8),
                       Text(
                         'View and control visibility of all care notes',
                         style: TextStyle(

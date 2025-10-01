@@ -356,6 +356,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         color: const Color(0xFF1E88E5),
         onTap: () => Navigator.pushNamed(context, Routes.adminCalendar),
       ),
+      // The following module has been commented out because of redundant functionality also accessed through the Caregiver Calendar
       _buildModernActionCard(
         title: 'Shifts',
         subtitle: 'Assign tasks',

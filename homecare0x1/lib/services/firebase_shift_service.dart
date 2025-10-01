@@ -27,6 +27,35 @@ class FirebaseShiftService {
   // Private constructor for singleton pattern
   FirebaseShiftService._constructor();
 
+  //Gets all the shifts that have been broadcasted
+  Future<List<Shift>> getBroadcastedShifts() async {
+    try {
+      final snapshot = await _firestore
+          .collection(_shiftsCollection)
+          .where('broadcast', isEqualTo: true)
+          .get();
+      return snapshot.docs.map((doc) => Shift(
+            id: doc.id,
+            clientId: doc['clientId'],
+            clientName: doc['clientName'],
+            startTime: (doc['startTime'] as Timestamp).toDate(),
+            endTime: (doc['endTime'] as Timestamp).toDate(),
+            caregiverId: doc['caregiverId'],
+            caregiverName: doc['caregiverName'],
+            status: doc['status'],
+            location: doc['location'] != null
+                ? Location(
+                    latitude: doc['location']['latitude'],
+                    longitude: doc['location']['longitude'])
+                : null,
+            broadcast: doc['broadcast'],
+          )).toList();
+    } catch (e) {
+      print('Error fetching broadcasted shifts: $e');
+      return [];
+    }
+  }
+
   // Fetch caregivers who worked with a specific client
   Future<List<CaregiverProfile>> getCaregiversForClient(String clientId) async {
     try {

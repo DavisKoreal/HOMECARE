@@ -346,7 +346,7 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         // badge: '2',
       ),
       _buildModernActionCard(
-        title: 'Medications',
+        title: 'Add Medication',
         subtitle: 'Log medication administration',
         icon: Icons.medical_services,
         color: const Color(0xFF9B59B6),

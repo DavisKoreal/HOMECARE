@@ -145,141 +145,6 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
     return _events[DateTime(day.year, day.month, day.day)] ?? [];
   }
 
-  // Shows a dialog to add a new shift.
-  Future<void> _showAddShiftDialog() async {
-    // Controllers for text input fields.
-    final clientIdController = TextEditingController();
-    final clientNameController = TextEditingController();
-    // Initialize start and end times for the shift.
-    DateTime? startTime = _selectedDay;
-    DateTime? endTime = _selectedDay?.add(const Duration(hours: 2));
-
-    // Display a dialog for adding a new shift.
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        // Apply rounded corners to the dialog.
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Add New Shift'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Text field for client ID.
-              TextFormField(
-                controller: clientIdController,
-                decoration: const InputDecoration(
-                  labelText: 'Client ID',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              // Text field for client name.
-              TextFormField(
-                controller: clientNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Client Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              // Button to select start time.
-              ModernButton(
-                text: 'Select Start Time',
-                icon: Icons.access_time,
-                onPressed: () async {
-                  // Show time picker and update start time if selected.
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.now(),
-                  );
-                  if (time != null && startTime != null) {
-                    setState(() {
-                      startTime = DateTime(
-                        startTime!.year,
-                        startTime!.month,
-                        startTime!.day,
-                        time.hour,
-                        time.minute,
-                      );
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              // Button to select end time.
-              ModernButton(
-                text: 'Select End Time',
-                icon: Icons.access_time,
-                onPressed: () async {
-                  // Show time picker and update end time if selected.
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.now(),
-                  );
-                  if (time != null && endTime != null) {
-                    setState(() {
-                      endTime = DateTime(
-                        endTime!.year,
-                        endTime!.month,
-                        endTime!.day,
-                        time.hour,
-                        time.minute,
-                      );
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          // Cancel button to dismiss the dialog.
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          // Button to add the shift.
-          ModernButton(
-            text: 'Add Shift',
-            icon: Icons.add,
-            onPressed: () async {
-              // Validate inputs and add the shift.
-              if (clientIdController.text.isNotEmpty &&
-                  clientNameController.text.isNotEmpty &&
-                  startTime != null &&
-                  endTime != null) {
-                try {
-                  // Add the shift using the provider.
-                  await Provider.of<ShiftAssignmentProvider>(context, listen: false).addShift(
-                    clientId: clientIdController.text,
-                    clientName: clientNameController.text,
-                    startTime: startTime!,
-                    endTime: endTime!,
-                    context: context,
-                  );
-                  // Close the dialog.
-                  Navigator.pop(context);
-                  // Reload events to reflect the new shift.
-                  await _loadEvents();
-                  // Show success notification.
-                  _overlayUtils.showOverlay(context, 'Shift added successfully');
-                } catch (e) {
-                  // Show error notification if adding fails.
-                  _overlayUtils.showOverlay(context, 'Error: $e', isError: true);
-                }
-              } else {
-                // Show error if fields are incomplete.
-                _overlayUtils.showOverlay(context, 'Please fill all fields', isError: true);
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
   // Shows a dialog to edit an existing shift.
   Future<void> _showEditShiftDialog(Shift shift) async {
@@ -497,11 +362,11 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
                         ),
                         const SizedBox(height: 24),
                         // Button to open the add shift dialog.
-                        ModernButton(
-                          text: 'Add New Shift',
-                          icon: Icons.add,
-                          onPressed: _showAddShiftDialog,
-                        ),
+                        // ModernButton(
+                        //   text: 'Add New Shift',
+                        //   icon: Icons.add,
+                        //   onPressed: _showAddShiftDialog,
+                        // ),
                       ],
                     ),
                   ),
