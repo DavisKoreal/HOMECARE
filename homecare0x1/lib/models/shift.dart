@@ -8,7 +8,7 @@ class Shift {
   DateTime endTime;
   String? caregiverId;
   String? caregiverName;
-  String status; // 'pending', 'in_session', 'completed', 'cancelled', 'request'
+  String status; // 'pending', 'in_session', 'completed', 'cancelled', 'request',
   Location? location; // Optional location for the shift
   bool? broadcast;
 

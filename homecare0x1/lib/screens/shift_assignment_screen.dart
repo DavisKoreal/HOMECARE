@@ -661,7 +661,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
           (_selectedFilter == 'This Week' &&
               shift.startTime.isAfter(startOfWeek) &&
               shift.startTime.isBefore(endOfWeek)) ||
-          (_selectedFilter == 'Complete' && shift.status == 'complete');
+          (_selectedFilter == 'Complete' && shift.status == 'completed');
 
       return matchesSearch && matchesFilter;
     }).toList();
@@ -872,9 +872,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                     ? Container(
                         height: 200,
                         child: _buildEmptyState(
-                          _searchQuery.isNotEmpty
-                              ? 'No shifts match your search'
-                              : 'No shifts match your filter',
+                          _searchQuery.isNotEmpty? 'No shifts match your search': 'No shifts match your filter',
                           Icons.assignment_turned_in,
                         ),
                       )
@@ -964,13 +962,9 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
-                                      shift.status == 'request'
-                                          ? 'Request'
-                                          : 'Unassigned',
+                                      shift.status == 'request'? 'Request': shift.status == 'pending'? 'Pending': shift.status == 'in_session'? 'In Session': shift.status == 'completed'? 'Completed': shift.status == 'cancelled'? 'Cancelled': 'Unknown status',
                                       style: TextStyle(
-                                        color: shift.status == 'request'
-                                            ? AppTheme.errorRed
-                                            : AppTheme.errorRed,
+                                        color: shift.status == 'request'? AppTheme.errorRed: AppTheme.errorRed,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                       ),
