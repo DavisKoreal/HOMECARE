@@ -123,6 +123,25 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
     }
   }
 
+  void showShiftAssignedDialog(BuildContext context, String status) {
+  showDialog(
+    context: context,
+    barrierDismissible: true, // allows tapping outside to dismiss
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text("Shift Assignment"),
+        content: Text(
+          "The shift has been assigned to a caregiver before and is in the $status.",
+          style: const TextStyle(fontSize: 16),
+        ),
+      );
+    },
+  );
+}
+
   // Cleans up resources when the widget is disposed.
   @override
   void dispose() {
@@ -977,7 +996,8 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                 color: AppTheme.primaryBlue,
                                 size: 18,
                               ),
-                              onTap: () => _assignCaregiver(context, shift),
+                              // on the tap of a shift, open the assign caregiver modal if the shift status is 'request', otherwise show a dialog indicating the shift is already assigned
+                              onTap: shift.status == 'request' ? () => _assignCaregiver(context, shift): () => showShiftAssignedDialog(context, shift.status),
                             ),
                           );
                         },
