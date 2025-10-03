@@ -24,6 +24,7 @@ class _CaregiverCalendarScreenState extends State<CaregiverCalendarScreen>
   late DateTime _focusedDay;
   late DateTime? _selectedDay;
   final Map<DateTime, List<Shift>> _events = {};
+  CalendarFormat _calendarFormat = CalendarFormat.month;
 
   @override
   void initState() {
@@ -70,6 +71,37 @@ class _CaregiverCalendarScreenState extends State<CaregiverCalendarScreen>
   @override
   Widget build(BuildContext context) {
     // final userProvider = Provider.of<UserProvider>(context);
+    var tableCalendar = TableCalendar(
+      onFormatChanged: (format) => setState(() => _calendarFormat = format),
+      firstDay: DateTime.utc(2020, 1, 1),
+      lastDay: DateTime.utc(2030, 12, 31),
+      focusedDay: _focusedDay,
+      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+      eventLoader: _getEventsForDay,
+      calendarFormat: _calendarFormat,
+      onDaySelected: (selectedDay, focusedDay) {
+        setState(() {
+          _selectedDay = selectedDay;
+          _focusedDay = focusedDay;
+        });
+      },
+      calendarStyle: CalendarStyle(
+        todayDecoration: BoxDecoration(
+          color: AppTheme.primaryBlue.withOpacity(0.5),
+          shape: BoxShape.circle,
+        ),
+        selectedDecoration: const BoxDecoration(
+          color: AppTheme.primaryBlue,
+          shape: BoxShape.circle,
+        ),
+        markerDecoration: BoxDecoration(
+          color: AppTheme.accentOrange,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+    
+    
     return ModernScreenLayout(
       title: 'Caregiver Calendar',
       showBackButton: true,
@@ -82,34 +114,7 @@ class _CaregiverCalendarScreenState extends State<CaregiverCalendarScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TableCalendar(
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2030, 12, 31),
-                focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                eventLoader: _getEventsForDay,
-                calendarFormat: CalendarFormat.month,
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                },
-                calendarStyle: CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: AppTheme.primaryBlue.withOpacity(0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: const BoxDecoration(
-                    color: AppTheme.primaryBlue,
-                    shape: BoxShape.circle,
-                  ),
-                  markerDecoration: BoxDecoration(
-                    color: AppTheme.accentOrange,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
+              tableCalendar,
               const SizedBox(height: 24),
               Text(
                 'Shifts on ${DateFormat('MMMM d, yyyy').format(_selectedDay ?? _focusedDay)}',
@@ -117,62 +122,7 @@ class _CaregiverCalendarScreenState extends State<CaregiverCalendarScreen>
               ),
               const SizedBox(height: 16),
               Consumer<ShiftAssignmentProvider>(
-                builder: (context, provider, child) {
-                  final shifts = _getEventsForDay(_selectedDay ?? _focusedDay);
-                  if (shifts.isEmpty) {
-                    return const Center(child: Text('No shifts scheduled'));
-                  }
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: shifts.length,
-                    itemBuilder: (context, index) {
-                      final shift = shifts[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                            child: Icon(Icons.event, color: AppTheme.primaryBlue),
-                          ),
-                          title: Text(shift.clientName),
-                          subtitle: Text(
-                            '${DateFormat('h:mm a').format(shift.startTime)} - ${DateFormat('h:mm a').format(shift.endTime)}\n'
-                            'Status: ${shift.status}',
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (shift.status == 'pending')
-                                ModernButton(
-                                  text: 'Clock In',
-                                  icon: Icons.login,
-                                  onPressed: () => Navigator.pushNamed(
-                                    context,
-                                    Routes.visitCheckIn,
-                                    arguments: shift,
-                                  ),
-                                ),
-                              if (shift.status == 'in_session')
-                                ModernButton(
-                                  text: 'Clock Out',
-                                  icon: Icons.logout,
-                                  onPressed: () => Navigator.pushNamed(
-                                    context,
-                                    Routes.visitCheckOut,
-                                    arguments: shift,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+                builder: buildShiftsList,
               ),
             ],
           ),
@@ -180,4 +130,99 @@ class _CaregiverCalendarScreenState extends State<CaregiverCalendarScreen>
       ),
     );
   }
+
+  Widget buildShiftsList(context, provider, child) {
+    final shifts = _getEventsForDay(_selectedDay ?? _focusedDay);
+    if (shifts.isEmpty) {
+      return const Center(child: Text('No shifts scheduled'));
+    }
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: shifts.length,
+      itemBuilder: (context, index) {
+        final shift = shifts[index];
+        final textToShow = shift.status == 'pending'
+            ? 'Clock In'
+            : shift.status == 'in_session'
+                ? 'Currently in session'
+                : shift.status == 'completed'
+                    ? 'View Details'
+                    : '';
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+              child: Icon(Icons.event, color: AppTheme.primaryBlue),
+            ),
+            title: Text(shift.clientName),
+            subtitle: Text(
+              '${DateFormat('h:mm a').format(shift.startTime)} - ${DateFormat('h:mm a').format(shift.endTime)}\n'
+              'Status: $textToShow',
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (shift.status == 'pending')
+                  ModernButton(
+                    text: 'Clock In',
+                    icon: Icons.login,
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      Routes.visitCheckIn,
+                      arguments: shift,
+                    ),
+                  ),
+                if (shift.status == 'in_session')
+                  ModernButton(
+                    text: 'Clock Out',
+                    icon: Icons.logout,
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      Routes.visitCheckOut,
+                      arguments: shift,
+                    ),
+                  ),
+                if (shift.status == 'completed')
+                  ModernButton(
+                    text: 'View',
+                    icon: Icons.visibility,
+                    onPressed: () => showDialogOfCompletedShiftDetails(context, shift),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+Widget showDialogOfCompletedShiftDetails(BuildContext context, Shift shift) {
+  return AlertDialog(
+    title: Text('Shift Details for ${shift.clientName}'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Client: ${shift.clientName}'),
+        Text(
+            'Time: ${DateFormat('MMMM d, yyyy h:mm a').format(shift.startTime)} - ${DateFormat('h:mm a').format(shift.endTime)}'),
+        Text('Status: ${shift.status}'),
+        if (shift.location != null)
+          Text(
+              'Location: (${shift.location!.latitude}, ${shift.location!.longitude})'),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text('Close'),
+      ),
+    ],
+  );
 }

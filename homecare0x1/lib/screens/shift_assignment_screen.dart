@@ -129,12 +129,10 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
     barrierDismissible: true, // allows tapping outside to dismiss
     builder: (BuildContext context) {
       return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16),),
         title: const Text("Shift Assignment"),
         content: Text(
-          "The shift has been assigned to a caregiver before and is in the $status.",
+          "The shift has been assigned to a caregiver before and is $status.",
           style: const TextStyle(fontSize: 16),
         ),
       );
@@ -705,7 +703,8 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
       body: FadeTransition(
         opacity: _fadeAnimation,
         // show circular progress if in the isloading state
-        child: _isLoading? Center(child: CircularProgressIndicator()):SlideTransition(
+        child: _isLoading? Center(child: CircularProgressIndicator())
+        :SlideTransition(
           position: _slideAnimation,
           child: SingleChildScrollView(
             child: Column(

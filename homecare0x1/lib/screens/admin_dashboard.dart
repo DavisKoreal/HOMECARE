@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'dart:math';
+import 'package:homecare0x1/screens/admin_caregiver_approval.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -391,6 +392,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         icon: Icons.analytics_outlined,
         color: const Color(0xFFE67E22),
         onTap: () {},
+      ),
+      _buildModernActionCard(
+        title: 'Approve Caregivers',
+        subtitle: 'Manage staff',
+        icon: Icons.medical_services_outlined,
+        color: const Color(0xFF00A86B),
+        onTap: () => Navigator.push(context,   MaterialPageRoute(
+            builder: (context) => AdminCaregiverApprovalPage(
+              adminId: Provider.of<UserProvider>(context, listen: false).user?.id ?? '',
+            ),
+          ),
+        ),
       ),
     ];
   }

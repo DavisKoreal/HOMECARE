@@ -51,15 +51,19 @@ class _CareNotesScreenState extends State<CareNotesScreen>
     _animationController.forward();
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
+  void _disposeControllers() {
     _healthStatusController.dispose();
     _activitiesController.dispose();
     _observationsController.dispose();
     _medicationAdherenceController.dispose();
     _moodController.dispose();
     _noteController.dispose();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _disposeControllers();
     super.dispose();
   }
 
@@ -84,6 +88,12 @@ class _CareNotesScreenState extends State<CareNotesScreen>
       );
       _formKey.currentState!.reset();
       _selectedShiftId = null;
+      _healthStatusController.clear();
+      _activitiesController.clear();
+      _observationsController.clear();
+      _medicationAdherenceController.clear();
+      _moodController.clear();
+      _noteController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Note added successfully'),

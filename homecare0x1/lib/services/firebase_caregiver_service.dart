@@ -26,6 +26,21 @@ class FirebaseCaregiverService {
     }
   }
 
+  Future<List<CaregiverProfile>> getUnApprovedCaregivers() async {
+    try {
+      final snapshot = await _firestore
+          .collection(_caregiverProfilesCollection)
+          .where('approved', isEqualTo: false)
+          .get();
+      return snapshot.docs
+          .map((doc) => CaregiverProfile.fromMap(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      print('Error fetching unapproved caregivers: $e');
+      return [];
+    }
+  }
+
   Future<List<CaregiverProfile>> getCaregiversForClient(List<String> caregiverIds) async {
     try {
       final profiles = <CaregiverProfile>[];
@@ -48,6 +63,22 @@ class FirebaseCaregiverService {
       return "success";
     } catch (e) {
       print('Error upserting caregiver profile: $e');
+      return "error";
+    }
+  }
+
+  Future<String> upsertApprovalStatus(String caregiverId, bool approved, String? approverId) async {
+    if (approverId == null && approved) {
+      return "error";
+    }
+    try {
+      await _firestore.collection(_caregiverProfilesCollection).doc(caregiverId).update({
+        'approved': approved,
+        'approverId': approverId,
+      });
+      return "success";
+    } catch (e) {
+      print('Error updating approval status: $e');
       return "error";
     }
   }

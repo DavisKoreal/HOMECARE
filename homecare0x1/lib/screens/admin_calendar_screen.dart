@@ -40,6 +40,8 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
   String? _errorMessage;
   // Instance of OverlayUtils for showing notifications.
   late OverlayUtils _overlayUtils;
+  // a state variable for either daily, weekly or monthly calendar 
+  CalendarFormat _calendarFormat = CalendarFormat.month;
 
   @override
   void initState() {
@@ -145,152 +147,9 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
     return _events[DateTime(day.year, day.month, day.day)] ?? [];
   }
 
+// a function to build a widget used to switch between calendar formats (daily, weekly, monthly)
 
-  // Shows a dialog to edit an existing shift.
-  Future<void> _showEditShiftDialog(Shift shift) async {
-    // Initialize variables with the shift's current values.
-    DateTime? startTime = shift.startTime;
-    DateTime? endTime = shift.endTime;
-    String? selectedCaregiverId = shift.caregiverId;
-    String? selectedCaregiverName = shift.caregiverName;
-
-    // Display a dialog for editing the shift.
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        // Apply rounded corners to the dialog.
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Edit Shift'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Display the client name (non-editable).
-              Text('Client: ${shift.clientName}'),
-              const SizedBox(height: 16),
-              // Dropdown to select a caregiver.
-              Consumer<ShiftAssignmentProvider>(
-                builder: (context, provider, child) {
-                  final caregivers = provider.availableCaregivers;
-                  return DropdownButtonFormField<String>(
-                    value: selectedCaregiverId,
-                    decoration: const InputDecoration(
-                      labelText: 'Caregiver (Optional)',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: [
-                      // Option for no caregiver.
-                      const DropdownMenuItem<String>(
-                        value: null,
-                        child: Text('None'),
-                      ),
-                      // List all available caregivers.
-                      ...caregivers.map((caregiver) => DropdownMenuItem<String>(
-                            value: caregiver.id,
-                            child: Text(caregiver.name),
-                          )),
-                    ],
-                    onChanged: (value) {
-                      // Update caregiver ID and name when selection changes.
-                      selectedCaregiverId = value;
-                      selectedCaregiverName = value != null
-                          ? caregivers.firstWhere((c) => c.id == value).name
-                          : null;
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              // Button to select start time.
-              ModernButton(
-                text: 'Select Start Time',
-                icon: Icons.access_time,
-                onPressed: () async {
-                  // Show time picker and update start time if selected.
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.fromDateTime(shift.startTime),
-                  );
-                  if (time != null) {
-                    setState(() {
-                      startTime = DateTime(
-                        shift.startTime.year,
-                        shift.startTime.month,
-                        shift.startTime.day,
-                        time.hour,
-                        time.minute,
-                      );
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              // Button to select end time.
-              ModernButton(
-                text: 'Select End Time',
-                icon: Icons.access_time,
-                onPressed: () async {
-                  // Show time picker and update end time if selected.
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.fromDateTime(shift.endTime),
-                  );
-                  if (time != null) {
-                    setState(() {
-                      endTime = DateTime(
-                        shift.endTime.year,
-                        shift.endTime.month,
-                        shift.endTime.day,
-                        time.hour,
-                        time.minute,
-                      );
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          // Cancel button to dismiss the dialog.
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          // Button to save changes to the shift.
-          ModernButton(
-            text: 'Save Changes',
-            icon: Icons.save,
-            onPressed: () async {
-              // Validate inputs and update the shift.
-              if (startTime != null && endTime != null) {
-                try {
-                  // Update the shift using the provider.
-                  await Provider.of<ShiftAssignmentProvider>(context, listen: false).updateShift(
-                    shiftId: shift.id,
-                    startTime: startTime!,
-                    endTime: endTime!,
-                    context: context,
-                    caregiverId: selectedCaregiverId,
-                    caregiverName: selectedCaregiverName,
-                  );
-                  // Close the dialog.
-                  Navigator.pop(context);
-                  // Reload events to reflect the updated shift.
-                  await _loadEvents();
-                  // Show success notification.
-                  _overlayUtils.showOverlay(context, 'Shift updated successfully');
-                } catch (e) {
-                  // Show error notification if updating fails.
-                  _overlayUtils.showOverlay(context, 'Error: $e', isError: true);
-                }
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  
 
   // Cleans up resources when the widget is disposed.
   @override
@@ -307,6 +166,48 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
   Widget build(BuildContext context) {
     // Access the UserProvider for user-related data.
     final userProvider = Provider.of<UserProvider>(context);
+    var tableCalendar = TableCalendar(
+
+                          onFormatChanged: (format) => setState(() => _calendarFormat = format),
+                          // height is 90 percent of available height
+                          
+                          firstDay: DateTime.utc(2020, 1, 1),
+                          lastDay: DateTime.utc(2030, 12, 31),
+                          focusedDay: _focusedDay,
+                          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                          eventLoader: _getEventsForDay,
+                          calendarFormat: _calendarFormat,
+                          // Handle day selection and navigate to shift list.
+                          onDaySelected: (selectedDay, focusedDay) {
+                            setState(() {
+                              _selectedDay = selectedDay;
+                              _focusedDay = focusedDay;
+                            });
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              Navigator.pushNamed(
+                                context,
+                                Routes.shiftList,
+                                arguments: selectedDay,
+                              );
+                            });
+                          },
+                          // Customize calendar appearance.
+                          calendarStyle: CalendarStyle(
+                            todayDecoration: BoxDecoration(
+                              color: AppTheme.primaryBlue.withOpacity(0.5),
+                              shape: BoxShape.circle,
+                            ),
+                            selectedDecoration: const BoxDecoration(
+                              color: AppTheme.primaryBlue,
+                              shape: BoxShape.circle,
+                            ),
+                            markerDecoration: BoxDecoration(
+                              color: AppTheme.accentOrange,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        );
+    
     return ModernScreenLayout(
       title: 'Admin Calendar',
       showBackButton: true,
@@ -324,42 +225,10 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // _buildCalendarFormatToggle(),
+                        // const SizedBox(height: 16),
                         // Calendar widget to display shifts.
-                        TableCalendar(
-                          firstDay: DateTime.utc(2020, 1, 1),
-                          lastDay: DateTime.utc(2030, 12, 31),
-                          focusedDay: _focusedDay,
-                          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                          eventLoader: _getEventsForDay,
-                          calendarFormat: CalendarFormat.month,
-                          // Handle day selection and navigate to shift list.
-                          onDaySelected: (selectedDay, focusedDay) {
-                            setState(() {
-                              _selectedDay = selectedDay;
-                              _focusedDay = focusedDay;
-                            });
-                            Navigator.pushNamed(
-                              context,
-                              Routes.shiftList,
-                              arguments: selectedDay,
-                            );
-                          },
-                          // Customize calendar appearance.
-                          calendarStyle: CalendarStyle(
-                            todayDecoration: BoxDecoration(
-                              color: AppTheme.primaryBlue.withOpacity(0.5),
-                              shape: BoxShape.circle,
-                            ),
-                            selectedDecoration: const BoxDecoration(
-                              color: AppTheme.primaryBlue,
-                              shape: BoxShape.circle,
-                            ),
-                            markerDecoration: BoxDecoration(
-                              color: AppTheme.accentOrange,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
+                        tableCalendar,
                         const SizedBox(height: 24),
                         // Button to open the add shift dialog.
                         // ModernButton(
@@ -374,3 +243,150 @@ class AdminCalendarScreenState extends State<AdminCalendarScreen>
     );
   }
 }
+
+
+  // // Shows a dialog to edit an existing shift.
+  // Future<void> _showEditShiftDialog(Shift shift) async {
+  //   // Initialize variables with the shift's current values.
+  //   DateTime? startTime = shift.startTime;
+  //   DateTime? endTime = shift.endTime;
+  //   String? selectedCaregiverId = shift.caregiverId;
+  //   String? selectedCaregiverName = shift.caregiverName;
+
+  //   // Display a dialog for editing the shift.
+  //   await showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       // Apply rounded corners to the dialog.
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  //       title: const Text('Edit Shift'),
+  //       content: SingleChildScrollView(
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             // Display the client name (non-editable).
+  //             Text('Client: ${shift.clientName}'),
+  //             const SizedBox(height: 16),
+  //             // Dropdown to select a caregiver.
+  //             Consumer<ShiftAssignmentProvider>(
+  //               builder: (context, provider, child) {
+  //                 final caregivers = provider.availableCaregivers;
+  //                 return DropdownButtonFormField<String>(
+  //                   value: selectedCaregiverId,
+  //                   decoration: const InputDecoration(
+  //                     labelText: 'Caregiver (Optional)',
+  //                     border: OutlineInputBorder(),
+  //                   ),
+  //                   items: [
+  //                     // Option for no caregiver.
+  //                     const DropdownMenuItem<String>(
+  //                       value: null,
+  //                       child: Text('None'),
+  //                     ),
+  //                     // List all available caregivers.
+  //                     ...caregivers.map((caregiver) => DropdownMenuItem<String>(
+  //                           value: caregiver.id,
+  //                           child: Text(caregiver.name),
+  //                         )),
+  //                   ],
+  //                   onChanged: (value) {
+  //                     // Update caregiver ID and name when selection changes.
+  //                     selectedCaregiverId = value;
+  //                     selectedCaregiverName = value != null
+  //                         ? caregivers.firstWhere((c) => c.id == value).name
+  //                         : null;
+  //                   },
+  //                 );
+  //               },
+  //             ),
+  //             const SizedBox(height: 16),
+  //             // Button to select start time.
+  //             ModernButton(
+  //               text: 'Select Start Time',
+  //               icon: Icons.access_time,
+  //               onPressed: () async {
+  //                 // Show time picker and update start time if selected.
+  //                 final time = await showTimePicker(
+  //                   context: context,
+  //                   initialTime: TimeOfDay.fromDateTime(shift.startTime),
+  //                 );
+  //                 if (time != null) {
+  //                   setState(() {
+  //                     startTime = DateTime(
+  //                       shift.startTime.year,
+  //                       shift.startTime.month,
+  //                       shift.startTime.day,
+  //                       time.hour,
+  //                       time.minute,
+  //                     );
+  //                   });
+  //                 }
+  //               },
+  //             ),
+  //             const SizedBox(height: 16),
+  //             // Button to select end time.
+  //             ModernButton(
+  //               text: 'Select End Time',
+  //               icon: Icons.access_time,
+  //               onPressed: () async {
+  //                 // Show time picker and update end time if selected.
+  //                 final time = await showTimePicker(
+  //                   context: context,
+  //                   initialTime: TimeOfDay.fromDateTime(shift.endTime),
+  //                 );
+  //                 if (time != null) {
+  //                   setState(() {
+  //                     endTime = DateTime(
+  //                       shift.endTime.year,
+  //                       shift.endTime.month,
+  //                       shift.endTime.day,
+  //                       time.hour,
+  //                       time.minute,
+  //                     );
+  //                   });
+  //                 }
+  //               },
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //       actions: [
+  //         // Cancel button to dismiss the dialog.
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context),
+  //           child: const Text('Cancel'),
+  //         ),
+  //         // Button to save changes to the shift.
+  //         ModernButton(
+  //           text: 'Save Changes',
+  //           icon: Icons.save,
+  //           onPressed: () async {
+  //             // Validate inputs and update the shift.
+  //             if (startTime != null && endTime != null) {
+  //               try {
+  //                 // Update the shift using the provider.
+  //                 await Provider.of<ShiftAssignmentProvider>(context, listen: false).updateShift(
+  //                   shiftId: shift.id,
+  //                   startTime: startTime!,
+  //                   endTime: endTime!,
+  //                   context: context,
+  //                   caregiverId: selectedCaregiverId,
+  //                   caregiverName: selectedCaregiverName,
+  //                 );
+  //                 // Close the dialog.
+  //                 Navigator.pop(context);
+  //                 // Reload events to reflect the updated shift.
+  //                 await _loadEvents();
+  //                 // Show success notification.
+  //                 _overlayUtils.showOverlay(context, 'Shift updated successfully');
+  //               } catch (e) {
+  //                 // Show error notification if updating fails.
+  //                 _overlayUtils.showOverlay(context, 'Error: $e', isError: true);
+  //               }
+  //             }
+  //           },
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }

@@ -29,4 +29,5 @@ class Routes {
   static const String caregiverProfile = '/caregiver_profile';
   static const String clientViewShiftHistory = '/client_view_shift_history';
   static const String caregiverCompleteProfile = '/caregiver_complete_profile';
+  static const String adminCaregiverApproval = '/admin_caregiver_approval';
 }

@@ -11,6 +11,7 @@ class CaregiverProfile {
   final double rating;
   final int reviews;
   final bool approved;
+  final String? approverId; 
 
   CaregiverProfile({
     required this.id,
@@ -25,6 +26,7 @@ class CaregiverProfile {
     required this.rating,
     required this.reviews,
     this.approved = false,
+    this.approverId,
   });
 
   factory CaregiverProfile.fromMap(Map<String, dynamic> map, String id) {
@@ -41,6 +43,7 @@ class CaregiverProfile {
       rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
       reviews: (map['reviews'] as num?)?.toInt() ?? 0,
       approved: map['approved'] ?? false,
+      approverId: map['approverId'],
     );
   }
 
@@ -57,6 +60,7 @@ class CaregiverProfile {
       'rating': rating,
       'reviews': reviews,
       'approved': approved,
+      'approverId': approverId,
     };
   }
 }
