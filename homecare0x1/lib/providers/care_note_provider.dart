@@ -29,6 +29,11 @@ class CareNoteProvider with ChangeNotifier {
         timestamp: (doc['timestamp'] as Timestamp).toDate(),
         isVisibleToClient: doc['isVisibleToClient'],
         isLate: doc['isLate'],
+        foodAndDrinks: doc['foodAndDrinks'] ?? '',
+        mealQuantityPercentage: doc['mealQuantityPercentage'] ?? 0,
+        hydrationMl: doc['hydrationMl'] ?? 0,
+        hasBowelMovement: doc['hasBowelMovement'] ?? false,
+        mobilityAndShower: doc['mobilityAndShower'] ?? '',
       )).toList());
       notifyListeners();
     } catch (e) {
@@ -99,6 +104,11 @@ class CareNoteProvider with ChangeNotifier {
       note: note,
       timestamp: now,
       isLate: isLate,
+      foodAndDrinks: '', // Provide appropriate value or parameter
+      mealQuantityPercentage: 0, // Provide appropriate value or parameter
+      hydrationMl: 0, // Provide appropriate value or parameter
+      hasBowelMovement: false, // Provide appropriate value or parameter
+      mobilityAndShower: '', // Provide appropriate value or parameter
     );
 
     try {
@@ -141,6 +151,11 @@ class CareNoteProvider with ChangeNotifier {
         timestamp: _notes[index].timestamp,
         isVisibleToClient: newVisibility,
         isLate: _notes[index].isLate,
+        foodAndDrinks: _notes[index].foodAndDrinks,
+        mealQuantityPercentage: _notes[index].mealQuantityPercentage,
+        hydrationMl: _notes[index].hydrationMl,
+        hasBowelMovement: _notes[index].hasBowelMovement,
+        mobilityAndShower: _notes[index].mobilityAndShower,
       );
       try {
         await _firestore.collection('care_notes').doc(noteId).update({

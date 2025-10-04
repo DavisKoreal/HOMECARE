@@ -42,6 +42,13 @@ class FirebaseCareNotesService {
           timestamp: (data['timestamp'] as Timestamp).toDate(),
           isVisibleToClient: data['isVisibleToClient'] as bool,
           isLate: data['isLate'] as bool? ?? false,
+          foodAndDrinks: data['foodAndDrinks'] as String,
+          mealQuantityPercentage: data['mealQuantityPercentage'] as int,
+          hydrationMl: data['hydrationMl'] as int,
+          hasBowelMovement: data['hasBowelMovement'] as bool,
+          bowelMovementDescription: data['bowelMovementDescription'] as String?,
+          bowelMovementFrequency: data['bowelMovementFrequency'] as int? ?? 0,
+          mobilityAndShower: data['mobilityAndShower'] as String,
         );
       }).toList();
       print('Fetched ${carenotesList.length} care notes from Firestore.');
@@ -84,6 +91,13 @@ class FirebaseCareNotesService {
           timestamp: (data['timestamp'] as Timestamp).toDate(),
           isVisibleToClient: data['isVisibleToClient'] as bool,
           isLate: data['isLate'] as bool? ?? false,
+          foodAndDrinks: data['foodAndDrinks'] as String,
+          mealQuantityPercentage: data['mealQuantityPercentage'] as int,
+          hydrationMl: data['hydrationMl'] as int,
+          hasBowelMovement: data['hasBowelMovement'] as bool,
+          bowelMovementDescription: data['bowelMovementDescription'] as String?,
+          bowelMovementFrequency: data['bowelMovementFrequency'] as int? ?? 0,
+          mobilityAndShower: data['mobilityAndShower'] as String,
         );
       }).toList();
       print('Fetched ${carenotesList.length} care notes from Firestore.');
@@ -113,7 +127,6 @@ class FirebaseCareNotesService {
       Query query = _careNotesCollection
           .orderBy('timestamp', descending: true)
           .limit(_careNotesLimit);
-          
 
       if (clientId != null && clientId.isNotEmpty) {
         query = query.where('clientId', isEqualTo: clientId);
@@ -147,6 +160,13 @@ class FirebaseCareNotesService {
           timestamp: (data['timestamp'] as Timestamp).toDate(),
           isVisibleToClient: data['isVisibleToClient'] as bool,
           isLate: data['isLate'] as bool? ?? false,
+          foodAndDrinks: data['foodAndDrinks'] as String,
+          mealQuantityPercentage: data['mealQuantityPercentage'] as int,
+          hydrationMl: data['hydrationMl'] as int,
+          hasBowelMovement: data['hasBowelMovement'] as bool,
+          bowelMovementDescription: data['bowelMovementDescription'] as String?,
+          bowelMovementFrequency: data['bowelMovementFrequency'] as int? ?? 0,
+          mobilityAndShower: data['mobilityAndShower'] as String,
         );
       }).toList();
       print('Fetched ${careNotesList.length} filtered care notes from Firestore.');
@@ -202,6 +222,13 @@ class FirebaseCareNotesService {
         'timestamp': Timestamp.fromDate(note.timestamp),
         'isVisibleToClient': note.isVisibleToClient,
         'isLate': note.isLate,
+        'foodAndDrinks': note.foodAndDrinks,
+        'mealQuantityPercentage': note.mealQuantityPercentage,
+        'hydrationMl': note.hydrationMl,
+        'hasBowelMovement': note.hasBowelMovement,
+        'bowelMovementDescription': note.bowelMovementDescription,
+        'bowelMovementFrequency': note.bowelMovementFrequency,
+        'mobilityAndShower': note.mobilityAndShower,
       });
     } catch (e) {
       print('Error adding care note: $e');

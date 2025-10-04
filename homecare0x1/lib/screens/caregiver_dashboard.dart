@@ -546,260 +546,445 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         false;
   }
 
-  // Shows an improved dialog to collect all CareNote fields
-  Future<Map<String, dynamic>?> _showAddCareNoteDialog(BuildContext context) async {
-    // Controllers for text fields
-    final healthStatusController = TextEditingController();
-    final activitiesController = TextEditingController();
-    final observationsController = TextEditingController();
-    final medicationAdherenceController = TextEditingController();
-    final moodController = TextEditingController();
-    final noteController = TextEditingController();
-    final clientIdController = TextEditingController();
-    final shiftIdController = TextEditingController();
+// Shows an improved dialog to collect all CareNote fields
+Future<Map<String, dynamic>?> _showAddCareNoteDialog(BuildContext context) async {
+  // Controllers for text fields
+  final healthStatusController = TextEditingController();
+  final activitiesController = TextEditingController();
+  final observationsController = TextEditingController();
+  final medicationAdherenceController = TextEditingController();
+  final moodController = TextEditingController();
+  final noteController = TextEditingController();
+  final clientIdController = TextEditingController();
+  final shiftIdController = TextEditingController();
+  final foodAndDrinksController = TextEditingController();
+  final bowelMovementDescriptionController = TextEditingController();
+  final mobilityAndShowerController = TextEditingController();
 
-    // State for boolean fields
-    bool isVisibleToClient = false;
-    bool isLate = false;
+  // State for numeric and boolean fields
+  int mealQuantityPercentage = 0;
+  int hydrationMl = 0;
+  bool hasBowelMovement = false;
+  int bowelMovementFrequency = 0;
+  bool isVisibleToClient = false;
+  bool isLate = false;
 
-    // Page controller for tabs
-    final PageController pageController = PageController();
-    int currentPage = 0;
+  // Page controller for tabs
+  final PageController pageController = PageController();
+  int currentPage = 0;
 
-    return await showDialog<Map<String, dynamic>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          contentPadding: EdgeInsets.zero,
-          title: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF3498DB), Color(0xFF5DADE2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
+  return await showDialog<Map<String, dynamic>>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: EdgeInsets.zero,
+        title: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF3498DB), Color(0xFF5DADE2)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.note_add,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.note_add,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Add Care Note',
+                  style: TextStyle(
                     color: Colors.white,
-                    size: 20,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Add Care Note',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          content: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: MediaQuery.of(context).size.height * 0.7,
-            child: Column(
-              children: [
-                // Tab indicator
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: currentPage >= 0 ? const Color(0xFF3498DB) : Colors.grey[300],
-                            borderRadius: BorderRadius.circular(2),
-                          ),
+        ),
+        content: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Column(
+            children: [
+              // Tab indicator
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: currentPage >= 0 ? const Color(0xFF3498DB) : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Container(
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: currentPage >= 1 ? const Color(0xFF3498DB) : Colors.grey[300],
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Container(
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: currentPage >= 2 ? const Color(0xFF3498DB) : Colors.grey[300],
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Page content
-                Expanded(
-                  child: PageView(
-                    controller: pageController,
-                    onPageChanged: (page) => setState(() => currentPage = page),
-                    children: [
-                      // Page 1: Basic Information
-                      _buildCareNotePage1(
-                        clientIdController,
-                        shiftIdController,
-                        healthStatusController,
-                        moodController,
-                      ),
-                      // Page 2: Activities and Observations
-                      _buildCareNotePage2(
-                        activitiesController,
-                        observationsController,
-                        medicationAdherenceController,
-                      ),
-                      // Page 3: Notes and Settings
-                      _buildCareNotePage3(
-                        noteController,
-                        isVisibleToClient,
-                        isLate,
-                        setState,
-                      ),
-                    ],
-                  ),
-                ),
-                // Navigation buttons
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      if (currentPage > 0)
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              pageController.previousPage(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              side: const BorderSide(color: Color(0xFF3498DB)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Text(
-                              'Previous',
-                              style: TextStyle(color: Color(0xFF3498DB)),
-                            ),
-                          ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: currentPage >= 1 ? const Color(0xFF3498DB) : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                      if (currentPage > 0) const SizedBox(width: 12),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: currentPage >= 2 ? const Color(0xFF3498DB) : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: currentPage >= 3 ? const Color(0xFF3498DB) : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Page content
+              Expanded(
+                child: PageView(
+                  controller: pageController,
+                  onPageChanged: (page) => setState(() => currentPage = page),
+                  children: [
+                    // Page 1: Basic Information
+                    _buildCareNotePage1(
+                      clientIdController,
+                      shiftIdController,
+                      healthStatusController,
+                      moodController,
+                    ),
+                    // Page 2: Activities and Observations
+                    _buildCareNotePage2(
+                      activitiesController,
+                      observationsController,
+                      medicationAdherenceController,
+                    ),
+                    // Page 3: Notes and Settings
+                    _buildCareNotePage3(
+                      noteController,
+                      isVisibleToClient,
+                      isLate,
+                      setState,
+                    ),
+                    // Page 4: Additional Information (New Fields)
+                    _buildCareNotePage4(
+                      foodAndDrinksController,
+                      mealQuantityPercentage,
+                      hydrationMl,
+                      hasBowelMovement,
+                      bowelMovementDescriptionController,
+                      bowelMovementFrequency,
+                      mobilityAndShowerController,
+                      setState,
+                    ),
+                  ],
+                ),
+              ),
+              // Navigation buttons
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    if (currentPage > 0)
                       Expanded(
-                        child: ElevatedButton(
+                        child: OutlinedButton(
                           onPressed: () {
-                            if (currentPage < 2) {
-                              // Validate current page before proceedi
-                                pageController.nextPage(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                            } else {
-                              // Final submission
-                              if (_validateAllCareNoteFields([
-                                healthStatusController.text,
-                                activitiesController.text,
-                                observationsController.text,
-                                medicationAdherenceController.text,
-                                moodController.text,
-                                noteController.text,
-                                clientIdController.text,
-                                shiftIdController.text,
-                              ])) {
-                                Navigator.pop(context, {
-                                  'healthStatus': healthStatusController.text.trim(),
-                                  'activities': activitiesController.text.trim(),
-                                  'observations': observationsController.text.trim(),
-                                  'medicationAdherence': medicationAdherenceController.text.trim(),
-                                  'mood': moodController.text.trim(),
-                                  'note': noteController.text.trim(),
-                                  'clientId': clientIdController.text.trim(),
-                                  'shiftId': shiftIdController.text.trim(),
-                                  'isVisibleToClient': isVisibleToClient,
-                                  'isLate': isLate,
-                                });
-                              } else {
-                                _overlayUtils.showOverlay(
-                                  context,
-                                  'Please fill in all required fields.',
-                                  isError: true,
-                                );
-                              }
-                            }
+                            pageController.previousPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3498DB),
-                            foregroundColor: Colors.white,
+                          style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: const BorderSide(color: Color(0xFF3498DB)),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: Text(currentPage < 2 ? 'Next' : 'Submit'),
+                          child: const Text(
+                            'Previous',
+                            style: TextStyle(color: Color(0xFF3498DB)),
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
+                    if (currentPage > 0) const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (currentPage < 3) {
+                            // Proceed to next page
+                            pageController.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          } else {
+                            // Final submission
+                            if (_validateAllCareNoteFields([
+                              healthStatusController.text,
+                              activitiesController.text,
+                              observationsController.text,
+                              medicationAdherenceController.text,
+                              moodController.text,
+                              noteController.text,
+                              clientIdController.text,
+                              shiftIdController.text,
+                              foodAndDrinksController.text,
+                              mobilityAndShowerController.text,
+                            ])) {
+                              Navigator.pop(context, {
+                                'healthStatus': healthStatusController.text.trim(),
+                                'activities': activitiesController.text.trim(),
+                                'observations': observationsController.text.trim(),
+                                'medicationAdherence': medicationAdherenceController.text.trim(),
+                                'mood': moodController.text.trim(),
+                                'note': noteController.text.trim(),
+                                'clientId': clientIdController.text.trim(),
+                                'shiftId': shiftIdController.text.trim(),
+                                'isVisibleToClient': isVisibleToClient,
+                                'isLate': isLate,
+                                'foodAndDrinks': foodAndDrinksController.text.trim(),
+                                'mealQuantityPercentage': mealQuantityPercentage,
+                                'hydrationMl': hydrationMl,
+                                'hasBowelMovement': hasBowelMovement,
+                                'bowelMovementDescription': hasBowelMovement
+                                    ? bowelMovementDescriptionController.text.trim()
+                                    : null,
+                                'bowelMovementFrequency': bowelMovementFrequency,
+                                'mobilityAndShower': mobilityAndShowerController.text.trim(),
+                              });
+                            } else {
+                              _overlayUtils.showOverlay(
+                                context,
+                                'Please fill in all required fields.',
+                                isError: true,
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3498DB),
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: const BorderSide(color: Colors.red),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
-                          'Cancel',
-                          style: TextStyle(color: Colors.red),
+                        child: Text(currentPage < 3 ? 'Next' : 'Submit'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: Colors.red),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                    ],
-                  ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    ), 
     );
   }
+
+// Page 4: Additional Information (New Fields)
+Widget _buildCareNotePage4(
+  TextEditingController foodAndDrinksController,
+  int mealQuantityPercentage,
+  int hydrationMl,
+  bool hasBowelMovement,
+  TextEditingController bowelMovementDescriptionController,
+  int bowelMovementFrequency,
+  TextEditingController mobilityAndShowerController,
+  StateSetter setState,
+) {
+  return SingleChildScrollView(
+    padding: const EdgeInsets.all(20),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Nutrition, Bowel, and Mobility',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2C3E50),
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Record details about food, hydration, bowel movements, and mobility.',
+          style: TextStyle(
+            color: Color(0xFF7F8C8D),
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 24),
+        _buildImprovedTextField(
+          controller: foodAndDrinksController,
+          label: 'Food and Drinks',
+          icon: Icons.fastfood,
+          hint: 'E.g., Breakfast: Oatmeal and juice',
+          maxLines: 2,
+          isRequired: true,
+        ),
+        const SizedBox(height: 24),
+        _buildImprovedTextField(
+          controller: TextEditingController(text: mealQuantityPercentage.toString()),
+          label: 'Meal Quantity (%)',
+          icon: Icons.percent,
+          hint: 'Describe percentage (0-100) of meals consumed and general feeding habits',
+          isRequired: true,
+          // onChanged: (value) {
+          //   setState(() {
+          //     mealQuantityPercentage = int.tryParse(value) ?? 0;
+          //   });
+          // },
+          // keyboardType: TextInputType.number,
+        ),
+        const SizedBox(height: 24),
+        _buildImprovedTextField(
+          controller: TextEditingController(text: hydrationMl.toString()),
+          label: 'Hydration (ml)',
+          icon: Icons.local_drink,
+          hint: 'Enter milliliters of water taken',
+          isRequired: true,
+          // onChanged: (value) {
+          //   setState(() {
+          //     hydrationMl = int.tryParse(value) ?? 0;
+          //   });
+          // },
+          // keyboardType: TextInputType.number,
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Bowel Movement',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2C3E50),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!),
+          ),
+          child: SwitchListTile(
+            title: const Text(
+              'Had Bowel Movement',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: const Text(
+              'Indicate if the client had a bowel movement',
+              style: TextStyle(fontSize: 12),
+            ),
+            value: hasBowelMovement,
+            onChanged: (value) {
+              setState(() {
+                hasBowelMovement = value ?? false;
+                if (!hasBowelMovement) {
+                  bowelMovementDescriptionController.clear();
+                }
+              });
+            },
+            activeColor: const Color(0xFF3498DB),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          ),
+        ),
+        if (hasBowelMovement) ...[
+          const SizedBox(height: 24),
+          _buildImprovedTextField(
+            controller: bowelMovementDescriptionController,
+            label: 'Bowel Movement Description',
+            icon: Icons.description,
+            hint: 'E.g., Normal, Bristol scale type 4',
+            maxLines: 2,
+            isRequired: false,
+          ),
+        ],
+        const SizedBox(height: 24),
+        _buildImprovedTextField(
+          controller: TextEditingController(text: bowelMovementFrequency.toString()),
+          label: 'Days Without Bowel Movement',
+          icon: Icons.timer,
+          hint: 'Enter days without bowel movement',
+          isRequired: true,
+          // onChanged: (value) {
+          //   setState(() {
+          //     bowelMovementFrequency = int.tryParse(value) ?? 0;
+          //   });
+          // },
+          // keyboardType: TextInputType.number,
+        ),
+        const SizedBox(height: 24),
+        _buildImprovedTextField(
+          controller: mobilityAndShowerController,
+          label: 'Mobility and Shower',
+          icon: Icons.directions_walk,
+          hint: 'E.g., Walked 100m with walker, showered with assistance',
+          maxLines: 2,
+          isRequired: true,
+        ),
+      ],
+    ),
+  );
+}
 
   // Page 1: Basic Information
   Widget _buildCareNotePage1(
@@ -1109,6 +1294,11 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       timestamp: DateTime.now(),
       isVisibleToClient: data['isVisibleToClient'],
       isLate: data['isLate'],
+      foodAndDrinks: data['foodAndDrinks'] ?? '',
+      mealQuantityPercentage: data['mealQuantityPercentage'] ?? 0,
+      hydrationMl: data['hydrationMl'] ?? 0,
+      hasBowelMovement: data['hasBowelMovement'] ?? false,
+      mobilityAndShower: data['mobilityAndShower'] ?? '',
     );
   }
 
@@ -1130,7 +1320,14 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       final careNote = _createCareNoteFromData(careNoteData);
       await _saveCareNote(context, careNote);
       if (context.mounted) {
-        Navigator.pushNamed(context, Routes.careNotes);
+        // Navigator.pushNamed(context, Routes.careNotes);
+        // pop the dialog box and show an overlay that the care note was added successfully
+        _overlayUtils.showOverlay(context, 'Care note added successfully');
+        // dismiss the dialog box overlaying 
+        // Navigator.of(context, rootNavigator: true).pop();
+        // Navigate to Care Notes screen
+
+
       }
     }
   }

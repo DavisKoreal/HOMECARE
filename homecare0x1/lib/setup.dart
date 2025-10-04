@@ -280,41 +280,55 @@ Future<void> setupMockData() async {
     }
   }
 
-  // Care Notes
-  final careNotes = [
-    if (caregiverId != null)
-      {
-        'id': 'cn1',
-        'clientId': 'f1',
-        'caregiverId': caregiverId,
-        'shiftId': 's1',
-        'healthStatus': 'Stable, no new issues',
-        'activities': 'Assisted with morning walk and meal prep',
-        'observations': 'Client was cooperative',
-        'medicationAdherence': 'Aspirin 100mg taken as prescribed',
-        'mood': 'Cheerful',
-        'note': 'Daily check completed',
-        'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 2))),
-        'isVisibleToClient': true,
-        'isLate': false,
-      },
-    if (caregiverId != null)
-      {
-        'id': 'cn2',
-        'clientId': 'f1',
-        'caregiverId': caregiverId,
-        'shiftId': 's4',
-        'healthStatus': 'Slight fatigue reported',
-        'activities': 'Helped with bathing and exercises',
-        'observations': 'Client needed extra rest',
-        'medicationAdherence': 'Lisinopril 10mg taken',
-        'mood': 'Calm',
-        'note': 'Evening check',
-        'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
-        'isVisibleToClient': false,
-        'isLate': true,
-      },
-  ];
+// Care Notes
+final careNotes = [
+  if (caregiverId != null)
+    {
+      'id': 'cn1',
+      'clientId': 'f1',
+      'caregiverId': caregiverId,
+      'shiftId': 's1',
+      'healthStatus': 'Stable, no new issues',
+      'activities': 'Assisted with morning walk and meal prep',
+      'observations': 'Client was cooperative',
+      'medicationAdherence': 'Aspirin 100mg taken as prescribed',
+      'mood': 'Cheerful',
+      'note': 'Daily check completed',
+      'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 2))),
+      'isVisibleToClient': true,
+      'isLate': false,
+      'foodAndDrinks': 'Breakfast: Oatmeal and orange juice; Snack: Apple slices',
+      'mealQuantityPercentage': 90,
+      'hydrationMl': 500,
+      'hasBowelMovement': true,
+      'bowelMovementDescription': 'Normal, Bristol scale type 4',
+      'bowelMovementFrequency': 0,
+      'mobilityAndShower': 'Client walked 100 meters with walker; showered with assistance',
+    },
+  if (caregiverId != null)
+    {
+      'id': 'cn2',
+      'clientId': 'f1',
+      'caregiverId': caregiverId,
+      'shiftId': 's4',
+      'healthStatus': 'Slight fatigue reported',
+      'activities': 'Helped with bathing and exercises',
+      'observations': 'Client needed extra rest',
+      'medicationAdherence': 'Lisinopril 10mg taken',
+      'mood': 'Calm',
+      'note': 'Evening check',
+      'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
+      'isVisibleToClient': false,
+      'isLate': true,
+      'foodAndDrinks': 'Dinner: Grilled chicken, vegetables, and water',
+      'mealQuantityPercentage': 70,
+      'hydrationMl': 300,
+      'hasBowelMovement': false,
+      'bowelMovementDescription': null,
+      'bowelMovementFrequency': 1,
+      'mobilityAndShower': 'Client required full assistance with bathing; limited mobility due to fatigue',
+    },
+];
 
   for (var note in careNotes) {
     try {

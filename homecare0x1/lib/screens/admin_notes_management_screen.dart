@@ -123,6 +123,7 @@ class _AdminNotesManagementScreenState extends State<AdminNotesManagementScreen>
         _isLoading = false;
       });
     } catch (e) {
+      print('Failed to apply filters: $e');
       setState(() {
         _isLoading = false;
         _error = 'Failed to apply filters: $e';
@@ -136,26 +137,33 @@ class _AdminNotesManagementScreenState extends State<AdminNotesManagementScreen>
       final newVisibility = !currentVisibility;
       await _careNotesService.toggleNoteVisibility(noteId, newVisibility);
       setState(() {
-        _notes = _notes.map((note) {
-          if (note.id == noteId) {
-            return CareNote(
-              id: note.id,
-              clientId: note.clientId,
-              caregiverId: note.caregiverId,
-              shiftId: note.shiftId,
-              healthStatus: note.healthStatus,
-              activities: note.activities,
-              observations: note.observations,
-              medicationAdherence: note.medicationAdherence,
-              mood: note.mood,
-              note: note.note,
-              timestamp: note.timestamp,
-              isVisibleToClient: newVisibility,
-              isLate: note.isLate,
-            );
-          }
-          return note;
-        }).toList();
+        // This does the task of updating the local state after successful update
+        // in Firestore. This avoids refetching all notes.
+        // 
+        final index = _notes.indexWhere((note) => note.id == noteId);
+        if (index != -1) {
+          final note = _notes[index];
+          _notes[index] = CareNote(
+            id: note.id,
+            clientId: note.clientId,
+            caregiverId: note.caregiverId,
+            shiftId: note.shiftId,
+            healthStatus: note.healthStatus,
+            activities: note.activities,
+            observations: note.observations,
+            medicationAdherence: note.medicationAdherence,
+            mood: note.mood,
+            note: note.note,
+            timestamp: note.timestamp,
+            isVisibleToClient: newVisibility,
+            isLate: note.isLate,
+            foodAndDrinks: note.foodAndDrinks,
+            mealQuantityPercentage: note.mealQuantityPercentage,
+            hydrationMl: note.hydrationMl,
+            hasBowelMovement: note.hasBowelMovement,
+            mobilityAndShower: note.mobilityAndShower,
+          );
+        }
       });
     } catch (e) {
       setState(() {
@@ -261,6 +269,26 @@ class _AdminNotesManagementScreenState extends State<AdminNotesManagementScreen>
                 style: const TextStyle(fontSize: 14)),
             Text('Medication Adherence: ${note.medicationAdherence}',
                 style: const TextStyle(fontSize: 14)),
+            Text('Food & Drinks: ${note.foodAndDrinks}',
+                style: const TextStyle(fontSize: 14)),
+            Text('Meal Quantity (%): ${note.mealQuantityPercentage}%',
+                style: const TextStyle(fontSize: 14)),
+            Text('Hydration (ml): ${note.hydrationMl} ml',
+                style: const TextStyle(fontSize: 14)),
+            Text('Bowel Movement: ${note.hasBowelMovement ? "Yes" : "No"}',
+                style: const TextStyle(fontSize: 14)),
+            if (note.bowelMovementDescription != null &&
+                note.bowelMovementDescription!.isNotEmpty)
+              Text('Bowel Movement Details: ${note.bowelMovementDescription}',
+                  style: const TextStyle(fontSize: 14)),
+            if (note.bowelMovementFrequency > 0)
+              Text('Bowel Movement Frequency: ${note.bowelMovementFrequency} times',
+                  style: const TextStyle(fontSize: 14)),
+            Text('Mobility & Shower: ${note.mobilityAndShower}',
+                style: const TextStyle(fontSize: 14)),
+            Text('Medication Adherence: ${note.medicationAdherence}', style: const TextStyle(fontSize: 14)),
+            // Text(),
+
             Text('Mood: ${note.mood}', style: const TextStyle(fontSize: 14)),
             Text('Note: ${note.note}', style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 12),
