@@ -345,14 +345,14 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
         onTap: () => _handleAddCareNote(context),
         // badge: '2',
       ),
-      _buildModernActionCard(
-        title: 'Add Medication',
-        subtitle: 'Log medication administration',
-        icon: Icons.medical_services,
-        color: const Color(0xFF9B59B6),
-        onTap: () => _handleLogMedication(context),
-        // badge: '1',
-      ),
+      // _buildModernActionCard(
+      //   title: 'Add Medication',
+      //   subtitle: 'Log medication administration',
+      //   icon: Icons.medical_services,
+      //   color: const Color(0xFF9B59B6),
+      //   onTap: () => _handleLogMedication(context),
+      //   // badge: '1',
+      // ),
     ];
   }
 
@@ -1456,25 +1456,25 @@ Widget _buildCareNotePage4(
   }
 
   // Handles medication logging
-  void _handleLogMedication(BuildContext context) async {
-    final medication = await _logMedication(context);
-    if (medication != null && context.mounted) {
-      final medicationProvider =
-          Provider.of<MedicationRecordProvider>(context, listen: false);
-      medicationProvider.addRecord(
-        MedicationRecord(
-          id: (medicationProvider.records.length + 1).toString(),
-          clientId: '1',
-          medicationName: medication['medication']!,
-          dosage: medication['dosage']!,
-          administrationTime: DateTime.now(),
-          notes: medication['notes'] ?? '',
-        ),
-      );
-      _overlayUtils.showOverlay(context, 'Medication logged successfully');
-      Navigator.pushNamed(context, Routes.emar);
-    }
-  }
+  // void _handleLogMedication(BuildContext context) async {
+  //   final medication = await _logMedication(context);
+  //   if (medication != null && context.mounted) {
+  //     final medicationProvider =
+  //         Provider.of<MedicationRecordProvider>(context, listen: false);
+  //     medicationProvider.addRecord(
+  //       MedicationRecord(
+  //         id: (medicationProvider.records.length + 1).toString(),
+  //         clientId: '1',
+  //         medicationName: medication['medication']!,
+  //         dosage: medication['dosage']!,
+  //         administrationTime: DateTime.now(),
+  //         notes: medication['notes'] ?? '',
+  //       ),
+  //     );
+  //     _overlayUtils.showOverlay(context, 'Medication logged successfully');
+  //     Navigator.pushNamed(context, Routes.emar);
+  //   }
+  // }
 
   // Builds a profile completion card
   Widget _buildProfileCompletionCard({bool isSecondary = false}) {
