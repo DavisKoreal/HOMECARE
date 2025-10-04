@@ -373,7 +373,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         onTap: () => Navigator.pushNamed(context, Routes.adminNotesManagement),
       ),
       _buildModernActionCard(
-        title: 'Clients',
+        title: 'Client Recipients',
         subtitle: 'Client records',
         icon: Icons.people_outline,
         color: const Color(0xFF3498DB),
@@ -492,20 +492,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             ],
           ),
           actions: [
-            Container(
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8F9FA),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.notifications_outlined,
-                  color: Color(0xFF7F8C8D),
-                ),
-                onPressed: () {},
-              ),
-            ),
+            // Container(
+            //   margin: const EdgeInsets.only(right: 8),
+            //   decoration: BoxDecoration(
+            //     color: const Color(0xFFF8F9FA),
+            //     borderRadius: BorderRadius.circular(12),
+            //   ),
+            //   child: IconButton(
+            //     icon: const Icon(
+            //       Icons.notifications_outlined,
+            //       color: Color(0xFF7F8C8D),
+            //     ),
+            //     onPressed: () {},
+            //   ),
+            // ),
             Container(
               margin: const EdgeInsets.only(right: 16),
               decoration: BoxDecoration(
@@ -640,7 +640,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 child: Row(
                                   children: [
                                     _buildModernStat(
-                                      title: 'Active Clients',
+                                      title: 'Recipients',
                                       value: _activeClients.toString(),
                                       percent: 0.75,
                                       color: const Color(0xFF00A86B),
@@ -658,7 +658,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                     ),
                                     const SizedBox(width: 16),
                                     _buildModernStat(
-                                      title: 'Pending Tasks',
+                                      title: 'Pending Shifts',
                                       value: _pendingTasks.toString(),
                                       percent: 0.3,
                                       color: const Color(0xFFE67E22),
