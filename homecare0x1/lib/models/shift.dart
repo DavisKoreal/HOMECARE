@@ -12,7 +12,7 @@ class Shift {
   Location? location; // Optional location for the shift
   bool? broadcast;
 
-
+ 
   Shift({
     required this.id,
     required this.clientId,

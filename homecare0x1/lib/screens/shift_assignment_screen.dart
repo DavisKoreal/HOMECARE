@@ -535,45 +535,40 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
     );
   }
 
-  // Builds filter chips for filtering shifts.
-  Widget _buildFilterChips() {
-    final filters = ['All', 'Assigned', 'Complete', 'Requests', 'Today', 'This Week'];
+  // Builds updated filter chips for filtering shifts.
+  // Need filter chips to adapt to the width of the screen and be scrollable horizontally
+  // This is to ensure that all filter options are visible on smaller screens
+  // and the user can scroll to see all options. It is important to reduce the energy spent by the user 
+  // to find the filter they want to apply
+Widget _buildResponsiveFilterChips() {
+  final filters = ['All', 'Assigned', 'Complete', 'Requests', 'Today', 'This Week', 'Broadcasted'];
 
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: filters.length,
-        itemBuilder: (context, index) {
-          final filter = filters[index];
-          final isSelected = _selectedFilter == filter;
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(filter),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  _selectedFilter = filter; // Update selected filter.
-                });
-              },
-              backgroundColor: AppTheme.neutral100,
-              selectedColor: AppTheme.primaryBlue.withOpacity(0.2),
-              labelStyle: TextStyle(
-                color: isSelected ? AppTheme.primaryBlue : AppTheme.neutral600,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-              side: BorderSide(
-                color: isSelected ? AppTheme.primaryBlue : Colors.transparent,
-              ),
-            ),
-          );
+  return Wrap(
+    spacing: 8, // Horizontal spacing between chips
+    runSpacing: 8, // Vertical spacing between rows
+    children: filters.map((filter) {
+      final isSelected = _selectedFilter == filter;
+      return FilterChip(
+        label: Text(filter),
+        selected: isSelected,
+        onSelected: (selected) {
+          setState(() {
+            _selectedFilter = filter; // Update selected filter
+          });
         },
-      ),
-    );
-  }
+        backgroundColor: AppTheme.neutral100,
+        selectedColor: AppTheme.primaryBlue.withOpacity(0.2),
+        labelStyle: TextStyle(
+          color: isSelected ? AppTheme.primaryBlue : AppTheme.neutral600,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+        side: BorderSide(
+          color: isSelected ? AppTheme.primaryBlue : Colors.black12,
+        ),
+      );
+    }).toList(),
+  );
+}
 
   // Builds a stats card showing counts of caregivers and pending assignments.
   Widget _buildStatsCard() {
@@ -678,7 +673,8 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
           (_selectedFilter == 'This Week' &&
               shift.startTime.isAfter(startOfWeek) &&
               shift.startTime.isBefore(endOfWeek)) ||
-          (_selectedFilter == 'Complete' && shift.status == 'completed');
+          (_selectedFilter == 'Complete' && shift.status == 'completed')||
+          (_selectedFilter == 'Broadcasted' && shift.broadcast == true);
 
       return matchesSearch && matchesFilter;
     }).toList();
@@ -715,7 +711,8 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                 // Search bar for filtering.
                 _buildSearchBar(),
                 // Filter chips for shift categories.
-                _buildFilterChips(),
+                // _buildFilterChips(),
+                _buildResponsiveFilterChips(),
                 const SizedBox(height: 24),
                 // Section for displaying available caregivers.
                 Padding(
@@ -967,6 +964,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                       ),
                                     ],
                                   ),
+
                                   const SizedBox(height: 4),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
@@ -988,6 +986,26 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen>
                                       ),
                                     ),
                                   ),
+
+                                   
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.campaign,
+                                        size: 16,
+                                        color: AppTheme.primaryBlue,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        shift.broadcast == true ? 'Broadcasted Shift' : shift.broadcast == false ?'Not Broadcasted': 'Broadcast info not available',
+                                        style: TextStyle(
+                                          color: AppTheme.primaryBlue,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  )
                                 ],
                               ),
                               trailing: Icon(

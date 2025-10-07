@@ -11,6 +11,7 @@ import 'package:homecare0x1/models/caregiver.dart';
 import 'package:homecare0x1/services/firebase_caregiver_service.dart';
 import 'package:homecare0x1/models/caregiver_profile.dart';
 
+
 // FirebaseShiftService class for managing shift-related operations with Firestore
 class FirebaseShiftService {
   // Singleton instance to ensure only one instance of the service exists
@@ -27,7 +28,7 @@ class FirebaseShiftService {
   // Private constructor for singleton pattern
   FirebaseShiftService._constructor();
 
-  //Gets all the shifts that have been broadcasted
+  // Gets all the shifts that have been broadcasted
   Future<List<Shift>> getBroadcastedShifts() async {
     try {
       final snapshot = await _firestore
@@ -104,7 +105,6 @@ class FirebaseShiftService {
           .collection(_shiftsCollection)
           .limit(500)
           .get();
-          // print that this function was called
       print('Fetched ${snapshot.docs.length} shifts from Firestore as all the shifts');
       // Map documents to Shift objects
       return snapshot.docs.map((doc) => Shift(
@@ -121,6 +121,7 @@ class FirebaseShiftService {
                     latitude: doc['location']['latitude'],
                     longitude: doc['location']['longitude'])
                 : null,
+            broadcast: doc['broadcast'] ?? false, // Default to false if null
           )).toList();
     } catch (e) {
       // Log error and return empty list on failure
@@ -178,7 +179,7 @@ class FirebaseShiftService {
       // Fetch all shifts and filter by clientId
       final shifts = await getAllShifts();
       final clientShifts = shifts.where((shift) => shift.clientId == clientId).toList();
-      // sort having the most recent shift first
+      // Sort by most recent shift first
       clientShifts.sort((a, b) => b.startTime.compareTo(a.startTime));
       return clientShifts;
     } catch (e) {
@@ -191,16 +192,22 @@ class FirebaseShiftService {
   /// Checks if a new shift overlaps with existing shifts for a caregiver or client
   /// Returns true if there is an overlap, false otherwise
   Future<bool> _isShiftOverlap(DateTime startTime, DateTime endTime, String? caregiverId, String clientId) async {
-    // final shifts = await getAllShifts();
-    // get all shifts associated with supplied caregiver ID
-    final shifts = await getShiftsForCaregiver(caregiverId ?? '');
-    for (var shift in shifts) {
-      // Check for overlap with caregiver or client shifts
-      if (!(endTime.isBefore(shift.startTime) || startTime.isAfter(shift.endTime))) {
-        return true; // Overlap detected
+    try {
+      // Fetch shifts for the caregiver (if provided) or client
+      final shifts = caregiverId != null
+          ? await getShiftsForCaregiver(caregiverId)
+          : await getShiftsForClient(clientId);
+      for (var shift in shifts) {
+        // Check for overlap with caregiver or client shifts
+        if (!(endTime.isBefore(shift.startTime) || startTime.isAfter(shift.endTime))) {
+          return true; // Overlap detected
+        }
       }
+      return false; // No overlap
+    } catch (e) {
+      print('Error checking shift overlap: $e');
+      return true; // Assume overlap on error to prevent invalid scheduling
     }
-    return false; // No overlap
   }
 
   /// Requests a new shift for a client
@@ -211,6 +218,7 @@ class FirebaseShiftService {
     required DateTime startTime,
     required DateTime endTime,
     required BuildContext context,
+    bool broadcast = true, // Default to broadcasted shift
   }) async {
     try {
       // Validate start and end times
@@ -237,6 +245,7 @@ class FirebaseShiftService {
         location: LocationProvider().getRandomLocation(),
         caregiverId: null,
         caregiverName: null,
+        broadcast: broadcast,
       );
 
       // Save shift to Firestore
@@ -252,6 +261,7 @@ class FirebaseShiftService {
         },
         'caregiverId': null,
         'caregiverName': null,
+        'broadcast': broadcast,
       });
       return "success";
     } catch (e) {
@@ -271,6 +281,7 @@ class FirebaseShiftService {
     required BuildContext context,
     String? caregiverId,
     String? caregiverName,
+    bool broadcast = false, // Default to non-broadcasted shift for admin
   }) async {
     try {
       // Check if user is admin
@@ -295,7 +306,7 @@ class FirebaseShiftService {
       }
       // Check for shift overlaps
       if (await _isShiftOverlap(startTime, endTime, caregiverId, clientId)) {
-        throw Exception('Shift overlaps with existing shift for client');
+        throw Exception('Shift overlaps with existing shift for client or caregiver');
       }
 
       // Generate unique shift ID
@@ -310,6 +321,7 @@ class FirebaseShiftService {
         caregiverName: caregiverName,
         status: 'pending',
         location: LocationProvider().getRandomLocation(),
+        broadcast: broadcast,
       );
 
       // Save shift to Firestore
@@ -325,6 +337,7 @@ class FirebaseShiftService {
           'latitude': shift.location!.latitude,
           'longitude': shift.location!.longitude,
         },
+        'broadcast': broadcast,
       });
       return "success";
     } catch (e) {
@@ -343,6 +356,7 @@ class FirebaseShiftService {
     required BuildContext context,
     String? caregiverId,
     String? caregiverName,
+    bool? broadcast,
   }) async {
     try {
       // Check if user is admin
@@ -374,6 +388,7 @@ class FirebaseShiftService {
         'endTime': Timestamp.fromDate(endTime),
         if (caregiverId != null) 'caregiverId': caregiverId,
         if (caregiverName != null) 'caregiverName': caregiverName,
+        if (broadcast != null) 'broadcast': broadcast,
       });
       return "success";
     } catch (e) {
@@ -389,6 +404,7 @@ class FirebaseShiftService {
     required String shiftId,
     required String status,
     Location? location,
+    bool? broadcast,
   }) async {
     try {
       // Find the shift to update
@@ -411,6 +427,7 @@ class FirebaseShiftService {
             'latitude': location.latitude,
             'longitude': location.longitude,
           },
+        if (broadcast != null) 'broadcast': broadcast,
       });
       return "success";
     } catch (e) {
@@ -422,7 +439,7 @@ class FirebaseShiftService {
 
   /// Assigns a caregiver to a shift
   /// Returns "success" on successful assignment, "error" on failure
-  Future<String> assignShift( String shiftId, String caregiverId, String caregiverName) async {
+  Future<String> assignShift(String shiftId, String caregiverId, String caregiverName) async {
     try {
       final doc = await _firestore.collection(_shiftsCollection).doc(shiftId).get();
       if (!doc.exists) {
@@ -442,6 +459,7 @@ class FirebaseShiftService {
                 latitude: doc['location']['latitude'],
                 longitude: doc['location']['longitude'])
             : null,
+        broadcast: doc['broadcast'] ?? false, // Default to false if null
       );
 
       // Check for shift overlaps
@@ -454,6 +472,7 @@ class FirebaseShiftService {
         'caregiverId': caregiverId,
         'caregiverName': caregiverName,
         'status': shift.status == 'request' ? 'pending' : shift.status,
+        'broadcast': false, // Set broadcast to false when assigned
       });
       return "success";
     } catch (e) {

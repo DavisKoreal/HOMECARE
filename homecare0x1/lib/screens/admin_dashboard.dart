@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
+import 'package:homecare0x1/screens/admin_initiate_shift.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
@@ -404,6 +405,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             ),
           ),
         ),
+      ),
+      _buildModernActionCard(
+        title: "New shift", 
+        subtitle: "Add shift", 
+        icon:Icons.add_task, 
+        color:  const Color(0xFF00A86B), 
+        onTap:  () => Navigator.push(context,   MaterialPageRoute(
+            builder: (context) => AdminInitiateShift(),
+            ),
+          ),
       ),
     ];
   }

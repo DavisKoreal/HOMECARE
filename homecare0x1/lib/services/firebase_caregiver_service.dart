@@ -95,4 +95,16 @@ class FirebaseCaregiverService {
       return [];
     }
   }
+
+  Future<List<CaregiverProfile>> getAllCaregiverProfiles() async {
+    try {
+      final snapshot = await _firestore.collection(_caregiverProfilesCollection).get();
+      return snapshot.docs
+          .map((doc) => CaregiverProfile.fromMap(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      print('Error fetching all caregiver profiles: $e');
+      return [];
+    }
+  }
 }
