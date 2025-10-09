@@ -50,6 +50,7 @@ class FirebaseShiftService {
                     longitude: doc['location']['longitude'])
                 : null,
             broadcast: doc['broadcast'],
+            adminNotes: doc['adminNotes'],
           )).toList();
     } catch (e) {
       print('Error fetching broadcasted shifts: $e');
@@ -122,6 +123,7 @@ class FirebaseShiftService {
                     longitude: doc['location']['longitude'])
                 : null,
             broadcast: doc['broadcast'] ?? false, // Default to false if null
+            adminNotes: doc['adminNotes']?? '', // Default to empty string if null
           )).toList();
     } catch (e) {
       // Log error and return empty list on failure
@@ -246,6 +248,7 @@ class FirebaseShiftService {
         caregiverId: null,
         caregiverName: null,
         broadcast: broadcast,
+        adminNotes: 'Requested via app ',
       );
 
       // Save shift to Firestore
@@ -262,6 +265,7 @@ class FirebaseShiftService {
         'caregiverId': null,
         'caregiverName': null,
         'broadcast': broadcast,
+        'adminNotes': shift.adminNotes,
       });
       return "success";
     } catch (e) {
@@ -282,11 +286,12 @@ class FirebaseShiftService {
     String? caregiverId,
     String? caregiverName,
     bool broadcast = false, // Default to non-broadcasted shift for admin
+    String? adminNotes,
   }) async {
     try {
 
       final Location location = Location(latitude: 0.0, longitude: 0.0);
-      LocationProvider().getLocation().then((locData) {
+      await LocationProvider().getLocation().then((locData) {
         location.latitude = locData['Location']['Latitude'];
         location.longitude = locData['Location']['Longitude'];
       }).catchError((e) {
@@ -331,6 +336,7 @@ class FirebaseShiftService {
         status: 'pending',
         location: location,
         broadcast: broadcast,
+        adminNotes: adminNotes,
       );
 
       // Save shift to Firestore
@@ -347,6 +353,7 @@ class FirebaseShiftService {
           'longitude': shift.location!.longitude,
         },
         'broadcast': broadcast,
+        'adminNotes': adminNotes ?? '',
       });
       return "success";
     } catch (e) {
@@ -469,6 +476,7 @@ class FirebaseShiftService {
                 longitude: doc['location']['longitude'])
             : null,
         broadcast: doc['broadcast'] ?? false, // Default to false if null
+        adminNotes: doc['adminNotes']?? '', // Default to empty string if null
       );
 
       // Check for shift overlaps

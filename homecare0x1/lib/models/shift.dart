@@ -11,6 +11,7 @@ class Shift {
   String status; // 'pending', 'in_session', 'completed', 'cancelled', 'request',
   Location? location; // Optional location for the shift
   bool? broadcast;
+  String? adminNotes;
 
  
   Shift({
@@ -24,5 +25,6 @@ class Shift {
     required this.status,
     this.location,
     this.broadcast,
+    this.adminNotes,
   });
 }

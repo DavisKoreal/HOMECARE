@@ -29,6 +29,7 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
   // ==================== Controllers ====================
   final TextEditingController _clientSearchController = TextEditingController();
   final TextEditingController _caregiverSearchController = TextEditingController();
+  final TextEditingController _adminNotesController = TextEditingController();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -53,6 +54,10 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
   // Broadcast flag - determines if shift is sent to all available caregivers
   bool _broadcast = false;
 
+  // Progress tracking
+  int _currentStep = 0;
+  final int _totalSteps = 4; // Client, Caregiver, Schedule, Notes
+
   // Data lists
   List<Client> _clients = [];
   List<CaregiverProfile> _caregivers = [];
@@ -70,6 +75,7 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
   void dispose() {
     _clientSearchController.dispose();
     _caregiverSearchController.dispose();
+    _adminNotesController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -185,6 +191,46 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
     });
   }
 
+  // ==================== Step Navigation ====================
+  
+  /// Move to next step with validation
+  void _nextStep() {
+    if (_currentStep == 0) {
+      // Validate client selection
+      if (_selectedClientId == null || _selectedClientName == null) {
+        _showErrorMessage('Please select a client');
+        return;
+      }
+    } else if (_currentStep == 1) {
+      // Validate caregiver selection (only if not broadcasting)
+      if (!_broadcast && (_selectedCaregiverId == null || _selectedCaregiverName == null)) {
+        _showErrorMessage('Please select a caregiver or enable broadcast mode');
+        return;
+      }
+    } else if (_currentStep == 2) {
+      // Validate date/time
+      if (_startTime == null || _endTime == null) {
+        _showErrorMessage('Please select both start and end times');
+        return;
+      }
+      if (_endTime!.isBefore(_startTime!)) {
+        _showErrorMessage('End time must be after start time');
+        return;
+      }
+    }
+
+    if (_currentStep < _totalSteps - 1) {
+      setState(() => _currentStep++);
+    }
+  }
+
+  /// Move to previous step
+  void _previousStep() {
+    if (_currentStep > 0) {
+      setState(() => _currentStep--);
+    }
+  }
+
   // ==================== Form Validation & Submission ====================
   
   /// Validate form inputs before submission
@@ -229,6 +275,9 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
         caregiverId: _selectedCaregiverId,
         caregiverName: _selectedCaregiverName,
         broadcast: _broadcast,
+        adminNotes: _adminNotesController.text.trim().isNotEmpty 
+            ? _adminNotesController.text.trim() 
+            : null,
       );
 
       if (result == 'success') {
@@ -342,27 +391,140 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
         opacity: _fadeAnimation,
         child: SlideTransition(
           position: _slideAnimation,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeaderBanner(),
-                const SizedBox(height: 24),
-                _buildClientSection(),
-                const SizedBox(height: 24),
-                _buildCaregiverSection(),
-                const SizedBox(height: 24),
-                _buildDateTimeSection(),
-                const SizedBox(height: 16),
-                _buildBroadcastToggle(),
-                const SizedBox(height: 24),
-                _buildSubmitButton(),
-              ],
-            ),
+          child: Column(
+            children: [
+              _buildProgressBar(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeaderBanner(),
+                      const SizedBox(height: 24),
+                      _buildStepContent(),
+                      const SizedBox(height: 24),
+                      _buildNavigationButtons(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  /// Build progress bar
+  Widget _buildProgressBar() {
+    final progress = (_currentStep + 1) / _totalSteps;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Step ${_currentStep + 1} of $_totalSteps',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.neutral600,
+                ),
+              ),
+              Text(
+                _getStepTitle(_currentStep),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primaryBlue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: AppTheme.neutral100,
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+              minHeight: 8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get step title
+  String _getStepTitle(int step) {
+    switch (step) {
+      case 0:
+        return 'Select Client';
+      case 1:
+        return 'Select Caregiver';
+      case 2:
+        return 'Set Schedule';
+      case 3:
+        return 'Add Notes';
+      default:
+        return '';
+    }
+  }
+
+  /// Build step content
+  Widget _buildStepContent() {
+    switch (_currentStep) {
+      case 0:
+        return _buildClientSection();
+      case 1:
+        return _buildCaregiverSection();
+      case 2:
+        return _buildScheduleSection();
+      case 3:
+        return _buildAdminNotesSection();
+      default:
+        return const SizedBox();
+    }
+  }
+
+  /// Build navigation buttons
+  Widget _buildNavigationButtons() {
+    return Row(
+      children: [
+        if (_currentStep > 0)
+          Expanded(
+            child: ModernButton(
+              text: 'Previous',
+              icon: Icons.arrow_back,
+              onPressed: _previousStep,
+            ),
+          ),
+        if (_currentStep > 0) const SizedBox(width: 16),
+        Expanded(
+          child: ModernButton(
+            text: _currentStep == _totalSteps - 1 ? 'Create Shift' : 'Next',
+            icon: _currentStep == _totalSteps - 1 ? Icons.check : Icons.arrow_forward,
+            isLoading: _isLoading,
+            onPressed: _currentStep == _totalSteps - 1 ? _submitShift : _nextStep,
+          ),
+        ),
+      ],
     );
   }
 
@@ -399,7 +561,7 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
           ),
           const SizedBox(height: 8),
           Text(
-            'Assign a shift to a client and caregiver',
+            _getStepDescription(_currentStep),
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 16,
@@ -408,6 +570,22 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
         ],
       ),
     );
+  }
+
+  /// Get step description
+  String _getStepDescription(int step) {
+    switch (step) {
+      case 0:
+        return 'Choose the client who needs care';
+      case 1:
+        return 'Assign a caregiver or broadcast to all';
+      case 2:
+        return 'Set the shift start and end times';
+      case 3:
+        return 'Add any important notes or instructions';
+      default:
+        return 'Complete the shift creation process';
+    }
   }
 
   /// Build the client search and selection section
@@ -469,6 +647,8 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
           ],
         ),
         const SizedBox(height: 12),
+        _buildBroadcastToggle(),
+        const SizedBox(height: 16),
         _buildSearchField(
           controller: _caregiverSearchController,
           hintText: 'Search caregivers by name or ID...',
@@ -477,6 +657,236 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
         ),
         const SizedBox(height: 16),
         _buildCaregiverList(),
+      ],
+    );
+  }
+
+  /// Build schedule section
+  Widget _buildScheduleSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Shift Schedule',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.neutral600,
+              ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDateTimeButton(
+                label: _startTime == null
+                    ? 'Select Start'
+                    : DateFormat('MMM d, yyyy\nh:mm a').format(_startTime!),
+                icon: Icons.calendar_today,
+                onPressed: () => _selectDateTime(context, true),
+                isSelected: _startTime != null,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildDateTimeButton(
+                label: _endTime == null
+                    ? 'Select End'
+                    : DateFormat('MMM d, yyyy\nh:mm a').format(_endTime!),
+                icon: Icons.event,
+                onPressed: () => _selectDateTime(context, false),
+                isSelected: _endTime != null,
+              ),
+            ),
+          ],
+        ),
+        if (_startTime != null && _endTime != null) ...[
+          const SizedBox(height: 16),
+          _buildShiftSummaryCard(),
+        ],
+      ],
+    );
+  }
+
+  /// Build shift summary card
+  Widget _buildShiftSummaryCard() {
+    final duration = _endTime!.difference(_startTime!);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: AppTheme.primaryBlue.withOpacity(0.05),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.schedule, color: AppTheme.primaryBlue),
+                const SizedBox(width: 8),
+                Text(
+                  'Shift Duration',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.neutral600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '$hours hours and $minutes minutes',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryBlue,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build admin notes section
+  Widget _buildAdminNotesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Admin Notes (Optional)',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.neutral600,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Add any important instructions, special requirements, or notes for the caregiver.',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppTheme.neutral600,
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _adminNotesController,
+          maxLines: 8,
+          maxLength: 1000,
+          decoration: InputDecoration(
+            hintText: 'Enter detailed notes here...\n\nExample: Client prefers morning medication at 9 AM. Ensure to check blood pressure before administering. Family will be visiting at 2 PM.',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppTheme.neutral600),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppTheme.neutral600.withOpacity(0.3)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppTheme.primaryBlue, width: 2),
+            ),
+            filled: true,
+            fillColor: AppTheme.neutral100,
+            counterText: '${_adminNotesController.text.length}/1000',
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildShiftReviewCard(),
+      ],
+    );
+  }
+
+  /// Build shift review card
+  Widget _buildShiftReviewCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: AppTheme.primaryBlue),
+                const SizedBox(width: 8),
+                Text(
+                  'Shift Summary',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.neutral600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildReviewRow('Client', _selectedClientName ?? 'Not selected', Icons.person),
+            const Divider(height: 24),
+            _buildReviewRow(
+              'Caregiver', 
+              _broadcast 
+                  ? 'Broadcast to all' 
+                  : (_selectedCaregiverName ?? 'Not selected'),
+              Icons.medical_services,
+            ),
+            const Divider(height: 24),
+            _buildReviewRow(
+              'Start Time',
+              _startTime != null 
+                  ? DateFormat('MMM d, yyyy - h:mm a').format(_startTime!)
+                  : 'Not set',
+              Icons.calendar_today,
+            ),
+            const Divider(height: 24),
+            _buildReviewRow(
+              'End Time',
+              _endTime != null 
+                  ? DateFormat('MMM d, yyyy - h:mm a').format(_endTime!)
+                  : 'Not set',
+              Icons.event,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build review row
+  Widget _buildReviewRow(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: AppTheme.primaryBlue.withOpacity(0.7)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.neutral600.withOpacity(0.7),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.neutral600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -645,48 +1055,6 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
         : maxVisibleItems * itemHeight;
   }
 
-  /// Build date and time selection section
-  Widget _buildDateTimeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Shift Schedule',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.neutral600,
-              ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildDateTimeButton(
-                label: _startTime == null
-                    ? 'Select Start'
-                    : DateFormat('MMM d, yyyy\nh:mm a').format(_startTime!),
-                icon: Icons.calendar_today,
-                onPressed: () => _selectDateTime(context, true),
-                isSelected: _startTime != null,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildDateTimeButton(
-                label: _endTime == null
-                    ? 'Select End'
-                    : DateFormat('MMM d, yyyy\nh:mm a').format(_endTime!),
-                icon: Icons.event,
-                onPressed: () => _selectDateTime(context, false),
-                isSelected: _endTime != null,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   /// Build individual date/time button
   Widget _buildDateTimeButton({
     required String label,
@@ -724,26 +1092,12 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift>
             // Clear caregiver selection if broadcasting
             if (value) {
               _clearCaregiverSelection();
+              _showSuccessMessage('Broadcast mode enabled. Caregiver selection cleared.');
             }
           });
         },
         activeColor: AppTheme.successGreen,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  /// Build submit button
-  Widget _buildSubmitButton() {
-    return Center(
-      child: SizedBox(
-        width: double.infinity,
-        child: ModernButton(
-          text: 'Create Shift',
-          icon: Icons.add_circle_outline,
-          isLoading: _isLoading,
-          onPressed: _submitShift,
-        ),
       ),
     );
   }
