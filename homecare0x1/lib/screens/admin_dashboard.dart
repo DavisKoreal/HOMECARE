@@ -320,7 +320,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   child: Icon(
                     icon,
                     color: color,
-                    size: 28,
+                    size: 14,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -337,7 +337,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   subtitle,
                   style: const TextStyle(
                     color: Color(0xFF7F8C8D),
-                    fontSize: 14,
+                    fontSize: 12,
                     height: 1.4,
                   ),
                 ),
@@ -411,10 +411,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         subtitle: "Add shift", 
         icon:Icons.add_task, 
         color:  const Color(0xFF00A86B), 
-        onTap:  () => Navigator.push(context,   MaterialPageRoute(
-            builder: (context) => AdminInitiateShift(),
-            ),
-          ),
+        onTap:  () => Navigator.pushNamed(context, Routes.adminInitiateShift)
       ),
     ];
   }
@@ -712,9 +709,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               GridView.count(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
-                                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3: 2,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
+                                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4: 2,
+                                crossAxisSpacing: 8,
+                                mainAxisSpacing: 8,
                                 childAspectRatio: 0.85,
                                 children: _buildDashboardActions(context),
                               ),

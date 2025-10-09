@@ -284,6 +284,14 @@ class FirebaseShiftService {
     bool broadcast = false, // Default to non-broadcasted shift for admin
   }) async {
     try {
+
+      final Location location = Location(latitude: 0.0, longitude: 0.0);
+      LocationProvider().getLocation().then((locData) {
+        location.latitude = locData['Location']['Latitude'];
+        location.longitude = locData['Location']['Longitude'];
+      }).catchError((e) {
+        print('Error fetching location: $e');
+      });
       // Check if user is admin
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       if (userProvider.user?.role != 'admin') {
@@ -300,6 +308,7 @@ class FirebaseShiftService {
       // Validate start and end times
       if (startTime.isAfter(endTime)) {
         throw Exception('Start time must be before end time');
+
       }
       if (startTime.isBefore(DateTime.now())) {
         throw Exception('Start time must be in the future');
@@ -320,7 +329,7 @@ class FirebaseShiftService {
         caregiverId: caregiverId,
         caregiverName: caregiverName,
         status: 'pending',
-        location: LocationProvider().getRandomLocation(),
+        location: location,
         broadcast: broadcast,
       );
 

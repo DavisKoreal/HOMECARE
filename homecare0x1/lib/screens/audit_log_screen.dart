@@ -828,14 +828,16 @@ class _AuditLogScreenState extends State<AuditLogScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
-    final paginatedLogs = _getPaginatedLogs();
-    final filteredLogs = _getFilteredLogs();
-    final hasMoreItems = _currentPage * _itemsPerPage < filteredLogs.length;
+@override
+Widget build(BuildContext context) {
+  final paginatedLogs = _getPaginatedLogs();
+  final filteredLogs = _getFilteredLogs();
+  final hasMoreItems = _currentPage * _itemsPerPage < filteredLogs.length;
 
-    return ModernScreenLayout(
-      title: 'Audit Log',
-      body: FadeTransition(
+  return ModernScreenLayout(
+    title: 'Audit Log',
+    body: SingleChildScrollView(
+      child: FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
           position: _slideAnimation,
@@ -897,22 +899,22 @@ class _AuditLogScreenState extends State<AuditLogScreen>
               const SizedBox(height: 16),
 
               // Logs list
-              Expanded(
-                child: paginatedLogs.isEmpty
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
+              paginatedLogs.isEmpty
+                  ? _buildEmptyState()
+                  : SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.5, // Adjust height as needed
+                      child: RefreshIndicator(
                         onRefresh: () async {
                           setState(() {
                             _currentPage = 1;
                           });
                           // Simulate refresh delay
-                          await Future.delayed(
-                              const Duration(milliseconds: 500));
+                          await Future.delayed(const Duration(milliseconds: 500));
                         },
                         child: ListView.builder(
                           controller: _scrollController,
-                          itemCount:
-                              paginatedLogs.length + (hasMoreItems ? 1 : 0),
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: paginatedLogs.length + (hasMoreItems ? 1 : 0),
                           itemBuilder: (context, index) {
                             if (index < paginatedLogs.length) {
                               return _buildLogItem(paginatedLogs[index], index);
@@ -928,13 +930,14 @@ class _AuditLogScreenState extends State<AuditLogScreen>
                           },
                         ),
                       ),
-              ),
+                    ),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // Extended AuditLog model to include additional fields
