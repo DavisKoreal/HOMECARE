@@ -45,7 +45,7 @@ Future<void> main() async {
   );
 
   // Initialize mock data in Firestore
-  await setupMockData();
+  // await setupMockData();
 
   runApp(const HomecareApp());
 }
