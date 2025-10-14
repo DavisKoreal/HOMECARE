@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:homecare0x1/models/audit_log.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
-import 'package:homecare0x1/widgets/common/modern_button.dart';
+// import 'package:homecare0x1/widgets/common/modern_button.dart';
 import 'package:intl/intl.dart';
+import 'package:homecare0x1/services/auditlog_service.dart';
 
 class AuditLogScreen extends StatefulWidget {
   const AuditLogScreen({super.key});
@@ -38,97 +39,33 @@ class _AuditLogScreenState extends State<AuditLogScreen>
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  // Mock audit logs with more diverse data
-  final List<AuditLog> _allLogs = [
-    AuditLog(
-      id: '1',
-      userId: 'admin1',
-      userName: 'Alice Smith',
-      action: 'Client Profile Updated',
-      timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-      details: 'Updated care plan for John Doe - Modified medication schedule',
-      actionType: 'Update',
-      severity: 'Medium',
-    ),
-    AuditLog(
-      id: '2',
-      userId: 'caregiver1',
-      userName: 'Bob Johnson',
-      action: 'Medication Logged',
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      details: 'Logged Aspirin 81mg for John Doe - Morning dose administered',
-      actionType: 'Create',
-      severity: 'Low',
-    ),
-    AuditLog(
-      id: '3',
-      userId: 'admin1',
-      userName: 'Alice Smith',
-      action: 'Shift Assigned',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      details:
-          'Assigned caregiver Sarah Johnson to Jane Smith for evening shift',
-      actionType: 'Assignment',
-      severity: 'Medium',
-    ),
-    AuditLog(
-      id: '4',
-      userId: 'system',
-      userName: 'System',
-      action: 'Security Alert',
-      timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-      details: 'Failed login attempt detected from IP 192.168.1.100',
-      actionType: 'Security',
-      severity: 'High',
-    ),
-    AuditLog(
-      id: '5',
-      userId: 'caregiver2',
-      userName: 'Emily Davis',
-      action: 'Care Note Added',
-      timestamp: DateTime.now().subtract(const Duration(hours: 4)),
-      details:
-          'Added progress note for patient Mary Wilson - Vital signs stable',
-      actionType: 'Create',
-      severity: 'Low',
-    ),
-    AuditLog(
-      id: '6',
-      userId: 'admin2',
-      userName: 'David Brown',
-      action: 'User Account Created',
-      timestamp: DateTime.now().subtract(const Duration(days: 2)),
-      details: 'Created new caregiver account for David Brown',
-      actionType: 'Create',
-      severity: 'Medium',
-    ),
-    AuditLog(
-      id: '7',
-      userId: 'caregiver1',
-      userName: 'Bob Johnson',
-      action: 'Emergency Contact Updated',
-      timestamp: DateTime.now().subtract(const Duration(hours: 6)),
-      details: 'Updated emergency contact information for John Doe',
-      actionType: 'Update',
-      severity: 'Medium',
-    ),
-    AuditLog(
-      id: '8',
-      userId: 'system',
-      userName: 'System',
-      action: 'Data Backup Completed',
-      timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
-      details: 'Automated daily backup completed successfully',
-      actionType: 'System',
-      severity: 'Low',
-    ),
-  ];
+  // Data and service initialization
+  final List<AuditLog> _allLogs = [];
+  final FirebaseAuditLogService _auditLogService = FirebaseAuditLogService.instance;
+  bool _isLoading = true;
+
+  Future<void> _fetchAuditLogs() async {
+    setState(() => _isLoading = true);
+    
+    _auditLogService.getAllAuditLogs().then((logs) {
+      setState(() {
+        _allLogs.clear();
+        _allLogs.addAll(logs);
+        _isLoading = false;
+      });
+    }).catchError((error) {
+      setState(() => _isLoading = false);
+      print('Error fetching audit logs: $error');
+    });
+  }
+
 
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
     _scrollController.addListener(_onScroll);
+    _fetchAuditLogs(); // Fetch audit logs when screen loads
   }
 
   void _initializeAnimations() {
@@ -207,14 +144,13 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     // Apply user type filter
     if (_selectedUserType != 'All Users') {
       filtered = filtered.where((log) {
-        if (_selectedUserType == 'Admins') return log.userId.contains('admin');
-        if (_selectedUserType == 'Caregivers')
-          return log.userId.contains('caregiver');
+        if (_selectedUserType == 'admin') return log.userId.contains('admin');
+        if (_selectedUserType == 'caregiver') return log.userId.contains('caregiver');
         if (_selectedUserType == 'System') return log.userId == 'system';
         return true;
       }).toList();
     }
-
+// Create
     // Apply date range filter
     if (_selectedDateRange != 'All Time') {
       final now = DateTime.now();
@@ -358,14 +294,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
                   // Action Type Filter
                   _buildFilterRow(
                     'Action Type',
-                    [
-                      'All',
-                      'Create',
-                      'Update',
-                      'Assignment',
-                      'Security',
-                      'System'
-                    ],
+                    AuditLog.validActionTypes,
                     _selectedFilter,
                     (value) => setState(() {
                       _selectedFilter = value;
@@ -378,7 +307,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
                   // User Type Filter
                   _buildFilterRow(
                     'User Type',
-                    ['All Users', 'Admins', 'Caregivers', 'System'],
+                    ['All Users', 'admin', 'caregiver', 'system'],
                     _selectedUserType,
                     (value) => setState(() {
                       _selectedUserType = value;
@@ -596,7 +525,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
   }
 
   Widget _buildLogItem(AuditLog log, int index) {
-    final isEven = index % 2 == 0;
+    // final isEven = index % 2 == 0;
 
     return AnimatedContainer(
       duration: Duration(milliseconds: 300 + (index * 50)),
@@ -648,7 +577,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  log.userId,
+                  log.userName,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 13,
@@ -767,12 +696,22 @@ class _AuditLogScreenState extends State<AuditLogScreen>
 
   Color _getSeverityColor(String severity) {
     switch (severity) {
-      case 'High':
+      //       'info',
+      // 'warning',
+      // 'error',
+      // 'critical',
+      // 'security',
+      // 'compliance'
+      case 'critical':
         return Colors.red[600]!;
-      case 'Medium':
-        return Colors.orange[600]!;
-      case 'Low':
-        return Colors.green[600]!;
+      case 'security':
+        return Colors.orange;
+      case 'error':
+        return Colors.red[400]!;
+      case 'warning':
+        return Colors.blueAccent;
+      case 'info':
+        return Colors.lightGreen[400]!;
       default:
         return Colors.grey[600]!;
     }
@@ -780,16 +719,25 @@ class _AuditLogScreenState extends State<AuditLogScreen>
 
   IconData _getActionIcon(String actionType) {
     switch (actionType) {
-      case 'Create':
-        return Icons.add_circle;
-      case 'Update':
+
+      //       'login',
+      // 'logout',
+      // 'data_change',
+      // 'security',
+      // 'compliance',
+      // 'system'
+      case 'login':
+        return Icons.login;
+      case 'logout':
+        return Icons.logout;
+      case 'data_change':
         return Icons.edit;
-      case 'Assignment':
-        return Icons.assignment;
-      case 'Security':
+      case 'security':      
         return Icons.security;
-      case 'System':
-        return Icons.settings;
+      case 'compliance':
+        return Icons.verified_user;
+      case 'system':  
+        return Icons.computer;
       default:
         return Icons.history;
     }
@@ -907,9 +855,16 @@ Widget build(BuildContext context) {
               const SizedBox(height: 16),
 
               // Logs list
-              paginatedLogs.isEmpty
-                  ? _buildEmptyState()
-                  : SizedBox(
+              _isLoading
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : paginatedLogs.isEmpty
+                      ? _buildEmptyState()
+                      : SizedBox(
                       height: MediaQuery.of(context).size.height * 0.5, // Adjust height as needed
                       child: RefreshIndicator(
                         onRefresh: () async {
@@ -939,6 +894,7 @@ Widget build(BuildContext context) {
                         ),
                       ),
                     ),
+                const SizedBox(height: 32),
             ],
           ),
         ),
@@ -949,7 +905,7 @@ Widget build(BuildContext context) {
 }
 
 // Extended AuditLog model to include additional fields
-extension AuditLogExtension on AuditLog {
-  String get actionType => this.actionType ?? 'Unknown';
-  String get severity => this.severity ?? 'Low';
-}
+// extension AuditLogExtension on AuditLog {
+//   String get actionType => this.actionType ?? 'Unknown';
+//   String get severity => this.severity ?? 'Low';
+// }

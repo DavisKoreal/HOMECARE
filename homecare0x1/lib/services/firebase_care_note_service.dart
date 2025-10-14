@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:homecare0x1/models/care_note.dart';
+import 'package:homecare0x1/models/user.dart';
+import 'package:homecare0x1/services/auditlog_service.dart';
+import 'package:homecare0x1/providers/user_provider.dart';
 
 // Service class for handling Firebase Firestore operations related to care notes
 class FirebaseCareNotesService {
@@ -8,6 +11,7 @@ class FirebaseCareNotesService {
       FirebaseFirestore.instance.collection('care_notes');
   final CollectionReference _clientsCollection =
       FirebaseFirestore.instance.collection('clients');
+  final FirebaseAuditLogService _auditLogService = FirebaseAuditLogService.instance;
 
   // Constant for the maximum number of care notes to retrieve
   static const int _careNotesLimit = 500;
@@ -207,7 +211,7 @@ class FirebaseCareNotesService {
   }
 
   /// Adds a new care note to Firestore
-  Future<void> addCareNote(CareNote note) async {
+  Future<void> addCareNote(CareNote note, User user) async {
     try {
       await _careNotesCollection.add({
         'clientId': note.clientId,
@@ -230,6 +234,17 @@ class FirebaseCareNotesService {
         'bowelMovementFrequency': note.bowelMovementFrequency,
         'mobilityAndShower': note.mobilityAndShower,
       });
+      // final userProvider = UserProvider();
+      await _auditLogService.createAuditLog(
+        userId: user.id,
+        userName: user.name,
+        userRole: user.role,
+        action: 'Added care note for client ${note.clientId}',
+        actionType: 'add care note',
+        severity: 'info',
+        details: 'Care note added with shiftId: ${note.shiftId}',
+      );
+
     } catch (e) {
       print('Error adding care note: $e');
       throw Exception('Failed to add care note: $e');

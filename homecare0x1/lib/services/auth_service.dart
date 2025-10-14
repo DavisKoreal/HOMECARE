@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:homecare0x1/models/user.dart';
+import 'package:homecare0x1/services/auditlog_service.dart';
 
 class AuthService {
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuditLogService _auditLogService = FirebaseAuditLogService.instance;
 
   // Future<User?> login(String email, String password) async {
   //   try {
@@ -48,8 +50,18 @@ class AuthService {
       final docSnapshot =
           await _firestore.collection('users').doc(credential.user!.uid).get();
       if (docSnapshot.exists) {
-        print("A document snapshot exists");
+        // print("A document snapshot exists");
         final userData = docSnapshot.data()!;
+        // Create audit log entry for login
+        await _auditLogService.createAuditLog(
+          userId: userData['id'] as String,
+          userName: userData['name'] as String,
+          userRole: userData['role'] as String,
+          action: 'User logged in',
+          actionType: 'login',
+          severity: 'security',
+          details: 'User ID: ${userData['id']}, Email: $email',
+        );
         return User(
           id: userData['id'] as String,
           role: userData['role'] as String,

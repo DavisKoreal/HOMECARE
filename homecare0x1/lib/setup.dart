@@ -489,4 +489,54 @@ final careNotes = [
       print('Error adding task ${task['id']}: $e');
     }
   }
+
+  // add mock audit logs
+  final auditLogs = [
+    if (adminId != null)
+      {
+        'id': 'al1',
+        'userId': adminId,
+        'userName': 'Business Owner',
+        'action': 'User Login',
+        'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 5))),
+        'details': 'Admin logged into the system',
+        'actionType': 'login',
+        'severity': 'info',
+      },
+    if (caregiverId != null)
+      {
+        'id': 'al2',
+        'userId': caregiverId,
+        'userName': 'Kind Nurse',
+        'action': 'Shift Completed',
+        'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 3))),
+        'details': 'Completed shift for client John Doe on Jan 10, 2025',
+        'actionType': 'data_change',
+        'severity': 'info',
+      },
+    if (adminId != null)
+      {
+        'id': 'al3',
+        'userId': adminId,
+        'userName': 'Business Owner',
+        'action': 'Password Change',
+        'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
+        'details': 'Changed password for user',
+        'actionType': 'security',
+        'severity': 'warning',
+      },
+  ];
+  for (var log in auditLogs) {
+    try {
+      final logRef = firestore.collection('audit_logs').doc(log['id'] as String);
+      final existingLog = await logRef.get();
+      if (!existingLog.exists) {
+        await logRef.set(log);
+        print('Added audit log ${log['id']}');
+      }
+    } catch (e) {
+      print('Error adding audit log ${log['id']}: $e');
+    }
+  }
+  
 }

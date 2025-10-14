@@ -2,6 +2,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:homecare0x1/models/caregiver.dart';
 import 'package:homecare0x1/models/caregiver_profile.dart';
+import 'package:homecare0x1/models/user.dart';
+import 'package:homecare0x1/services/auditlog_service.dart';
 
 class FirebaseCaregiverService {
   static final FirebaseCaregiverService instance = FirebaseCaregiverService._constructor();
@@ -10,6 +12,7 @@ class FirebaseCaregiverService {
 
   final String _caregiversCollection = 'caregivers';
   final String _caregiverProfilesCollection = 'caregiver_profiles';
+  final FirebaseAuditLogService _auditLogService = FirebaseAuditLogService.instance;
 
   FirebaseCaregiverService._constructor();
 
@@ -60,6 +63,16 @@ class FirebaseCaregiverService {
   Future<String> upsertCaregiverProfile(CaregiverProfile profile) async {
     try {
       await _firestore.collection(_caregiverProfilesCollection).doc(profile.id).set(profile.toMap());
+      // Create audit log entry for profile update
+      await _auditLogService.createAuditLog(
+        userId: profile.approverId ?? 'system',
+        userName: profile.approverId != null ? 'approver' : 'system',
+        userRole: 'caregiver',
+        action: 'Updated caregiver profile for ${profile.name}',     
+        actionType: 'data change',
+        severity: 'info',
+        details: 'Caregiver ID: ${profile.id}, Approved: ${profile.approved}',
+      );
       return "success";
     } catch (e) {
       print('Error upserting caregiver profile: $e');

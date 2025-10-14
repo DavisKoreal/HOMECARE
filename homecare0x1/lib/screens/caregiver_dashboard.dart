@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 import 'package:homecare0x1/services/firebase_care_note_service.dart';
 import 'package:homecare0x1/services/firebase_caregiver_service.dart';
 import 'package:homecare0x1/models/caregiver_profile.dart';
+import 'package:homecare0x1/models/user.dart';
 // Caregiver Dashboard Screen
 // Displays a dashboard for caregivers with stats, quick actions, and recent activities.
 // Includes functionality to add care notes via a comprehensive tabbed dialog.
@@ -1306,7 +1307,8 @@ Widget _buildCareNotePage4(
   Future<void> _saveCareNote(BuildContext context, CareNote careNote) async {
     final service = FirebaseCareNotesService();
     try {
-      await service.addCareNote(careNote);
+      final User user = Provider.of<UserProvider>(context, listen: false).user!;
+      await service.addCareNote(careNote, user);
       _overlayUtils.showOverlay(context, 'Care note added successfully');
     } catch (e) {
       _overlayUtils.showOverlay(context, 'Failed to add care note: $e', isError: true);

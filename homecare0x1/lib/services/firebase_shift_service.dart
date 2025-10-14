@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:homecare0x1/models/client.dart';
 import 'package:homecare0x1/models/shift.dart';
 import 'package:homecare0x1/models/location.dart';
+import 'package:homecare0x1/models/user.dart';
 import 'package:homecare0x1/providers/location_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/models/caregiver.dart';
 import 'package:homecare0x1/services/firebase_caregiver_service.dart';
 import 'package:homecare0x1/models/caregiver_profile.dart';
+import 'package:homecare0x1/services/auditlog_service.dart';
 
 
 // FirebaseShiftService class for managing shift-related operations with Firestore
@@ -19,6 +21,9 @@ class FirebaseShiftService {
 
   // Firestore instance for database operations
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  //audit log instance
+  final FirebaseAuditLogService _auditLogService = FirebaseAuditLogService.instance;
 
   // Collection names for Firestore
   final String _caregiversCollection = 'caregivers';
@@ -221,6 +226,7 @@ class FirebaseShiftService {
     required DateTime endTime,
     required BuildContext context,
     bool broadcast = true, // Default to broadcasted shift
+    required User user,
   }) async {
     try {
       // Validate start and end times
@@ -267,6 +273,16 @@ class FirebaseShiftService {
         'broadcast': broadcast,
         'adminNotes': shift.adminNotes,
       });
+      // Create audit log entry for shift request
+      await _auditLogService.createAuditLog(
+        userId: user.id,
+        userName: user.name,
+        userRole: user.role,  // Default to 'client' if role is null
+        action: 'Requested new shift for client $clientName',     
+        actionType: 'shift request',
+        severity: 'info',
+        details: 'Shift ID: $shiftId, Start: $startTime, End: $endTime, Broadcast: $broadcast',
+      );
       return "success";
     } catch (e) {
       // Log error and return error status
@@ -355,6 +371,18 @@ class FirebaseShiftService {
         'broadcast': broadcast,
         'adminNotes': adminNotes ?? '',
       });
+
+      // Create audit log entry for adding shift
+      await _auditLogService.createAuditLog(
+        userId: userProvider.user!.id,
+        userName: userProvider.user!.name,
+        userRole: userProvider.user!.role,  // Default to 'admin' if role is null
+        action: 'Added new shift for client $clientName',     
+        actionType: 'assignment',
+        severity: 'info',
+        details: 'Shift ID: $shiftId, Start: $startTime, End: $endTime, Caregiver: ${caregiverName ?? 'Unassigned'}, Broadcast: $broadcast',
+      );
+
       return "success";
     } catch (e) {
       // Log error and return error status
@@ -406,6 +434,17 @@ class FirebaseShiftService {
         if (caregiverName != null) 'caregiverName': caregiverName,
         if (broadcast != null) 'broadcast': broadcast,
       });
+
+      // Create audit log entry for updating shift
+      await _auditLogService.createAuditLog(
+        userId: userProvider.user!.id,
+        userName: userProvider.user!.name,
+        userRole: userProvider.user!.role,  // Default to 'admin' if role is null
+        action: 'Updated shift for client ${shift.clientName}',     
+        actionType: 'data change',
+        severity: 'info',
+        details: 'Shift ID: $shiftId, Start: $startTime, End: $endTime, Caregiver: ${caregiverName ?? shift.caregiverName}, Broadcast: ${broadcast ?? shift.broadcast}',
+      );
       return "success";
     } catch (e) {
       // Log error and return error status
@@ -445,6 +484,17 @@ class FirebaseShiftService {
           },
         if (broadcast != null) 'broadcast': broadcast,
       });
+
+      // Create audit log entry for updating shift status
+      await _auditLogService.createAuditLog(
+        userId: 'system',
+        userName: 'system',
+        userRole: 'system',
+        action: 'Updated status for shift ${shift.id} to $status',     
+        actionType: 'data change',
+        severity: 'security',
+        details: 'Shift ID: $shiftId, New Status: $status',
+      );
       return "success";
     } catch (e) {
       // Log error and return error status
@@ -491,6 +541,16 @@ class FirebaseShiftService {
         'status': shift.status == 'request' ? 'pending' : shift.status,
         'broadcast': false, // Set broadcast to false when assigned
       });
+      // Create audit log entry for assigning shift
+      await _auditLogService.createAuditLog(
+        userId: 'system',
+        userName: 'system',
+        userRole: 'system',
+        action: 'Assigned caregiver $caregiverName to shift ${shift.id}',     
+        actionType: 'assignment',
+        severity: 'info',
+        details: 'Shift ID: $shiftId, Caregiver ID: $caregiverId, Caregiver Name: $caregiverName',
+      );
       return "success";
     } catch (e) {
       // Log error and return error status
