@@ -43,6 +43,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     AuditLog(
       id: '1',
       userId: 'admin1',
+      userName: 'Alice Smith',
       action: 'Client Profile Updated',
       timestamp: DateTime.now().subtract(const Duration(hours: 1)),
       details: 'Updated care plan for John Doe - Modified medication schedule',
@@ -52,6 +53,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     AuditLog(
       id: '2',
       userId: 'caregiver1',
+      userName: 'Bob Johnson',
       action: 'Medication Logged',
       timestamp: DateTime.now().subtract(const Duration(hours: 2)),
       details: 'Logged Aspirin 81mg for John Doe - Morning dose administered',
@@ -61,6 +63,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     AuditLog(
       id: '3',
       userId: 'admin1',
+      userName: 'Alice Smith',
       action: 'Shift Assigned',
       timestamp: DateTime.now().subtract(const Duration(days: 1)),
       details:
@@ -71,6 +74,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     AuditLog(
       id: '4',
       userId: 'system',
+      userName: 'System',
       action: 'Security Alert',
       timestamp: DateTime.now().subtract(const Duration(hours: 3)),
       details: 'Failed login attempt detected from IP 192.168.1.100',
@@ -80,6 +84,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     AuditLog(
       id: '5',
       userId: 'caregiver2',
+      userName: 'Emily Davis',
       action: 'Care Note Added',
       timestamp: DateTime.now().subtract(const Duration(hours: 4)),
       details:
@@ -90,6 +95,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     AuditLog(
       id: '6',
       userId: 'admin2',
+      userName: 'David Brown',
       action: 'User Account Created',
       timestamp: DateTime.now().subtract(const Duration(days: 2)),
       details: 'Created new caregiver account for David Brown',
@@ -99,6 +105,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     AuditLog(
       id: '7',
       userId: 'caregiver1',
+      userName: 'Bob Johnson',
       action: 'Emergency Contact Updated',
       timestamp: DateTime.now().subtract(const Duration(hours: 6)),
       details: 'Updated emergency contact information for John Doe',
@@ -108,6 +115,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     AuditLog(
       id: '8',
       userId: 'system',
+      userName: 'System',
       action: 'Data Backup Completed',
       timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
       details: 'Automated daily backup completed successfully',

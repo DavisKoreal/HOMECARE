@@ -1,6 +1,7 @@
 class AuditLog {
   final String id;
   final String userId;
+  final String userName;
   final String action;
   final DateTime timestamp;
   final String details;
@@ -9,6 +10,7 @@ class AuditLog {
 
   AuditLog({
     required this.id,
+    required this.userName,
     required this.userId,
     required this.action,
     required this.timestamp,

@@ -387,13 +387,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         color: const Color(0xFF9B59B6),
         onTap: () => Navigator.pushNamed(context, Routes.auditLog),
       ),
-      _buildModernActionCard(
-        title: 'Analytics',
-        subtitle: 'View metrics',
-        icon: Icons.analytics_outlined,
-        color: const Color(0xFFE67E22),
-        onTap: () {},
-      ),
+      // _buildModernActionCard(
+      //   title: 'Analytics',
+      //   subtitle: 'View metrics',
+      //   icon: Icons.analytics_outlined,
+      //   color: const Color(0xFFE67E22),
+      //   onTap: () {},
+      // ),
       _buildModernActionCard(
         title: 'Approve Caregivers',
         subtitle: 'Manage staff',
