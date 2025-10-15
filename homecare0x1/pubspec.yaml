@@ -1,3 +1,4 @@
+# pubspec.yaml
 name: homecare0x1
 description: A new Flutter project.
 publish_to: 'none'
@@ -20,6 +21,8 @@ dependencies:
   cloud_firestore: ^6.0.0
   js: ^0.7.2
   geolocator: ^14.0.2
+  flutter_local_notifications: ^19.4.2  # Add for local notifications
+  timezone: ^0.10.1  # Add for scheduling
 
 dev_dependencies:
   flutter_test:

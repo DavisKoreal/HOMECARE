@@ -1,3 +1,4 @@
+// Updated models/shift.dart
 import 'package:homecare0x1/models/location.dart';
 
 class Shift {
@@ -11,8 +12,9 @@ class Shift {
   String status; // 'pending', 'in_session', 'completed', 'cancelled', 'request',
   Location? location; // Optional location for the shift
   bool? broadcast;
+  bool clockedIn; // New field to track if caregiver has clocked in
+  DateTime? clockInTime; // Optional timestamp for clock-in
 
- 
   Shift({
     required this.id,
     required this.clientId,
@@ -24,5 +26,7 @@ class Shift {
     required this.status,
     this.location,
     this.broadcast,
+    this.clockedIn = false,
+    this.clockInTime,
   });
 }
