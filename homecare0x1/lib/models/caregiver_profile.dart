@@ -1,6 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class CaregiverProfile {
   final String id;
   final String name;
+  final String employeeID;
+  final String position;
+  final DateTime dateOfBirth;
+  final String address;
   final String role;
   final String experience;
   final List<String> certifications;
@@ -11,11 +17,15 @@ class CaregiverProfile {
   final double rating;
   final int reviews;
   final bool approved;
-  final String? approverId; 
+  final String? approverId;
 
   CaregiverProfile({
     required this.id,
     required this.name,
+    required this.employeeID,
+    required this.position,
+    required this.dateOfBirth,
+    required this.address,
     required this.role,
     required this.experience,
     required this.certifications,
@@ -33,6 +43,12 @@ class CaregiverProfile {
     return CaregiverProfile(
       id: id,
       name: map['name'] ?? '',
+      employeeID: map['employeeID'] ?? 'CG0000',
+      position: map['position'] ?? '',
+      dateOfBirth: map['dateOfBirth'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['dateOfBirth'])
+          : DateTime(1980),
+      address: map['address'] ?? '',
       role: map['role'] ?? '',
       experience: map['experience'] ?? '',
       certifications: List<String>.from(map['certifications'] ?? []),
@@ -50,6 +66,10 @@ class CaregiverProfile {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
+      'employeeID': employeeID,
+      'position': position,
+      'dateOfBirth': dateOfBirth.millisecondsSinceEpoch,
+      'address': address,
       'role': role,
       'experience': experience,
       'certifications': certifications,

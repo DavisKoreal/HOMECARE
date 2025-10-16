@@ -31,4 +31,5 @@ class Routes {
   static const String caregiverCompleteProfile = '/caregiver_complete_profile';
   static const String adminCaregiverApproval = '/admin_caregiver_approval';
   static const String adminInitiateShift = '/admin_initiate_shift';
+  static const String addClient = '/add-client';
 }

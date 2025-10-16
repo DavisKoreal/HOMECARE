@@ -8,6 +8,7 @@ import 'package:homecare0x1/providers/payment_provider.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:homecare0x1/providers/task_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:homecare0x1/providers/client_provider.dart';
 import 'package:homecare0x1/screens/admin_calendar_screen.dart';
 import 'package:homecare0x1/screens/admin_dashboard.dart';
 import 'package:homecare0x1/screens/admin_notes_management_screen.dart';
@@ -33,7 +34,6 @@ import 'package:homecare0x1/screens/visit_check_in_screen.dart';
 import 'package:homecare0x1/screens/visit_check_out_screen.dart';
 import 'package:homecare0x1/screens/caregiver_complete_profile.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
-import 'package:homecare0x1/screens/admin_initiate_shift.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'setup.dart';
@@ -44,7 +44,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize mock data in Firestore
+  // Initialize mock data in Firestore for testing
   await setupMockData();
 
   runApp(const HomecareApp());
@@ -64,6 +64,7 @@ class HomecareApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
+        ChangeNotifierProvider(create: (_) => ClientProvider()),
       ],
       child: MaterialApp(
         title: 'Homecare App',
@@ -135,9 +136,6 @@ class HomecareApp extends StatelessWidget {
             case Routes.caregiverProfile:
               return MaterialPageRoute(
                   builder: (_) => const CaregiverProfileScreen());
-            case Routes.adminInitiateShift:
-              return MaterialPageRoute(
-                  builder: (_) => const AdminInitiateShift());
             case Routes.caregiverCalendar:
               return MaterialPageRoute(
                   builder: (_) => const CaregiverCalendarScreen());

@@ -4,8 +4,11 @@ import 'package:homecare0x1/screens/admin_initiate_shift.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
-import 'dart:math';
+import 'package:homecare0x1/providers/client_provider.dart';
 import 'package:homecare0x1/screens/admin_caregiver_approval.dart';
+import 'package:homecare0x1/screens/client_profile_screen.dart';
+import 'package:homecare0x1/screens/caregiver_profile_screen.dart';
+import 'dart:math';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -16,7 +19,6 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     with TickerProviderStateMixin {
-  // State variables
   late AnimationController _animationController;
   late AnimationController _statsAnimationController;
   late Animation<double> _fadeAnimation;
@@ -29,13 +31,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   String? _errorMessage;
   OverlayEntry? _overlayEntry;
 
-
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
     _fetchData();
-    
   }
 
   void _initializeAnimations() {
@@ -129,23 +129,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         'Just a moment, I am loading the latest information...',
         'Retrieving the latest updates for you...',
       ];
-      // choose a random message from the list
       String randomMessage = messages[random.nextInt(messages.length)];
       _showOverlay(randomMessage);
     });
 
     try {
       final shiftProvider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
-      Random random = Random(DateTime.now().millisecondsSinceEpoch);
+      final clientProvider = Provider.of<ClientProvider>(context, listen: false);
 
       await Future.wait([
-        shiftProvider.fetchClients(),
+        clientProvider.fetchClients(),
         shiftProvider.fetchCaregivers(),
         shiftProvider.fetchShifts(),
       ]);
 
       setState(() {
-        _activeClients = shiftProvider.clients.length;
+        _activeClients = clientProvider.clients.length;
         _activeCaregivers = shiftProvider.availableCaregivers.length;
         _pendingTasks = shiftProvider.shifts.where((shift) => shift.status == 'pending').length;
         _isLoading = false;
@@ -158,13 +157,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           'Great. Details fetched successfully!',
           'All systems operational!',
           'Data updated successfully!',
-          'Information refreshed successfully!',  
+          'Information refreshed successfully!',
           'Details loaded successfully!',
           'All data is up-to-date!',
         ];
-        // choose a random success message
         final successMessage = successMessages[random.nextInt(successMessages.length)];
-         // show success message
         _showOverlay(successMessage);
       });
     } catch (e) {
@@ -320,7 +317,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   child: Icon(
                     icon,
                     color: color,
-                    size: 14,
+                    size: 28,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -337,7 +334,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   subtitle,
                   style: const TextStyle(
                     color: Color(0xFF7F8C8D),
-                    fontSize: 12,
+                    fontSize: 14,
                     height: 1.4,
                   ),
                 ),
@@ -358,7 +355,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         color: const Color(0xFF1E88E5),
         onTap: () => Navigator.pushNamed(context, Routes.adminCalendar),
       ),
-      // The following module has been commented out because of redundant functionality also accessed through the Caregiver Calendar
       _buildModernActionCard(
         title: 'Shifts',
         subtitle: 'Assign tasks',
@@ -399,7 +395,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         subtitle: 'Manage staff',
         icon: Icons.medical_services_outlined,
         color: const Color(0xFF00A86B),
-        onTap: () => Navigator.push(context,   MaterialPageRoute(
+        onTap: () => Navigator.push(context, MaterialPageRoute(
             builder: (context) => AdminCaregiverApprovalPage(
               adminId: Provider.of<UserProvider>(context, listen: false).user?.id ?? '',
             ),
@@ -407,40 +403,53 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         ),
       ),
       _buildModernActionCard(
-        title: "New shift", 
-        subtitle: "Add shift", 
-        icon:Icons.add_task, 
-        color:  const Color(0xFF00A86B), 
-        onTap:  () => Navigator.pushNamed(context, Routes.adminInitiateShift)
+        title: 'New Shift',
+        subtitle: 'Add shift',
+        icon: Icons.add_task,
+        color: const Color(0xFF00A86B),
+        onTap: () => Navigator.push(context, MaterialPageRoute(
+          builder: (context) => const AdminInitiateShift(),
+        )),
+      ),
+      _buildModernActionCard(
+        title: 'Add Client',
+        subtitle: 'Add new client',
+        icon: Icons.add,
+        color: const Color(0xFF00A86B),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ClientProfileScreen(isAdding: true),
+          ),
+        ),
+      ),
+      _buildModernActionCard(
+        title: 'Add Caregiver',
+        subtitle: 'Add new caregiver',
+        icon: Icons.person_add,
+        color: const Color(0xFF00A86B),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CaregiverProfileScreen(isAdding: true),
+          ),
+        ),
       ),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        bool? shouldExit = await showDialog<bool>(
+    return WillPopScope(
+      onWillPop: () async {
+        final shouldExit = await showDialog<bool>(
           context: context,
-          barrierDismissible: false,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.logout, color: Colors.red, size: 20),
-                ),
-                const SizedBox(width: 12),
-                const Text('Logout Confirmation'),
-              ],
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Logout Confirmation'),
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
             content: const Text(
               'Are you sure you want to logout and return to the login screen?',
               style: TextStyle(height: 1.4),
@@ -467,6 +476,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           userProvider.clearUser();
           Navigator.pushReplacementNamed(context, Routes.login);
         }
+        return false;
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FA),
@@ -500,20 +510,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             ],
           ),
           actions: [
-            // Container(
-            //   margin: const EdgeInsets.only(right: 8),
-            //   decoration: BoxDecoration(
-            //     color: const Color(0xFFF8F9FA),
-            //     borderRadius: BorderRadius.circular(12),
-            //   ),
-            //   child: IconButton(
-            //     icon: const Icon(
-            //       Icons.notifications_outlined,
-            //       color: Color(0xFF7F8C8D),
-            //     ),
-            //     onPressed: () {},
-            //   ),
-            // ),
             Container(
               margin: const EdgeInsets.only(right: 16),
               decoration: BoxDecoration(
@@ -596,126 +592,64 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                           padding: const EdgeInsets.all(16),
                                           decoration: BoxDecoration(
                                             color: Colors.white.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: const Icon(
-                                            Icons.dashboard_outlined,
+                                            Icons.health_and_safety_outlined,
                                             color: Colors.white,
                                             size: 32,
                                           ),
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 20),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Icons.schedule, color: Colors.white, size: 16),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Last updated: ${DateTime.now().toString().substring(11, 16)}',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
                               const SizedBox(height: 32),
-                              const Text(
-                                'Key Metrics',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2C3E50),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                child: Row(
-                                  children: [
-                                    _buildModernStat(
-                                      title: 'Recipients',
-                                      value: _activeClients.toString(),
-                                      percent: 0.75,
-                                      color: const Color(0xFF00A86B),
-                                      icon: Icons.people_outline,
-                                      animation: _statsAnimations[0],
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _buildModernStat(
-                                      title: 'Care Staff',
-                                      value: _activeCaregivers.toString(),
-                                      percent: 0.6,
-                                      color: const Color(0xFF3498DB),
-                                      icon: Icons.medical_services_outlined,
-                                      animation: _statsAnimations[1],
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _buildModernStat(
-                                      title: 'Pending Shifts',
-                                      value: _pendingTasks.toString(),
-                                      percent: 0.3,
-                                      color: const Color(0xFFE67E22),
-                                      icon: Icons.assignment_outlined,
-                                      animation: _statsAnimations[2],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 40),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              GridView.count(
+                                crossAxisCount: 2,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 0.8,
                                 children: [
-                                  const Text(
-                                    'Quick Actions',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2C3E50),
-                                    ),
+                                  _buildModernStat(
+                                    title: 'Active Clients',
+                                    value: _activeClients.toString(),
+                                    percent: _activeClients / 100.0,
+                                    color: const Color(0xFF00A86B),
+                                    icon: Icons.people_outline,
+                                    animation: _statsAnimations[0],
                                   ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF00A86B).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Text(
-                                      'All systems operational',
-                                      style: TextStyle(
-                                        color: Color(0xFF00A86B),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                                  _buildModernStat(
+                                    title: 'Available Caregivers',
+                                    value: _activeCaregivers.toString(),
+                                    percent: _activeCaregivers / 50.0,
+                                    color: const Color(0xFF3498DB),
+                                    icon: Icons.medical_services_outlined,
+                                    animation: _statsAnimations[1],
+                                  ),
+                                  _buildModernStat(
+                                    title: 'Pending Tasks',
+                                    value: _pendingTasks.toString(),
+                                    percent: _pendingTasks / 20.0,
+                                    color: const Color(0xFFE74C3C),
+                                    icon: Icons.schedule_outlined,
+                                    animation: _statsAnimations[2],
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 32),
                               GridView.count(
+                                crossAxisCount: 2,
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
-                                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4: 2,
-                                crossAxisSpacing: 8,
-                                mainAxisSpacing: 8,
-                                childAspectRatio: 0.85,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 0.75,
                                 children: _buildDashboardActions(context),
                               ),
-                              const SizedBox(height: 32),
                             ],
                           ),
                         ),

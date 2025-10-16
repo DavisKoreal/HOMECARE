@@ -79,6 +79,10 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
             final profile = CaregiverProfile(
               id: user.id,
               name: user.name,
+              employeeID: 'CG0000', // Default or generate as needed
+              position: _roleController.text.trim(),
+              dateOfBirth: DateTime(1980), // Default date of birth
+              address: '', // Default empty address
               role: _roleController.text.trim(),
               experience: _experienceController.text.trim(),
               certifications: _certificationsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
@@ -211,832 +215,806 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                       style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                             color: const Color(0xFF2C3E50),
                             fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
+                            fontSize: 32,
                           ),
                     ),
 
                     const SizedBox(height: 8),
 
+                    // Subtitle
                     Text(
-                      'Your health, our priority',
+                      'Sign up to get started',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: const Color(0xFF7F8C8D),
                             fontSize: 16,
                           ),
                     ),
 
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 32),
 
-                    // Sign up form card
-                    Container(
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 30,
-                            offset: const Offset(0, 15),
-                          ),
-                        ],
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Create Account',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    color: const Color(0xFF2C3E50),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-
-                            const SizedBox(height: 8),
-
-                            Text(
-                              'Sign up to get started',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: const Color(0xFF7F8C8D),
-                                  ),
-                            ),
-
-                            const SizedBox(height: 32),
-
-                            // Name field
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Full Name',
-                                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                        color: const Color(0xFF2C3E50),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                ),
-                                const SizedBox(height: 8),
-                                TextFormField(
-                                  controller: _nameController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter your full name',
-                                    prefixIcon: Container(
-                                      margin: const EdgeInsets.all(12),
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF00A86B).withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.person_outline,
-                                        color: Color(0xFF00A86B),
-                                        size: 20,
-                                      ),
+                    // Form
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          // Role selection
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'I am a',
+                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                      color: const Color(0xFF2C3E50),
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFF00A86B),
-                                        width: 2,
-                                      ),
-                                    ),
-                                    filled: true,
-                                    fillColor: const Color(0xFFF8F9FA),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 16,
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your name';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            // Email field
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Email Address',
-                                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                        color: const Color(0xFF2C3E50),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                ),
-                                const SizedBox(height: 8),
-                                TextFormField(
-                                  controller: _emailController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter your email',
-                                    prefixIcon: Container(
-                                      margin: const EdgeInsets.all(12),
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF00A86B).withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.email_outlined,
-                                        color: Color(0xFF00A86B),
-                                        size: 20,
-                                      ),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFF00A86B),
-                                        width: 2,
-                                      ),
-                                    ),
-                                    filled: true,
-                                    fillColor: const Color(0xFFF8F9FA),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 16,
-                                    ),
-                                  ),
-                                  keyboardType: TextInputType.emailAddress,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your email';
-                                    }
-                                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                                      return 'Please enter a valid email';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            // Password field
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Password',
-                                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                        color: const Color(0xFF2C3E50),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                ),
-                                const SizedBox(height: 8),
-                                TextFormField(
-                                  controller: _passwordController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter your password',
-                                    prefixIcon: Container(
-                                      margin: const EdgeInsets.all(12),
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF00A86B).withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.lock_outline,
-                                        color: Color(0xFF00A86B),
-                                        size: 20,
-                                      ),
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                        color: const Color(0xFF7F8C8D),
-                                      ),
-                                      onPressed: () {
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
                                         setState(() {
-                                          _obscurePassword = !_obscurePassword;
+                                          _selectedRole = 'family';
                                         });
                                       },
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                        width: 1.5,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        decoration: BoxDecoration(
+                                          color: _selectedRole == 'family'
+                                              ? const Color(0xFF00A86B)
+                                              : Colors.white,
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.05),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            'Family Member',
+                                            style: TextStyle(
+                                              color: _selectedRole == 'family'
+                                                  ? Colors.white
+                                                  : const Color(0xFF2C3E50),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFF00A86B),
-                                        width: 2,
-                                      ),
-                                    ),
-                                    filled: true,
-                                    fillColor: const Color(0xFFF8F9FA),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 16,
                                     ),
                                   ),
-                                  obscureText: _obscurePassword,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your password';
-                                    }
-                                    if (value.length < 6) {
-                                      return 'Password must be at least 6 characters';
-                                    }
-                                    return null;
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedRole = 'caregiver';
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        decoration: BoxDecoration(
+                                          color: _selectedRole == 'caregiver'
+                                              ? const Color(0xFF00A86B)
+                                              : Colors.white,
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.05),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            'Caregiver',
+                                            style: TextStyle(
+                                              color: _selectedRole == 'caregiver'
+                                                  ? Colors.white
+                                                  : const Color(0xFF2C3E50),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Conditional fields based on role
+                          if (_selectedRole == 'family') ...[
+                            TextFormField(
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                hintText: 'Full Name',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.person_outline,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your name';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                hintText: 'Email Address',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.email_outlined,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your email';
+                                }
+                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                                  return 'Please enter a valid email';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              decoration: InputDecoration(
+                                hintText: 'Password',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.lock_outline,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                    color: Colors.grey.shade500,
+                                    size: 20,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
                                   },
                                 ),
-                              ],
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your password';
+                                }
+                                if (value.length < 6) {
+                                  return 'Password must be at least 6 characters';
+                                }
+                                return null;
+                              },
                             ),
-
-                            const SizedBox(height: 24),
-
-                            // Role selection
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Select Role',
-                                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                        color: const Color(0xFF2C3E50),
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                          ] else if (_selectedRole == 'caregiver') ...[
+                            TextFormField(
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                hintText: 'Full Name',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.person_outline,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
                                 ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: RadioListTile<String>(
-                                        title: const Text('Family'),
-                                        value: 'family',
-                                        groupValue: _selectedRole,
-                                        onChanged: (value) {
-                                          setState(() => _selectedRole = value);
-                                        },
-                                        activeColor: const Color(0xFF00A86B),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: RadioListTile<String>(
-                                        title: const Text('Caregiver'),
-                                        value: 'caregiver',
-                                        groupValue: _selectedRole,
-                                        onChanged: (value) {
-                                          setState(() => _selectedRole = value);
-                                        },
-                                        activeColor: const Color(0xFF00A86B),
-                                      ),
-                                    ),
-                                  ],
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
                                 ),
-                              ],
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your name';
+                                }
+                                return null;
+                              },
                             ),
-
-                            if (_selectedRole == 'caregiver') ...[
-                              const SizedBox(height: 24),
-
-                              // Phone field
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Phone Number',
-                                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                          color: const Color(0xFF2C3E50),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _phoneController,
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter your phone number',
-                                      prefixIcon: Container(
-                                        margin: const EdgeInsets.all(12),
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF00A86B).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Icon(
-                                          Icons.phone_outlined,
-                                          color: Color(0xFF00A86B),
-                                          size: 20,
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF00A86B),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      filled: true,
-                                      fillColor: const Color(0xFFF8F9FA),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    keyboardType: TextInputType.phone,
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your phone number';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 24),
-
-                              // Specialty/Role field
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Specialty/Role',
-                                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                          color: const Color(0xFF2C3E50),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _roleController,
-                                    decoration: InputDecoration(
-                                      hintText: 'e.g., Nurse, Therapist',
-                                      prefixIcon: Container(
-                                        margin: const EdgeInsets.all(12),
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF00A86B).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Icon(
-                                          Icons.work_outline,
-                                          color: Color(0xFF00A86B),
-                                          size: 20,
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF00A86B),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      filled: true,
-                                      fillColor: const Color(0xFFF8F9FA),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your areas of specialty';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 24),
-
-                              // Experience field
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Experience',
-                                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                          color: const Color(0xFF2C3E50),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _experienceController,
-                                    decoration: InputDecoration(
-                                      hintText: 'e.g., 5 years in elderly care',
-                                      prefixIcon: Container(
-                                        margin: const EdgeInsets.all(12),
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF00A86B).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Icon(
-                                          Icons.timeline_outlined,
-                                          color: Color(0xFF00A86B),
-                                          size: 20,
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF00A86B),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      filled: true,
-                                      fillColor: const Color(0xFFF8F9FA),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your experience';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 24),
-
-                              // Certifications field
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Certifications',
-                                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                          color: const Color(0xFF2C3E50),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _certificationsController,
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter certifications separated by comma',
-                                      prefixIcon: Container(
-                                        margin: const EdgeInsets.all(12),
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF00A86B).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Icon(
-                                          Icons.verified_outlined,
-                                          color: Color(0xFF00A86B),
-                                          size: 20,
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF00A86B),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      filled: true,
-                                      fillColor: const Color(0xFFF8F9FA),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your certifications';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 24),
-
-                              // Availability field
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Availability',
-                                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                          color: const Color(0xFF2C3E50),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _availabilityController,
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter available days/times separated by comma',
-                                      prefixIcon: Container(
-                                        margin: const EdgeInsets.all(12),
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF00A86B).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Icon(
-                                          Icons.calendar_today_outlined,
-                                          color: Color(0xFF00A86B),
-                                          size: 20,
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF00A86B),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      filled: true,
-                                      fillColor: const Color(0xFFF8F9FA),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your availability';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 24),
-
-                              // Bio field
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Bio',
-                                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                          color: const Color(0xFF2C3E50),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _bioController,
-                                    decoration: InputDecoration(
-                                      hintText: 'Tell us about yourself',
-                                      prefixIcon: Container(
-                                        margin: const EdgeInsets.all(12),
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF00A86B).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Icon(
-                                          Icons.description_outlined,
-                                          color: Color(0xFF00A86B),
-                                          size: 20,
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF00A86B),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      filled: true,
-                                      fillColor: const Color(0xFFF8F9FA),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    maxLines: 5,
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your bio';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
-
-                            // Error message
-                            if (_errorMessage != null) ...[
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.red.shade200,
-                                    width: 1,
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _roleController,
+                              decoration: InputDecoration(
+                                hintText: 'Role/Specialty',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.work_outline,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
                                   ),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.error_outline,
-                                      color: Colors.red.shade600,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        _errorMessage!,
-                                        style: TextStyle(
-                                          color: Colors.red.shade700,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
                                 ),
                               ),
-                            ],
-
-                            const SizedBox(height: 32),
-
-                            // Sign up button
-                            SizedBox(
-                              width: double.infinity,
-                              height: 56,
-                              child: _isLoading
-                                  ? Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF00A86B).withOpacity(0.8),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: const Center(
-                                        child: SizedBox(
-                                          width: 24,
-                                          height: 24,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2.5,
-                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  : ElevatedButton(
-                                      onPressed: _register,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF00A86B),
-                                        foregroundColor: Colors.white,
-                                        elevation: 0,
-                                        shadowColor: const Color(0xFF00A86B).withOpacity(0.3),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(Icons.person_add, size: 20),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Sign Up',
-                                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your role/specialty';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _experienceController,
+                              decoration: InputDecoration(
+                                hintText: 'Years of Experience',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.timeline_outlined,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your years of experience';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _certificationsController,
+                              decoration: InputDecoration(
+                                hintText: 'Certifications (comma-separated)',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.verified_user_outlined,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your certifications';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _phoneController,
+                              decoration: InputDecoration(
+                                hintText: 'Phone Number',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.phone_outlined,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              keyboardType: TextInputType.phone,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your phone number';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                hintText: 'Email Address',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.email_outlined,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your email';
+                                }
+                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                                  return 'Please enter a valid email';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _bioController,
+                              decoration: InputDecoration(
+                                hintText: 'Bio',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.description_outlined,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              maxLines: 5,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your bio';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _availabilityController,
+                              decoration: InputDecoration(
+                                hintText: 'Availability (comma-separated days)',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.calendar_today_outlined,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your availability';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              decoration: InputDecoration(
+                                hintText: 'Password',
+                                hintStyle: TextStyle(color: Colors.grey.shade500),
+                                prefixIcon: const Icon(
+                                  Icons.lock_outline,
+                                  color: Color(0xFF00A86B),
+                                  size: 20,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                    color: Colors.grey.shade500,
+                                    size: 20,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF00A86B),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8F9FA),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your password';
+                                }
+                                if (value.length < 6) {
+                                  return 'Password must be at least 6 characters';
+                                }
+                                return null;
+                              },
                             ),
                           ],
-                        ),
+
+                          // Error message
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.red.shade200,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Colors.red.shade600,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _errorMessage!,
+                                      style: TextStyle(
+                                        color: Colors.red.shade700,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          const SizedBox(height: 32),
+
+                          // Sign up button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: _isLoading
+                                ? Container(
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF00A86B).withOpacity(0.8),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: const Center(
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : ElevatedButton(
+                                    onPressed: _register,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF00A86B),
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      shadowColor: const Color(0xFF00A86B).withOpacity(0.3),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.person_add, size: 20),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Sign Up',
+                                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                          ),
+                        ],
                       ),
                     ),
 

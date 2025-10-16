@@ -1,4 +1,3 @@
-// New file: lib/services/firebase_caregiver_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:homecare0x1/models/caregiver.dart';
 import 'package:homecare0x1/models/caregiver_profile.dart';
