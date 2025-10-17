@@ -32,6 +32,8 @@ class AuditLog {
     'assignment',
     'add care note',
     'shift request',
+    'check in', 
+    'check out',
   ];
 
   static const validSeverities = [
@@ -63,7 +65,7 @@ class AuditLog {
     // Validate severity
 
     if (!validSeverities.contains(severity)) {
-      throw ArgumentError('Invalid severity: $severity. The enetred actions are not available. Must be one of $validSeverities');
+      throw ArgumentError('Invalid severity: $severity. The entered actions are not available. Must be one of $validSeverities');
     }
 
     return AuditLog._(
@@ -79,3 +81,5 @@ class AuditLog {
     );
   }
 }
+//this is the class that defines what the audit log model does, its attributes and stuff important for 
+//the functions that consume such objects ijn the whole project.
