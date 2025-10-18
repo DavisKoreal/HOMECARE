@@ -1,5 +1,5 @@
 class CaregiverProfile {
-  final String id;
+  String id;
   final String name;
   final String role;
   final String experience;
