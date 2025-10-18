@@ -14,10 +14,31 @@ class Caregiver {
 
   // Factory method to create a Caregiver object from Firestore document data
   factory Caregiver.fromMap(Map<String, dynamic> map, String id) {
+    DateTime? experienceDate;
+    if (map['startExperience'] != null) {
+      try {
+        experienceDate = DateTime.parse(map['startExperience']);
+      } catch (e) {
+        print('Error parsing startExperience date: $e');
+        experienceDate = null; // Fallback to null on parse failure
+      }
+    }
+
     return Caregiver(
       id: id,
-      name: map['name'],
-      isAvailable: map['isAvailable'],
+      name: map['name'] ?? '', // Default to empty string if null
+      isAvailable: map['isAvailable'] ?? false, // Default to false if null
+      startExperience: experienceDate,
     );
+  }
+
+  // Converts the Caregiver object to a Firestore-compatible map
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'isAvailable': isAvailable,
+      'startExperience': startExperience
+          ?.toIso8601String(), // Serialize DateTime to ISO string
+    };
   }
 }

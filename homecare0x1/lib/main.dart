@@ -8,6 +8,7 @@ import 'package:homecare0x1/providers/payment_provider.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:homecare0x1/providers/task_provider.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
+import 'package:homecare0x1/screens/admin_add_caregiver.dart';
 import 'package:homecare0x1/screens/admin_calendar_screen.dart';
 import 'package:homecare0x1/screens/admin_dashboard.dart';
 import 'package:homecare0x1/screens/admin_notes_management_screen.dart';
@@ -36,6 +37,7 @@ import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/screens/admin_initiate_shift.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
+import 'screens/admin_add_client.dart';
 import 'setup.dart';
 
 Future<void> main() async {
@@ -144,6 +146,12 @@ class HomecareApp extends StatelessWidget {
             case Routes.clientViewShiftHistory:
               return MaterialPageRoute(
                   builder: (_) => const ClientViewShiftHistoryScreen());
+            case Routes.adminAddClient:
+              return MaterialPageRoute(
+                  builder: (_) => const AdminAddClientScreen());
+            case Routes.adminAddCaregiver:
+              return MaterialPageRoute(
+                  builder: (_) => const AdminAddCaregiverPage());
             default:
               return MaterialPageRoute(
                 builder: (_) => Scaffold(

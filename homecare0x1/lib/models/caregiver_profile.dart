@@ -11,7 +11,7 @@ class CaregiverProfile {
   final double rating;
   final int reviews;
   final bool approved;
-  final String? approverId; 
+  final String? approverId;
 
   CaregiverProfile({
     required this.id,

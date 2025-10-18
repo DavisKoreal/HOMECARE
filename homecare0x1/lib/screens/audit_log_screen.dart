@@ -41,12 +41,13 @@ class _AuditLogScreenState extends State<AuditLogScreen>
 
   // Data and service initialization
   final List<AuditLog> _allLogs = [];
-  final FirebaseAuditLogService _auditLogService = FirebaseAuditLogService.instance;
+  final FirebaseAuditLogService _auditLogService =
+      FirebaseAuditLogService.instance;
   bool _isLoading = true;
 
   Future<void> _fetchAuditLogs() async {
     setState(() => _isLoading = true);
-    
+
     _auditLogService.getAllAuditLogs().then((logs) {
       setState(() {
         _allLogs.clear();
@@ -58,7 +59,6 @@ class _AuditLogScreenState extends State<AuditLogScreen>
       print('Error fetching audit logs: $error');
     });
   }
-
 
   @override
   void initState() {
@@ -144,9 +144,10 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     // Apply user type filter
     if (_selectedUserType != 'All Users') {
       filtered = filtered.where((log) {
-        if (_selectedUserType == 'admin') return log.userId.contains('admin');
-        if (_selectedUserType == 'caregiver') return log.userId.contains('caregiver');
-        if (_selectedUserType == 'System') return log.userId == 'system';
+        if (_selectedUserType == 'admin') return log.userRole == 'admin';
+        if (_selectedUserType == 'caregiver')
+          return log.userRole == 'caregiver';
+        if (_selectedUserType == 'System') return log.userRole == 'system';
         return true;
       }).toList();
     }
@@ -719,7 +720,6 @@ class _AuditLogScreenState extends State<AuditLogScreen>
 
   IconData _getActionIcon(String actionType) {
     switch (actionType) {
-
       //       'login',
       // 'logout',
       // 'data_change',
@@ -732,11 +732,11 @@ class _AuditLogScreenState extends State<AuditLogScreen>
         return Icons.logout;
       case 'data_change':
         return Icons.edit;
-      case 'security':      
+      case 'security':
         return Icons.security;
       case 'compliance':
         return Icons.verified_user;
-      case 'system':  
+      case 'system':
         return Icons.computer;
       default:
         return Icons.history;
@@ -784,124 +784,128 @@ class _AuditLogScreenState extends State<AuditLogScreen>
   }
 
   @override
-@override
-Widget build(BuildContext context) {
-  final paginatedLogs = _getPaginatedLogs();
-  final filteredLogs = _getFilteredLogs();
-  final hasMoreItems = _currentPage * _itemsPerPage < filteredLogs.length;
+  @override
+  Widget build(BuildContext context) {
+    final paginatedLogs = _getPaginatedLogs();
+    final filteredLogs = _getFilteredLogs();
+    final hasMoreItems = _currentPage * _itemsPerPage < filteredLogs.length;
 
-  return ModernScreenLayout(
-    title: 'Audit Log',
-    body: SingleChildScrollView(
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: Column(
-            children: [
-              // Stats card
-              _buildStatsCard(),
+    return ModernScreenLayout(
+      title: 'Audit Log',
+      body: SingleChildScrollView(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: Column(
+              children: [
+                // Stats card
+                _buildStatsCard(),
 
-              // Search bar
-              _buildSearchBar(),
+                // Search bar
+                _buildSearchBar(),
 
-              // Filters section
-              _buildFiltersSection(),
+                // Filters section
+                _buildFiltersSection(),
 
-              if (_showFilters) const SizedBox(height: 16),
+                if (_showFilters) const SizedBox(height: 16),
 
-              // Results header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.assignment,
-                      color: AppTheme.primaryBlue,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Audit Logs',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                // Results header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.assignment,
+                        color: AppTheme.primaryBlue,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Audit Logs',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: AppTheme.primaryBlue.withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          '${filteredLogs.length} ${filteredLogs.length == 1 ? 'log' : 'logs'}',
+                          style: TextStyle(
+                            color: AppTheme.primaryBlue,
                             fontWeight: FontWeight.bold,
+                            fontSize: 12,
                           ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: AppTheme.primaryBlue.withOpacity(0.3)),
-                      ),
-                      child: Text(
-                        '${filteredLogs.length} ${filteredLogs.length == 1 ? 'log' : 'logs'}',
-                        style: TextStyle(
-                          color: AppTheme.primaryBlue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Logs list
-              _isLoading
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  : paginatedLogs.isEmpty
-                      ? _buildEmptyState()
-                      : SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.5, // Adjust height as needed
-                      child: RefreshIndicator(
-                        onRefresh: () async {
-                          setState(() {
-                            _currentPage = 1;
-                          });
-                          // Simulate refresh delay
-                          await Future.delayed(const Duration(milliseconds: 500));
-                        },
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemCount: paginatedLogs.length + (hasMoreItems ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index < paginatedLogs.length) {
-                              return _buildLogItem(paginatedLogs[index], index);
-                            } else {
-                              // Loading indicator for pagination
-                              return Container(
-                                padding: const EdgeInsets.all(16),
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-                          },
+                // Logs list
+                _isLoading
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(),
                         ),
-                      ),
-                    ),
+                      )
+                    : paginatedLogs.isEmpty
+                        ? _buildEmptyState()
+                        : SizedBox(
+                            height: MediaQuery.of(context).size.height *
+                                0.5, // Adjust height as needed
+                            child: RefreshIndicator(
+                              onRefresh: () async {
+                                setState(() {
+                                  _currentPage = 1;
+                                });
+                                // Simulate refresh delay
+                                await Future.delayed(
+                                    const Duration(milliseconds: 500));
+                              },
+                              child: ListView.builder(
+                                controller: _scrollController,
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                itemCount: paginatedLogs.length +
+                                    (hasMoreItems ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index < paginatedLogs.length) {
+                                    return _buildLogItem(
+                                        paginatedLogs[index], index);
+                                  } else {
+                                    // Loading indicator for pagination
+                                    return Container(
+                                      padding: const EdgeInsets.all(16),
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
                 const SizedBox(height: 32),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 // Extended AuditLog model to include additional fields

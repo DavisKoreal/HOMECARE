@@ -6,25 +6,30 @@ import 'package:homecare0x1/models/user.dart';
 import 'package:homecare0x1/services/auditlog_service.dart';
 
 class FirebaseCaregiverService {
-  static final FirebaseCaregiverService instance = FirebaseCaregiverService._constructor();
+  static final FirebaseCaregiverService instance =
+      FirebaseCaregiverService._constructor();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final String _caregiversCollection = 'caregivers';
   final String _caregiverProfilesCollection = 'caregiver_profiles';
-  final FirebaseAuditLogService _auditLogService = FirebaseAuditLogService.instance;
+  final FirebaseAuditLogService _auditLogService =
+      FirebaseAuditLogService.instance;
 
   FirebaseCaregiverService._constructor();
 
   Future<CaregiverProfile?> getCaregiverProfile(String caregiverId) async {
     try {
-      final doc = await _firestore.collection(_caregiverProfilesCollection).doc(caregiverId).get();
+      final doc = await _firestore
+          .collection(_caregiverProfilesCollection)
+          .doc(caregiverId)
+          .get();
       if (doc.exists) {
         return CaregiverProfile.fromMap(doc.data()!, doc.id);
       }
       return null;
     } catch (e) {
-      print('Error fetching caregiver profile: $e');
+      print('Error fetching caregiverProfile profile: $e');
       return null;
     }
   }
@@ -44,7 +49,8 @@ class FirebaseCaregiverService {
     }
   }
 
-  Future<List<CaregiverProfile>> getCaregiversForClient(List<String> caregiverIds) async {
+  Future<List<CaregiverProfile>> getCaregiversForClient(
+      List<String> caregiverIds) async {
     try {
       final profiles = <CaregiverProfile>[];
       for (var caregiverId in caregiverIds) {
@@ -62,30 +68,37 @@ class FirebaseCaregiverService {
 
   Future<String> upsertCaregiverProfile(CaregiverProfile profile) async {
     try {
-      await _firestore.collection(_caregiverProfilesCollection).doc(profile.id).set(profile.toMap());
+      await _firestore
+          .collection(_caregiverProfilesCollection)
+          .doc(profile.id)
+          .set(profile.toMap());
       // Create audit log entry for profile update
       await _auditLogService.createAuditLog(
         userId: profile.approverId ?? 'system',
         userName: profile.approverId != null ? 'approver' : 'system',
-        userRole: 'caregiver',
-        action: 'Updated caregiver profile for ${profile.name}',     
+        userRole: 'caregiverProfile',
+        action: 'Updated caregiverProfile profile for ${profile.name}',
         actionType: 'data change',
         severity: 'info',
         details: 'Caregiver ID: ${profile.id}, Approved: ${profile.approved}',
       );
       return "success";
     } catch (e) {
-      print('Error upserting caregiver profile: $e');
+      print('Error upserting caregiverProfile profile: $e');
       return "error";
     }
   }
 
-  Future<String> upsertApprovalStatus(String caregiverId, bool approved, String? approverId) async {
+  Future<String> upsertApprovalStatus(
+      String caregiverId, bool approved, String? approverId) async {
     if (approverId == null && approved) {
       return "error";
     }
     try {
-      await _firestore.collection(_caregiverProfilesCollection).doc(caregiverId).update({
+      await _firestore
+          .collection(_caregiverProfilesCollection)
+          .doc(caregiverId)
+          .update({
         'approved': approved,
         'approverId': approverId,
       });
@@ -111,13 +124,80 @@ class FirebaseCaregiverService {
 
   Future<List<CaregiverProfile>> getAllCaregiverProfiles() async {
     try {
-      final snapshot = await _firestore.collection(_caregiverProfilesCollection).get();
+      final snapshot =
+          await _firestore.collection(_caregiverProfilesCollection).get();
       return snapshot.docs
           .map((doc) => CaregiverProfile.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      print('Error fetching all caregiver profiles: $e');
+      print('Error fetching all caregiverProfile profiles: $e');
       return [];
+    }
+  }
+
+// Updated method in FirebaseCaregiverService class
+  Future<String> createCaregiver(CaregiverProfile profile) async {
+    try {
+      // Use a batch for atomicity (both writes succeed or fail together)
+      final batch = _firestore.batch();
+
+      // Step 1: Map to minimal Caregiver for 'caregivers' collection
+      final caregiver = Caregiver(
+        id: '', // ID will be assigned post-add (via doc reference)
+        name: profile.name,
+        isAvailable:
+            false, // Default to available for new caregivers; can be overridden
+        startExperience: DateTime.tryParse(
+            profile.experience ?? ''), // Attempt to parse experience as date
+      );
+
+      // Prepare reference for 'caregivers' (auto-generate ID)
+      final caregiverRef = _firestore.collection(_caregiversCollection).doc();
+      batch.set(caregiverRef, caregiver.toMap());
+
+      // Step 2: Create full profile in 'caregiver_profiles' using the same ID
+      final fullProfile = CaregiverProfile(
+        id: caregiverRef.id,
+        name: profile.name,
+        role: profile.role,
+        experience: profile.experience ?? '', // Ensure non-null
+        certifications:
+            profile.certifications ?? [], // Ensure list is initialized
+        phone: profile.phone ?? '',
+        email: profile.email ?? '',
+        bio: profile.bio ?? '',
+        availability: profile.availability ?? [],
+        rating: profile.rating,
+        reviews: profile.reviews,
+        approved: profile.approved,
+        approverId: profile.approverId,
+      );
+      batch.set(
+        _firestore
+            .collection(_caregiverProfilesCollection)
+            .doc(caregiverRef.id),
+        fullProfile.toMap(),
+      );
+
+      // Commit the batch
+      await batch.commit();
+
+      // Step 3: Enhanced audit log with full details
+      await _auditLogService.createAuditLog(
+        userId: caregiverRef.id,
+        userName: profile.name ?? 'Unknown',
+        userRole: 'caregiver',
+        action: 'Created new caregiver entry for ${profile.name}',
+        actionType: 'adding caregiver',
+        severity: 'info',
+        details:
+            'Caregiver ID: ${caregiverRef.id}, Name: ${profile.name}, Profile Created: true, Available: true',
+      );
+
+      return caregiverRef.id;
+    } catch (e) {
+      print('Error creating caregiver: $e');
+      return 'Error: $e';
     }
   }
 }

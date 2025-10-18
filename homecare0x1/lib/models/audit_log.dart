@@ -1,5 +1,4 @@
 class AuditLog {
-
   final String id;
   final String userId;
   final String userName;
@@ -8,7 +7,7 @@ class AuditLog {
   final DateTime timestamp;
   final String details;
   final String actionType;
-  final String severity; 
+  final String severity;
 
   AuditLog._({
     required this.id,
@@ -22,7 +21,6 @@ class AuditLog {
     required this.severity,
   });
 
-   
   static const validActionTypes = [
     'login',
     'logout',
@@ -32,8 +30,13 @@ class AuditLog {
     'assignment',
     'add care note',
     'shift request',
-    'check in', 
+    'check in',
     'check out',
+    'adding caregiver',
+    'removing caregiver',
+    'client creation',
+    'client update',
+    'client deletion'
   ];
 
   static const validSeverities = [
@@ -59,20 +62,22 @@ class AuditLog {
     // Validate actionType
 
     if (!validActionTypes.contains(actionType)) {
-      throw ArgumentError('Invalid actionType: $actionType. This error is because there is an action that ahs beemn entered taht is not part of the enums tahta have benn estated in the descripption Must be one of $validActionTypes');
+      throw ArgumentError(
+          'Invalid actionType: $actionType. This error is because there is an action that ahs beemn entered taht is not part of the enums tahta have benn estated in the descripption Must be one of $validActionTypes');
     }
 
     // Validate severity
 
     if (!validSeverities.contains(severity)) {
-      throw ArgumentError('Invalid severity: $severity. The entered actions are not available. Must be one of $validSeverities');
+      throw ArgumentError(
+          'Invalid severity: $severity. The entered actions are not available. Must be one of $validSeverities');
     }
 
     return AuditLog._(
       id: id,
       userId: userId,
       userName: userName,
-      userRole: userRole,// User role can be set later if needed
+      userRole: userRole, // User role can be set later if needed
       action: action,
       timestamp: timestamp,
       details: details,

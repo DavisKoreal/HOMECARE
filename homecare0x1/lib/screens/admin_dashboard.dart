@@ -29,13 +29,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   String? _errorMessage;
   OverlayEntry? _overlayEntry;
 
-
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
     _fetchData();
-    
   }
 
   void _initializeAnimations() {
@@ -61,7 +59,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       return Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
           parent: _statsAnimationController,
-          curve: Interval(index * 0.2, 0.6 + (index * 0.2), curve: Curves.elasticOut),
+          curve: Interval(index * 0.2, 0.6 + (index * 0.2),
+              curve: Curves.elasticOut),
         ),
       );
     });
@@ -135,7 +134,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     });
 
     try {
-      final shiftProvider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
+      final shiftProvider =
+          Provider.of<ShiftAssignmentProvider>(context, listen: false);
       Random random = Random(DateTime.now().millisecondsSinceEpoch);
 
       await Future.wait([
@@ -147,7 +147,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       setState(() {
         _activeClients = shiftProvider.clients.length;
         _activeCaregivers = shiftProvider.availableCaregivers.length;
-        _pendingTasks = shiftProvider.shifts.where((shift) => shift.status == 'pending').length;
+        _pendingTasks = shiftProvider.shifts
+            .where((shift) => shift.status == 'pending')
+            .length;
         _isLoading = false;
       });
 
@@ -158,13 +160,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           'Great. Details fetched successfully!',
           'All systems operational!',
           'Data updated successfully!',
-          'Information refreshed successfully!',  
+          'Information refreshed successfully!',
           'Details loaded successfully!',
           'All data is up-to-date!',
         ];
         // choose a random success message
-        final successMessage = successMessages[random.nextInt(successMessages.length)];
-         // show success message
+        final successMessage =
+            successMessages[random.nextInt(successMessages.length)];
+        // show success message
         _showOverlay(successMessage);
       });
     } catch (e) {
@@ -226,8 +229,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       height: 70,
                       width: 70,
                       child: TweenAnimationBuilder<double>(
-                        duration: Duration(milliseconds: 1000 + (animation.value * 500).round()),
-                        tween: Tween(begin: 0.0, end: percent * animation.value),
+                        duration: Duration(
+                            milliseconds:
+                                1000 + (animation.value * 500).round()),
+                        tween:
+                            Tween(begin: 0.0, end: percent * animation.value),
                         builder: (context, value, child) {
                           return CircularProgressIndicator(
                             value: value,
@@ -251,7 +257,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 ),
                 const SizedBox(height: 16),
                 TweenAnimationBuilder<int>(
-                  duration: Duration(milliseconds: 1000 + (animation.value * 500).round()),
+                  duration: Duration(
+                      milliseconds: 1000 + (animation.value * 500).round()),
                   tween: IntTween(begin: 0, end: int.parse(value)),
                   builder: (context, value, child) {
                     return Text(
@@ -399,20 +406,35 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         subtitle: 'Manage staff',
         icon: Icons.medical_services_outlined,
         color: const Color(0xFF00A86B),
-        onTap: () => Navigator.push(context,   MaterialPageRoute(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
             builder: (context) => AdminCaregiverApprovalPage(
-              adminId: Provider.of<UserProvider>(context, listen: false).user?.id ?? '',
+              adminId:
+                  Provider.of<UserProvider>(context, listen: false).user?.id ??
+                      '',
             ),
           ),
         ),
       ),
       _buildModernActionCard(
-        title: "New shift", 
-        subtitle: "Add shift", 
-        icon:Icons.add_task, 
-        color:  const Color(0xFF00A86B), 
-        onTap:  () => Navigator.pushNamed(context, Routes.adminInitiateShift)
-      ),
+          title: "New shift",
+          subtitle: "Add shift",
+          icon: Icons.add_task,
+          color: const Color(0xFF00A86B),
+          onTap: () => Navigator.pushNamed(context, Routes.adminInitiateShift)),
+      _buildModernActionCard(
+          title: "Add Client",
+          subtitle: "New recipient",
+          icon: Icons.person_add,
+          color: const Color(0xFF00A86B),
+          onTap: () => Navigator.pushNamed(context, Routes.adminAddClient)),
+      _buildModernActionCard(
+          title: "Add Caregiver",
+          subtitle: "New staff",
+          icon: Icons.person_add_alt_1,
+          color: const Color(0xFF00A86B),
+          onTap: () => Navigator.pushNamed(context, Routes.adminAddCaregiver)),
     ];
   }
 
@@ -426,7 +448,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Row(
               children: [
                 Container(
@@ -455,7 +478,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
                 child: const Text('Logout'),
               ),
@@ -463,7 +487,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           ),
         );
         if (shouldExit ?? false) {
-          final userProvider = Provider.of<UserProvider>(context, listen: false);
+          final userProvider =
+              Provider.of<UserProvider>(context, listen: false);
           userProvider.clearUser();
           Navigator.pushReplacementNamed(context, Routes.login);
         }
@@ -525,7 +550,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   Icons.person_outline,
                   color: Color(0xFF7F8C8D),
                 ),
-                onPressed: () => Navigator.pushNamed(context, Routes.userProfile),
+                onPressed: () =>
+                    Navigator.pushNamed(context, Routes.userProfile),
               ),
             ),
           ],
@@ -550,7 +576,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 padding: const EdgeInsets.all(32),
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [Color(0xFF00A86B), Color(0xFF00C975)],
+                                    colors: [
+                                      Color(0xFF00A86B),
+                                      Color(0xFF00C975)
+                                    ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
@@ -570,7 +599,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                       children: [
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               const Text(
                                                 'Welcome Back, Admin!',
@@ -584,7 +614,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                               Text(
                                                 'Managing healthcare excellence, one patient at a time',
                                                 style: TextStyle(
-                                                  color: Colors.white.withOpacity(0.9),
+                                                  color: Colors.white
+                                                      .withOpacity(0.9),
                                                   fontSize: 16,
                                                   height: 1.4,
                                                 ),
@@ -595,8 +626,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                         Container(
                                           padding: const EdgeInsets.all(16),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(16),
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                           ),
                                           child: const Icon(
                                             Icons.dashboard_outlined,
@@ -608,7 +641,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                     ),
                                     const SizedBox(height: 20),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
                                       decoration: BoxDecoration(
                                         color: Colors.white.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(20),
@@ -616,7 +650,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.schedule, color: Colors.white, size: 16),
+                                          const Icon(Icons.schedule,
+                                              color: Colors.white, size: 16),
                                           const SizedBox(width: 8),
                                           Text(
                                             'Last updated: ${DateTime.now().toString().substring(11, 16)}',
@@ -644,7 +679,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               const SizedBox(height: 16),
                               SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
                                 child: Row(
                                   children: [
                                     _buildModernStat(
@@ -678,7 +714,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               ),
                               const SizedBox(height: 40),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
                                     'Quick Actions',
@@ -689,9 +726,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                     ),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF00A86B).withOpacity(0.1),
+                                      color: const Color(0xFF00A86B)
+                                          .withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: const Text(
@@ -709,7 +748,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               GridView.count(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
-                                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4: 2,
+                                crossAxisCount:
+                                    MediaQuery.of(context).size.width > 600
+                                        ? 4
+                                        : 2,
                                 crossAxisSpacing: 8,
                                 mainAxisSpacing: 8,
                                 childAspectRatio: 0.85,
