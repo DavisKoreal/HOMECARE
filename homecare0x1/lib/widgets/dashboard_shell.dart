@@ -9,6 +9,7 @@ class DashboardShell extends StatelessWidget {
   final String title;
   final List<Widget>? actions;
   final String activeRoute;
+  final Function(String route)? onNavigate; // New callback for SPA mode
 
   const DashboardShell({
     super.key,
@@ -16,6 +17,7 @@ class DashboardShell extends StatelessWidget {
     required this.title,
     required this.activeRoute,
     this.actions,
+    this.onNavigate,
   });
 
   void _handleLogout(BuildContext context) async {
@@ -55,10 +57,9 @@ class DashboardShell extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundCanvas,
-      // Mobile Drawer
       drawer: !isDesktop
           ? Drawer(
-              backgroundColor: const Color(0xFF2D3436), // Sidebar Dark Bg
+              backgroundColor: const Color(0xFF2D3436),
               child: _buildSidebarContent(context),
             )
           : null,
@@ -73,19 +74,15 @@ class DashboardShell extends StatelessWidget {
           : null,
       body: Row(
         children: [
-          // Desktop Sidebar
           if (isDesktop)
             Container(
               width: 260,
-              color: const Color(0xFF2D3436), // Sidebar Dark Bg
+              color: const Color(0xFF2D3436),
               child: _buildSidebarContent(context),
             ),
-          
-          // Main Content Area
           Expanded(
             child: Column(
               children: [
-                // Desktop Top Bar
                 if (isDesktop)
                   Container(
                     height: 64,
@@ -109,8 +106,6 @@ class DashboardShell extends StatelessWidget {
                       ],
                     ),
                   ),
-                
-                // Page Content
                 Expanded(
                   child: content,
                 ),
@@ -126,7 +121,6 @@ class DashboardShell extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Brand Area
         Container(
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -157,10 +151,7 @@ class DashboardShell extends StatelessWidget {
             ],
           ),
         ),
-
         const SizedBox(height: 16),
-
-        // Navigation Items
         Expanded(
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -175,7 +166,12 @@ class DashboardShell extends StatelessWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(6),
                       onTap: () {
-                        if (!isActive) {
+                        if (activeRoute == item['route']) return;
+                        
+                        // SPA Logic: If callback exists, use it. Else push route.
+                        if (onNavigate != null) {
+                          onNavigate!(item['route']);
+                        } else {
                           Navigator.pushReplacementNamed(context, item['route']);
                         }
                       },
@@ -207,8 +203,6 @@ class DashboardShell extends StatelessWidget {
             ],
           ),
         ),
-
-        // Bottom Actions (Logout)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: const BoxDecoration(

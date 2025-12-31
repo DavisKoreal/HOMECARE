@@ -1,2 +1,4 @@
 Instruction: Before returning an action source file where an action source file is a python source file denoted by action0xn where n is ordered according to the time step from 1 to 1000, ask for any files that you might need as context so that we cannot break the code
 Try to put constants of the app in one file. There is no need to repeat some constant variables. This makes configuration easier 
+Remove the navigation back buttons for screens that have been changed and no longer need to navigate back
+Ask for context of source files when you are not sure. This is needed for grounding. 
