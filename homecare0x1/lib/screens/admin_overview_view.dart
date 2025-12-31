@@ -41,7 +41,7 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
         setState(() {
           _activeClients = shiftProvider.clients.length;
           _activeCaregivers = shiftProvider.availableCaregivers.length;
-          _pendingTasks = shiftProvider.shifts.where((shift) => shift.status == 'pending').length;
+          _pendingTasks = shiftProvider.shifts.where((shift) => shift.status == 'pending' || shift.status == 'request').length;
           _isLoading = false;
         });
       }
@@ -85,13 +85,14 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
           
           const SizedBox(height: 32),
           
-          // Metrics Grid
+          // Metrics Grid (Refactored)
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
+              // Responsive columns: 3 on wide, 2 on medium, 1 on small
               int columns = width > 900 ? 3 : (width > 600 ? 2 : 1);
-              // Aspect ratio adjusted for flatter metric cards
               double aspectRatio = width > 900 ? 2.5 : 2.0; 
+              
               return GridView.count(
                 crossAxisCount: columns,
                 shrinkWrap: true,
@@ -100,9 +101,27 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
                 mainAxisSpacing: 24,
                 childAspectRatio: aspectRatio,
                 children: [
-                  _buildMetricCard('Recipients', _activeClients.toString(), Icons.people_outline, AppTheme.successGreen),
-                  _buildMetricCard('Care Staff', _activeCaregivers.toString(), Icons.medical_services_outlined, AppTheme.primaryPurple),
-                  _buildMetricCard('Pending Shifts', _pendingTasks.toString(), Icons.assignment_late_outlined, AppTheme.accentOrange),
+                  _buildMetricCard(
+                    title: 'Total Recipients', 
+                    value: _activeClients.toString(), 
+                    icon: Icons.people_outline, 
+                    color: AppTheme.successGreen,
+                    trend: '+2 this week'
+                  ),
+                  _buildMetricCard(
+                    title: 'Active Care Staff', 
+                    value: _activeCaregivers.toString(), 
+                    icon: Icons.medical_services_outlined, 
+                    color: AppTheme.primaryPurple,
+                    trend: 'All active'
+                  ),
+                  _buildMetricCard(
+                    title: 'Pending Requests', 
+                    value: _pendingTasks.toString(), 
+                    icon: Icons.assignment_late_outlined, 
+                    color: AppTheme.accentOrange,
+                    trend: 'Action needed'
+                  ),
                 ],
               );
             }
@@ -124,7 +143,6 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              // Responsive columns for actions
               int columns = width > 1200 ? 4 : (width > 800 ? 3 : (width > 600 ? 2 : 1));
               
               return GridView.count(
@@ -133,7 +151,7 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 2.5, // Wide, rectangular cards
+                childAspectRatio: 2.5,
                 children: [
                   _buildActionCard(
                     'New Shift', 'Create assignment', Icons.add_task, 
@@ -168,33 +186,55 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
     );
   }
 
-  Widget _buildMetricCard(String title, String value, IconData icon, Color color) {
+  Widget _buildMetricCard({required String title, required String value, required IconData icon, required Color color, String? trend}) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.borderGray),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              if (trend != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.neutral100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(trend, style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+                )
+            ],
           ),
-          const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 value,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
               ),
+              const SizedBox(height: 4),
               Text(title, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
             ],
           ),

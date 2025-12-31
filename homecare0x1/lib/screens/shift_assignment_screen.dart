@@ -75,7 +75,6 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
                  shift.startTime.day == now.day;
         
         case 'This Week':
-          // Simple "next 7 days" logic or current calendar week
           final difference = shift.startTime.difference(now).inDays;
           return difference >= 0 && difference <= 7;
 
@@ -148,25 +147,36 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
           ),
           const SizedBox(height: 24),
 
-          // 1. Stats Row (Restored Feature)
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard('Pending Assignments', pendingCount.toString(), Icons.assignment_late, AppTheme.accentOrange),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard('Available Caregivers', availableStaff.toString(), Icons.medical_services, AppTheme.successGreen),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard('Total Shifts', _allShifts.length.toString(), Icons.calendar_today, AppTheme.primaryPurple),
-              ),
-            ],
+          // 1. Stats Row (Responsive Fix)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 800;
+              if (isWide) {
+                return Row(
+                  children: [
+                    Expanded(child: _buildStatCard('Pending Assignments', pendingCount.toString(), Icons.assignment_late, AppTheme.accentOrange)),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildStatCard('Available Caregivers', availableStaff.toString(), Icons.medical_services, AppTheme.successGreen)),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildStatCard('Total Shifts', _allShifts.length.toString(), Icons.calendar_today, AppTheme.primaryPurple)),
+                  ],
+                );
+              } else {
+                return Column(
+                  children: [
+                    _buildStatCard('Pending Assignments', pendingCount.toString(), Icons.assignment_late, AppTheme.accentOrange),
+                    const SizedBox(height: 12),
+                    _buildStatCard('Available Caregivers', availableStaff.toString(), Icons.medical_services, AppTheme.successGreen),
+                    const SizedBox(height: 12),
+                    _buildStatCard('Total Shifts', _allShifts.length.toString(), Icons.calendar_today, AppTheme.primaryPurple),
+                  ],
+                );
+              }
+            }
           ),
           const SizedBox(height: 32),
 
-          // 2. Filters Bar (Updated with Date Options)
+          // 2. Filters Bar (Updated with Date Options & Overflow Fix)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -174,43 +184,77 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: AppTheme.borderGray),
             ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 300,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search client or caregiver...',
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: AppTheme.borderGray),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // If constrained width, stack vertically
+                if (constraints.maxWidth < 600) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextField(
+                        decoration: const InputDecoration(
+                          hintText: 'Search...',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onChanged: (val) => setState(() => _searchQuery = val),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: _selectedFilter,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        items: ['All', 'Requests', 'Pending', 'Completed', 'Unassigned', 'Today', 'This Week', 'This Month']
+                            .map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                        onChanged: (val) => setState(() => _selectedFilter = val!),
+                      ),
+                    ],
+                  );
+                }
+                
+                return Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search client or caregiver...',
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: AppTheme.borderGray),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                        ),
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                      ),
                     ),
-                    onChanged: (val) => setState(() => _searchQuery = val),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                DropdownButtonHideUnderline(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppTheme.borderGray),
-                      borderRadius: BorderRadius.circular(8),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 1,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppTheme.borderGray),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedFilter,
+                            isExpanded: true,
+                            items: ['All', 'Requests', 'Pending', 'Completed', 'Unassigned', 'Today', 'This Week', 'This Month']
+                                .map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                            onChanged: (val) => setState(() => _selectedFilter = val!),
+                          ),
+                        ),
+                      ),
                     ),
-                    child: DropdownButton<String>(
-                      value: _selectedFilter,
-                      // Added Date Filters back
-                      items: ['All', 'Requests', 'Pending', 'Completed', 'Unassigned', 'Today', 'This Week', 'This Month']
-                          .map((s) {
-                        return DropdownMenuItem(value: s, child: Text(s));
-                      }).toList(),
-                      onChanged: (val) => setState(() => _selectedFilter = val!),
-                    ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              }
             ),
           ),
           const SizedBox(height: 24),
@@ -271,12 +315,18 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                Text(
+                  title, 
+                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ],
       ),
