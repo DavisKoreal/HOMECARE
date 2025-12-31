@@ -63,10 +63,11 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
       final authService = AuthService();
       try {
         final user = await authService.register(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          role: _selectedRole!,
-          name: _nameController.text.trim(),
+          _emailController.text.trim(),
+          _passwordController.text,
+          _nameController.text.trim(), // Name
+          _selectedRole!, // Role
+          
         );
         setState(() => _isLoading = false);
         if (user != null && context.mounted) {
