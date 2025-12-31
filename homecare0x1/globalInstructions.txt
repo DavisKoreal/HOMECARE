@@ -2,3 +2,35 @@ Instruction: Before returning an action source file where an action source file 
 Try to put constants of the app in one file. There is no need to repeat some constant variables. This makes configuration easier 
 Remove the navigation back buttons for screens that have been changed and no longer need to navigate back
 Ask for context of source files when you are not sure. This is needed for grounding. 
+
+
+The following are further instructions
+
+1. Color Palette: "The Royal Purple"
+Primary Brand Color: A deep, vibrant purple (#5C42BD or similar) is used consistently for Call-to-Action (CTA) buttons, navigation accents, and iconography. This choice projects a sense of modern professionalism and creativity.
+
+Secondary Colors: Soft lavender and off-white backgrounds are used to create "blocks" of content, which helps separate different features without using harsh lines.
+
+Support Colors: High-contrast blacks and grays are used for readability, while occasional pops of green or orange highlight success states or specific "free" offers.
+
+2. Typography: Friendly yet Professional
+Font Choice: The site uses a clean, modern Sans-Serif typeface. The headers are bold and rounded, which makes the brand feel approachable rather than overly corporate.
+
+Hierarchy: There is a very clear visual hierarchy. Large "Hero" headlines quickly explain the value proposition ("Everything app for hourly teams"), followed by smaller sub-headers and bulleted lists that are easy to scan.
+
+3. Layout and Structure
+The "Bento" and Card Layout: The homepage uses a "modular card" style. Different features (Time Clocks, Scheduling, Payroll) are housed in distinct, rounded-corner boxes. This mirrors the "all-in-one" nature of the product.
+
+Whitespace: The design utilizes significant whitespace (negative space) to prevent the user from feeling overwhelmed by the many features the software offers.
+
+Z-Pattern / F-Pattern: The layout guides the eye from the top-left logo across the navigation to the "Get Started" button, then down through alternating image-and-text blocks.
+
+4. Iconography and Visuals
+Custom Illustrations/Icons: Homebase uses thin-line, modern icons often filled with their brand purple. These icons represent complex concepts (like "Labor Law Guides" or "Compliance") in a simplified, digestible way.
+
+Lifestyle Photography: The site features high-quality photos of diverse people in "real world" small business settings (restaurants, retail, wellness). This "human-centric" approach builds immediate trust with the target audience of local business owners.
+
+Interactive Elements: Hover states on buttons and cards are subtle but provide clear feedback, typically changing the saturation of the purple or adding a slight lift/shadow.
+
+5. Mobile-First Responsiveness
+The UI is clearly designed with a mobile-first mindset. Elements are "stacked" vertically on smaller screens, and buttons are large enough to be easily "thumb-friendly," reflecting the fact that many of their users (managers and employees) will access the tool via the Homebase mobile app.

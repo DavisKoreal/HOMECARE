@@ -53,18 +53,36 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
   }
 
   List<Shift> get _filteredShifts {
+    final now = DateTime.now();
+    
     return _allShifts.where((shift) {
+      // 1. Search Filter
       final matchesSearch = shift.clientName.toLowerCase().contains(_searchQuery.toLowerCase()) || 
                             (shift.caregiverName?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
-      
       if (!matchesSearch) return false;
 
+      // 2. Status & Date Filter
       switch (_selectedFilter) {
         case 'Requests': return shift.status == 'request';
         case 'Pending': return shift.status == 'pending';
         case 'Completed': return shift.status == 'completed';
         case 'Unassigned': return shift.caregiverId == null;
-        default: return true;
+        
+        // Date Filters
+        case 'Today':
+          return shift.startTime.year == now.year && 
+                 shift.startTime.month == now.month && 
+                 shift.startTime.day == now.day;
+        
+        case 'This Week':
+          // Simple "next 7 days" logic or current calendar week
+          final difference = shift.startTime.difference(now).inDays;
+          return difference >= 0 && difference <= 7;
+
+        case 'This Month':
+          return shift.startTime.year == now.year && shift.startTime.month == now.month;
+
+        default: return true; // 'All'
       }
     }).toList();
   }
@@ -89,6 +107,10 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate Stats
+    final pendingCount = _allShifts.where((s) => s.status == 'request' || s.caregiverId == null).length;
+    final availableStaff = _availableCaregivers.length;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -124,9 +146,27 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 24),
+
+          // 1. Stats Row (Restored Feature)
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard('Pending Assignments', pendingCount.toString(), Icons.assignment_late, AppTheme.accentOrange),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatCard('Available Caregivers', availableStaff.toString(), Icons.medical_services, AppTheme.successGreen),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatCard('Total Shifts', _allShifts.length.toString(), Icons.calendar_today, AppTheme.primaryPurple),
+              ),
+            ],
+          ),
           const SizedBox(height: 32),
 
-          // Filters Bar
+          // 2. Filters Bar (Updated with Date Options)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -161,7 +201,9 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
                     ),
                     child: DropdownButton<String>(
                       value: _selectedFilter,
-                      items: ['All', 'Requests', 'Pending', 'Completed', 'Unassigned'].map((s) {
+                      // Added Date Filters back
+                      items: ['All', 'Requests', 'Pending', 'Completed', 'Unassigned', 'Today', 'This Week', 'This Month']
+                          .map((s) {
                         return DropdownMenuItem(value: s, child: Text(s));
                       }).toList(),
                       onChanged: (val) => setState(() => _selectedFilter = val!),
@@ -173,7 +215,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Shifts Table
+          // 3. Shifts Table
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
@@ -209,6 +251,37 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
       ),
     );
   }
+
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.borderGray),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ShiftDataSource extends DataTableSource {
@@ -223,6 +296,9 @@ class _ShiftDataSource extends DataTableSource {
     if (index >= _shifts.length) return null;
     final shift = _shifts[index];
     
+    // Determine if action is needed
+    final needsAction = shift.caregiverId == null || shift.status == 'request';
+
     return DataRow(cells: [
       DataCell(Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,12 +323,19 @@ class _ShiftDataSource extends DataTableSource {
           : const Text('-', style: TextStyle(color: AppTheme.textSecondary)),
       ),
       DataCell(
-        shift.caregiverId == null || shift.status == 'request'
-          ? TextButton(
+        needsAction
+          ? ElevatedButton(
               onPressed: () => onAssign(shift),
-              child: const Text('Assign'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryPurple, 
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                minimumSize: Size.zero, 
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap
+              ),
+              child: const Text('Assign', style: TextStyle(fontSize: 12)),
             )
-          : const SizedBox(),
+          : const Text('No Action', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12, fontStyle: FontStyle.italic)),
       ),
     ]);
   }
