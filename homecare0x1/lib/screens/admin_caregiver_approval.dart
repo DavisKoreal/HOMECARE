@@ -148,7 +148,7 @@ class _AdminCaregiverApprovalPageState extends State<AdminCaregiverApprovalPage>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(c.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            Text(c.email, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                            Text(c.email ?? 'No email', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                           ],
                         ),
                       ),
@@ -158,7 +158,7 @@ class _AdminCaregiverApprovalPageState extends State<AdminCaregiverApprovalPage>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(c.role, style: const TextStyle(fontWeight: FontWeight.w600)),
-                            Text(c.phone, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                            Text(c.phone ?? 'No phone', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                           ],
                         ),
                       ),
