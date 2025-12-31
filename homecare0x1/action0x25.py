@@ -1,4 +1,101 @@
-import 'package:flutter/material.dart';
+import os
+import re
+
+def implement_real_schedule_data():
+    target_dir = os.path.expanduser("~/Desktop/HOMECARE/homecare0x1")
+    
+    if not os.path.exists(target_dir):
+        print(f"Error: Directory {target_dir} not found.")
+        return
+
+    print(f"Changing directory to: {target_dir}")
+    os.chdir(target_dir)
+
+    # ---------------------------------------------------------
+    # 1. Update Caregiver Model (caregiver.dart)
+    # ---------------------------------------------------------
+    print("\n--- Updating lib/models/caregiver.dart ---")
+    caregiver_path = os.path.join("lib", "models", "caregiver.dart")
+    
+    with open(caregiver_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # Add field if missing
+    if "double hourlyRate" not in content:
+        # Add field
+        content = re.sub(
+            r'final bool isAvailable;',
+            r'final bool isAvailable;\n  final double hourlyRate;',
+            content
+        )
+        # Update Constructor
+        content = re.sub(
+            r'required this.isAvailable,',
+            r'required this.isAvailable,\n    this.hourlyRate = 0.0,',
+            content
+        )
+        # Update fromMap
+        content = re.sub(
+            r'isAvailable: map\[\'isAvailable\'\] \?\? false,',
+            r'isAvailable: map[\'isAvailable\'] ?? false,\n      hourlyRate: (map[\'hourlyRate\'] ?? 0.0).toDouble(),',
+            content
+        )
+        # Update toMap
+        content = re.sub(
+            r'\'isAvailable\': isAvailable,',
+            r'\'isAvailable\': isAvailable,\n      \'hourlyRate\': hourlyRate,',
+            content
+        )
+        
+        with open(caregiver_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        print("Added hourlyRate to Caregiver model.")
+
+    # ---------------------------------------------------------
+    # 2. Update Caregiver Profile Model (caregiver_profile.dart)
+    # ---------------------------------------------------------
+    print("\n--- Updating lib/models/caregiver_profile.dart ---")
+    profile_path = os.path.join("lib", "models", "caregiver_profile.dart")
+    
+    if os.path.exists(profile_path):
+        with open(profile_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        if "double hourlyRate" not in content:
+            # We'll use a broader replacement strategy since we don't know the exact order of fields
+            # 1. Add field
+            if "final String name;" in content:
+                content = content.replace("final String name;", "final String name;\n  final double hourlyRate;")
+            
+            # 2. Update Constructor (This is tricky with regex, assuming standard formatting)
+            # We'll try to find a common required field in constructor
+            if "required this.name," in content:
+                content = content.replace("required this.name,", "required this.name,\n    this.hourlyRate = 0.0,")
+            
+            # 3. Update fromMap
+            if "name: map['name']," in content:
+                content = content.replace("name: map['name'],", "name: map['name'],\n      hourlyRate: (map['hourlyRate'] ?? 0.0).toDouble(),")
+            elif "name: map['name'] ?? ''," in content: # specific variance check
+                 content = content.replace("name: map['name'] ?? '',", "name: map['name'] ?? '',\n      hourlyRate: (map['hourlyRate'] ?? 0.0).toDouble(),")
+
+            # 4. Update toMap
+            if "'name': name," in content:
+                content = content.replace("'name': name,", "'name': name,\n      'hourlyRate': hourlyRate,")
+
+            with open(profile_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            print("Added hourlyRate to CaregiverProfile model.")
+    else:
+        print("Warning: caregiver_profile.dart not found. Skipping.")
+
+    # ---------------------------------------------------------
+    # 3. Update Day Schedule Screen (Real Data Wiring)
+    # ---------------------------------------------------------
+    print("\n--- Updating lib/screens/schedule/day_schedule_screen.dart ---")
+    screen_path = os.path.join("lib", "screens", "schedule", "day_schedule_screen.dart")
+    
+    # We will write the full file with the Service Wiring logic
+    screen_code = """import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:intl/intl.dart';
@@ -543,3 +640,10 @@ class _DayScheduleScreenState extends State<DayScheduleScreen> {
     );
   }
 }
+"""
+    with open(screen_path, "w", encoding="utf-8") as f:
+        f.write(screen_code)
+    print("Fully wired DayScheduleScreen with real Caregivers and Shifts.")
+
+if __name__ == "__main__":
+    implement_real_schedule_data()

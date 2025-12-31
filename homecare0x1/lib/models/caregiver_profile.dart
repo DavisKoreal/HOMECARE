@@ -1,6 +1,7 @@
 class CaregiverProfile {
   String id;
   final String name;
+  final double hourlyRate;
   final String role;
   final String experience;
   final List<String> certifications;
@@ -16,6 +17,7 @@ class CaregiverProfile {
   CaregiverProfile({
     required this.id,
     required this.name,
+    this.hourlyRate = 0.0,
     required this.role,
     required this.experience,
     required this.certifications,
@@ -33,6 +35,7 @@ class CaregiverProfile {
     return CaregiverProfile(
       id: id,
       name: map['name'] ?? '',
+      hourlyRate: (map['hourlyRate'] ?? 0.0).toDouble(),
       role: map['role'] ?? '',
       experience: map['experience'] ?? '',
       certifications: List<String>.from(map['certifications'] ?? []),
@@ -50,6 +53,7 @@ class CaregiverProfile {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
+      'hourlyRate': hourlyRate,
       'role': role,
       'experience': experience,
       'certifications': certifications,
