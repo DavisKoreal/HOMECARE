@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 class Routes {
   static const String login = '/login';
   static const String adminDashboard = '/admin_dashboard';
@@ -36,7 +37,6 @@ class Routes {
   static const String adminAddCaregiver = '/admin_add_caregiver';
 }
 
-import 'package:flutter/material.dart';
 
 // Centralized Navigation Configuration to avoid repetition
 class NavigationConfig {
