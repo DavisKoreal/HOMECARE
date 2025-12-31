@@ -1,4 +1,19 @@
-import 'package:flutter/material.dart';
+import os
+
+def refactor_quick_actions():
+    target_dir = os.path.expanduser("~/Desktop/HOMECARE/homecare0x1")
+    
+    if not os.path.exists(target_dir):
+        print(f"Error: Directory {target_dir} not found.")
+        return
+
+    print(f"Changing directory to: {target_dir}")
+    os.chdir(target_dir)
+
+    print("\n--- Refactoring Quick Actions in lib/screens/admin_overview_view.dart ---")
+    file_path = os.path.join("lib", "screens", "admin_overview_view.dart")
+    
+    new_content = """import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
@@ -263,3 +278,10 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
     );
   }
 }
+"""
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(new_content)
+    print("Successfully rewritten lib/screens/admin_overview_view.dart with new UI.")
+
+if __name__ == "__main__":
+    refactor_quick_actions()
