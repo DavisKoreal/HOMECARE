@@ -1,4 +1,19 @@
-import 'package:flutter/material.dart';
+import os
+
+def optimize_stats_layout():
+    target_dir = os.path.expanduser("~/Desktop/HOMECARE/homecare0x1")
+    
+    if not os.path.exists(target_dir):
+        print(f"Error: Directory {target_dir} not found.")
+        return
+
+    print(f"Changing directory to: {target_dir}")
+    os.chdir(target_dir)
+
+    print("\n--- Updating lib/screens/admin_overview_view.dart ---")
+    overview_path = os.path.join("lib", "screens", "admin_overview_view.dart")
+    
+    overview_content = """import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
@@ -327,3 +342,10 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
     );
   }
 }
+"""
+    with open(overview_path, "w", encoding="utf-8") as f:
+        f.write(overview_content)
+    print("Optimized Admin Overview layout: 4 Cols & Horizontal Cards.")
+
+if __name__ == "__main__":
+    optimize_stats_layout()
