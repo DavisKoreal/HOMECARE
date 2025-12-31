@@ -1,120 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
+  // Primary Brand Colors
+  static const Color primaryPurple = Color(0xFF5C42BD);
+  static const Color primaryBlue = Color(0xFF5C42BD); // Mapping Blue to Purple for consistency if needed, or keep distinct
+  static const Color primaryBlueLight = Color(0xFF7E60E8);
+
+  // Status Colors
+  static const Color successGreen = Color(0xFF00C853);
   static const Color warningOrange = Color(0xFFFFAB00);
   static const Color errorRed = Color(0xFFD50000);
-  static const Color successGreen = Color(0xFF00C853);
-  // ---------------------------------------------------------------------------
-  // NEW SaaS DESIGN SYSTEM (Homebase Style)
-  // ---------------------------------------------------------------------------
-  static const Color primaryPurple = Color(0xFF7B16FF);
+
+  // Backgrounds & Neutrals
+  static const Color backgroundCanvas = Color(0xFFF8F9FA);
+  static const Color neutral100 = Color(0xFFF1F2F6);
+  static const Color neutral600 = Color(0xFF636E72);
+  static const Color borderGray = Color(0xFFE0E0E0);
+
+  // Text
   static const Color textPrimary = Color(0xFF2D3436);
   static const Color textSecondary = Color(0xFF636E72);
-  static const Color backgroundCanvas = Color(0xFFF4F5F7);
-  static const Color borderGray = Color(0xFFDFE6E9);
   
-  // ---------------------------------------------------------------------------
-  // LEGACY COLORS (Restored for Backward Compatibility)
-  // Mapping old colors to new palette where possible to start unifying the look.
-  // ---------------------------------------------------------------------------
-  
-  // Old 'primaryBlue' is now mapped to 'primaryPurple' so old screens get the new brand color.
-  static const Color primaryBlue = primaryPurple; 
-  static const Color primaryBlueLight = Color(0xFFD1C4E9); // Light purple-ish
-  
-  // Standard SaaS Status Colors
-  static const Color successGreen = Color(0xFF00B894); 
-  static const Color errorRed = Color(0xFFD63031);     
-  static const Color accentOrange = Color(0xFFFF7675); 
-  static const Color secondaryTeal = Color(0xFF00CEC9); 
-  
-  // Neutrals
-  static const Color neutral600 = textSecondary;
-  static const Color neutral100 = Color(0xFFF5F6FA); // Light gray background used in old cards
+  // Accents
+  static const Color accentOrange = Color(0xFFFFAB00);
 
-  // ---------------------------------------------------------------------------
-  // THEME DATA
-  // ---------------------------------------------------------------------------
   static ThemeData get lightTheme {
     return ThemeData(
-      useMaterial3: true,
+      primaryColor: primaryPurple,
       scaffoldBackgroundColor: backgroundCanvas,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: primaryPurple,
-        surface: Colors.white,
-        onSurface: textPrimary,
+        secondary: successGreen,
         error: errorRed,
       ),
-      textTheme: GoogleFonts.interTextTheme(),
-      
-      // Button Styles
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: textPrimary),
+        titleTextStyle: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryPurple,
           foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        ),
-      ),
-      
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: textPrimary,
-          side: const BorderSide(color: borderGray),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        ),
-      ),
-      
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: primaryPurple,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-        ),
-      ),
-      
-      // Input Fields
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.all(16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: borderGray),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: borderGray),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: primaryPurple, width: 2),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
-  }
-
-  // ---------------------------------------------------------------------------
-  // HELPER METHODS (Restored)
-  // ---------------------------------------------------------------------------
-  static Color getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-      case 'approved':
-      case 'paid':
-        return successGreen;
-      case 'pending':
-      case 'request':
-      case 'scheduled':
-        return accentOrange; 
-      case 'cancelled':
-      case 'missed':
-      case 'late':
-        return errorRed;
-      default:
-        return neutral600;
-    }
   }
 }

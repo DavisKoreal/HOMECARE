@@ -8,10 +8,10 @@ import 'package:homecare0x1/widgets/common/modern_button.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 
 class CaregiverDashboardScreen extends StatefulWidget {
-  const CaregiverDashboard({super.key});
+  const CaregiverDashboardScreen({super.key});
 
   @override
-  State<CaregiverDashboardScreen> createState() => _CaregiverDashboardState();
+  State<CaregiverDashboardScreen> createState() => _CaregiverDashboardScreenState();
 }
 
 class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen> {
