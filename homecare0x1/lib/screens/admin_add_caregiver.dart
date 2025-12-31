@@ -4,7 +4,8 @@ import 'package:homecare0x1/services/firebase_caregiver_service.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 
 class AdminAddCaregiverPage extends StatefulWidget {
-  const AdminAddCaregiverPage({Key? key}) : super(key: key);
+  final VoidCallback? onBack;
+  const AdminAddCaregiverPage({Key? key, this.onBack}) : super(key: key);
 
   @override
   State<AdminAddCaregiverPage> createState() => _AdminAddCaregiverPageState();
@@ -38,6 +39,14 @@ class _AdminAddCaregiverPageState extends State<AdminAddCaregiverPage> {
     _certInputController.dispose();
     _availInputController.dispose();
     super.dispose();
+  }
+
+  void _handleBack() {
+    if (widget.onBack != null) {
+      widget.onBack!();
+    } else {
+      Navigator.maybePop(context);
+    }
   }
 
   void _addToList(TextEditingController controller, List<String> list) {
@@ -79,7 +88,7 @@ class _AdminAddCaregiverPageState extends State<AdminAddCaregiverPage> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result), backgroundColor: AppTheme.errorRed));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Caregiver added successfully'), backgroundColor: AppTheme.successGreen));
-        Navigator.maybePop(context);
+        _handleBack();
       }
     } catch (e) {
       if (mounted) {
@@ -121,7 +130,7 @@ class _AdminAddCaregiverPageState extends State<AdminAddCaregiverPage> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.maybePop(context),
+                      onPressed: _handleBack,
                     )
                   ],
                 ),
@@ -191,7 +200,7 @@ class _AdminAddCaregiverPageState extends State<AdminAddCaregiverPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton(
-                      onPressed: () => Navigator.maybePop(context),
+                      onPressed: _handleBack,
                       child: const Text('Cancel'),
                     ),
                     const SizedBox(width: 16),

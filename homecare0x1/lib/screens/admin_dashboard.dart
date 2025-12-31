@@ -14,7 +14,7 @@ import 'package:homecare0x1/screens/admin_initiate_shift.dart';
 import 'package:homecare0x1/screens/admin_add_client.dart';
 import 'package:homecare0x1/screens/admin_add_caregiver.dart';
 import 'package:homecare0x1/screens/admin_caregiver_approval.dart';
-import 'package:homecare0x1/providers/user_provider.dart'; // Needed for adminId passed to approval
+import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -93,13 +93,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return const AuditLogScreen();
 
       case Routes.adminInitiateShift:
-        return const AdminInitiateShift();
+        // Pass the callback so the form can close itself properly
+        return AdminInitiateShift(onBack: () => _navigateTo(Routes.adminDashboard));
 
       case Routes.adminAddClient:
-        return const AdminAddClientScreen();
+        return AdminAddClientScreen(onBack: () => _navigateTo(Routes.adminDashboard));
 
       case Routes.adminAddCaregiver:
-        return const AdminAddCaregiverPage();
+        return AdminAddCaregiverPage(onBack: () => _navigateTo(Routes.adminDashboard));
 
       case Routes.adminCaregiverApproval:
         final adminId = Provider.of<UserProvider>(context, listen: false).user?.id ?? '';

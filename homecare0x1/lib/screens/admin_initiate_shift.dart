@@ -8,7 +8,8 @@ import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 
 class AdminInitiateShift extends StatefulWidget {
-  const AdminInitiateShift({super.key});
+  final VoidCallback? onBack;
+  const AdminInitiateShift({super.key, this.onBack});
 
   @override
   State<AdminInitiateShift> createState() => _AdminInitiateShiftState();
@@ -36,6 +37,14 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift> {
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  void _handleBack() {
+    if (widget.onBack != null) {
+      widget.onBack!();
+    } else {
+      Navigator.maybePop(context);
+    }
   }
 
   Future<void> _loadData() async {
@@ -117,7 +126,7 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Shift created successfully'), backgroundColor: AppTheme.successGreen),
         );
-        Navigator.pop(context); // Go back to dashboard
+        _handleBack();
       }
     } catch (e) {
       _showError(e.toString());
@@ -150,19 +159,30 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Text(
-                'Create New Shift',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Assign a caregiver to a client for a specific time block.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Create New Shift',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Assign a caregiver to a client.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(icon: const Icon(Icons.close), onPressed: _handleBack),
+                ],
               ),
               const Divider(height: 48),
 
@@ -320,7 +340,7 @@ class _AdminInitiateShiftState extends State<AdminInitiateShift> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: _handleBack,
                       child: const Text('Cancel'),
                     ),
                     const SizedBox(width: 16),

@@ -5,7 +5,8 @@ import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/constants.dart';
 
 class AdminAddClientScreen extends StatefulWidget {
-  const AdminAddClientScreen({Key? key}) : super(key: key);
+  final VoidCallback? onBack;
+  const AdminAddClientScreen({Key? key, this.onBack}) : super(key: key);
 
   @override
   State<AdminAddClientScreen> createState() => _AdminAddClientScreenState();
@@ -27,6 +28,14 @@ class _AdminAddClientScreenState extends State<AdminAddClientScreen> {
     _addressController.dispose();
     _carePlanController.dispose();
     super.dispose();
+  }
+
+  void _handleBack() {
+    if (widget.onBack != null) {
+      widget.onBack!();
+    } else {
+      Navigator.maybePop(context);
+    }
   }
 
   Future<void> _submitForm() async {
@@ -51,10 +60,7 @@ class _AdminAddClientScreenState extends State<AdminAddClientScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result), backgroundColor: AppTheme.errorRed));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Client added successfully'), backgroundColor: AppTheme.successGreen));
-        // In SPA mode, we might want to navigate back to list or clear form
-        // For now, let's go back to Client List if possible, or just clear.
-        // Assuming navigation stack:
-        Navigator.maybePop(context); 
+        _handleBack();
       }
     } catch (e) {
       if (mounted) {
@@ -97,7 +103,7 @@ class _AdminAddClientScreenState extends State<AdminAddClientScreen> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.maybePop(context),
+                      onPressed: _handleBack,
                     )
                   ],
                 ),
@@ -143,7 +149,7 @@ class _AdminAddClientScreenState extends State<AdminAddClientScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton(
-                      onPressed: () => Navigator.maybePop(context),
+                      onPressed: _handleBack,
                       child: const Text('Cancel'),
                     ),
                     const SizedBox(width: 16),
