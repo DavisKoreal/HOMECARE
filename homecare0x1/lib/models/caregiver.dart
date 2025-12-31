@@ -2,8 +2,8 @@
 class Caregiver {
   final String id; // Unique identifier for the caregiver
   final String name; // Name of the caregiver
-  final bool isAvailable;
-  final double hourlyRate; // Availability status of the caregiver
+  final bool isAvailable; // Availability status of the caregiver
+  final double hourlyRate; // Hourly rate for cost calculation
   final DateTime? startExperience; // Start date of experience (optional)
 
   Caregiver({
@@ -29,8 +29,8 @@ class Caregiver {
     return Caregiver(
       id: id,
       name: map['name'] ?? '', // Default to empty string if null
-      isAvailable: map[\'isAvailable\'] ?? false,
-      hourlyRate: (map[\'hourlyRate\'] ?? 0.0).toDouble(), // Default to false if null
+      isAvailable: map['isAvailable'] ?? false, // Default to false if null
+      hourlyRate: (map['hourlyRate'] ?? 0.0).toDouble(),
       startExperience: experienceDate,
     );
   }
@@ -39,10 +39,9 @@ class Caregiver {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
-      \'isAvailable\': isAvailable,
-      \'hourlyRate\': hourlyRate,
-      'startExperience': startExperience
-          ?.toIso8601String(), // Serialize DateTime to ISO string
+      'isAvailable': isAvailable,
+      'hourlyRate': hourlyRate,
+      'startExperience': startExperience?.toIso8601String(), // Serialize DateTime to ISO string
     };
   }
 }
