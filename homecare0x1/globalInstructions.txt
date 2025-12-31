@@ -33,4 +33,4 @@ Lifestyle Photography: The site features high-quality photos of diverse people i
 Interactive Elements: Hover states on buttons and cards are subtle but provide clear feedback, typically changing the saturation of the purple or adding a slight lift/shadow.
 
 5. Mobile-First Responsiveness
-The UI is clearly designed with a mobile-first mindset. Elements are "stacked" vertically on smaller screens, and buttons are large enough to be easily "thumb-friendly," reflecting the fact that many of their users (managers and employees) will access the tool via the Homebase mobile app.
+The UI is clearly designed with a mobile-first mindset. Elements are "stacked" vertically on smaller screens, and buttons are large enough to be easily "thumb-friendly," reflecting the fact that many of their users (managers and employees) will access the tool via the Homebase mobile app.ask for permission to touch backend code 
