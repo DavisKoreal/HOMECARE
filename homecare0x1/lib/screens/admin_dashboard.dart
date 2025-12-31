@@ -1,3 +1,4 @@
+import 'package:homecare0x1/screens/schedule/day_schedule_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/widgets/dashboard_shell.dart';
@@ -77,6 +78,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case Routes.adminAddClient: return 'Add Recipient';
       case Routes.adminAddCaregiver: return 'Add Staff';
       case Routes.adminCaregiverApproval: return 'Staff Approval';
+      case Routes.daySchedule: return 'Schedule Builder';
+      case Routes.daySchedule:
+        return const DayScheduleScreen();
+
       default: return 'HomeCare';
     }
   }
@@ -113,6 +118,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case Routes.adminCaregiverApproval:
         final adminId = Provider.of<UserProvider>(context, listen: false).user?.id ?? '';
         return AdminCaregiverApprovalPage(adminId: adminId);
+
+      case Routes.daySchedule:
+        return const DayScheduleScreen();
 
       default:
         // Fallback to Overview if route is unknown, solving "Page not found"

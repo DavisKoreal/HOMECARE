@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Routes {
+  static const String daySchedule = '/day_schedule';
   static const String login = '/login';
   static const String adminDashboard = '/admin_dashboard';
   static const String clientProfile = '/client_profile';
@@ -45,6 +46,11 @@ class NavigationConfig {
       'title': 'Dashboard',
       'icon': Icons.dashboard_outlined,
       'route': Routes.adminDashboard,
+    },
+    {
+      'title': 'Schedule',
+      'icon': Icons.calendar_month_outlined,
+      'route': Routes.daySchedule,
     },
     {
       'title': 'Calendar',
