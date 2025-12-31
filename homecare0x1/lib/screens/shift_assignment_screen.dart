@@ -105,38 +105,45 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
               color: AppColors.textDark,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
+          Text(
+            'Monitor shift status and assign staff efficiently.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.textLight,
+            ),
+          ),
+          const SizedBox(height: 32),
 
-          // --- Stats Section (Responsive Layout to fix Overflow) ---
+          // --- Stats Section (Updated to Horizontal Card Layout) ---
           LayoutBuilder(
             builder: (context, constraints) {
-              // If width < 900px, stack them vertically or 2x2. 
-              // Using a simple column for narrow screens fixes the RenderFlex error.
-              if (constraints.maxWidth < 900) {
+              final width = constraints.maxWidth;
+              // Responsive: Stack on mobile (<900), Row on Desktop
+              if (width < 900) {
                 return Column(
                   children: [
-                    _buildStatCard('Pending Needs', pendingCount.toString(), Icons.assignment_late, AppColors.warningOrange),
+                    _buildStatCard('Pending Needs', pendingCount.toString(), Icons.assignment_late_outlined, AppColors.warningOrange),
                     const SizedBox(height: 12),
-                    _buildStatCard('Available Staff', availableStaff.toString(), Icons.people_alt, AppColors.successGreen),
+                    _buildStatCard('Available Staff', availableStaff.toString(), Icons.people_alt_outlined, AppColors.successGreen),
                     const SizedBox(height: 12),
-                    _buildStatCard('Total Shifts', _allShifts.length.toString(), Icons.calendar_month, AppColors.royalPurple),
+                    _buildStatCard('Total Shifts', _allShifts.length.toString(), Icons.calendar_month_outlined, AppColors.royalPurple),
                   ],
                 );
               } else {
                 return Row(
                   children: [
-                    Expanded(child: _buildStatCard('Pending Needs', pendingCount.toString(), Icons.assignment_late, AppColors.warningOrange)),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildStatCard('Available Staff', availableStaff.toString(), Icons.people_alt, AppColors.successGreen)),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildStatCard('Total Shifts', _allShifts.length.toString(), Icons.calendar_month, AppColors.royalPurple)),
+                    Expanded(child: _buildStatCard('Pending Needs', pendingCount.toString(), Icons.assignment_late_outlined, AppColors.warningOrange)),
+                    const SizedBox(width: 24),
+                    Expanded(child: _buildStatCard('Available Staff', availableStaff.toString(), Icons.people_alt_outlined, AppColors.successGreen)),
+                    const SizedBox(width: 24),
+                    Expanded(child: _buildStatCard('Total Shifts', _allShifts.length.toString(), Icons.calendar_month_outlined, AppColors.royalPurple)),
                   ],
                 );
               }
             }
           ),
           
-          const SizedBox(height: 32),
+          const SizedBox(height: 48),
 
           // Filters Bar
           Container(
@@ -156,7 +163,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
                   width: 300,
                   child: TextField(
                     decoration: const InputDecoration(
-                      hintText: 'Search...',
+                      hintText: 'Search client or staff...',
                       prefixIcon: Icon(Icons.search),
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.all(0),
@@ -210,7 +217,7 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
                       DataColumn(label: Text('Time')),
                       DataColumn(label: Text('Client')),
                       DataColumn(label: Text('Status')),
-                      DataColumn(label: Text('Assigned')),
+                      DataColumn(label: Text('Assigned Staff')),
                       DataColumn(label: Text('Action')),
                     ],
                     source: _ShiftDataSource(_filteredShifts, context, _showAssignmentDialog),
@@ -222,17 +229,26 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
     );
   }
 
-  // Improved Stat Card to match Admin Overview
+  // --- Optimized Stat Card (Horizontal Layout) ---
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(LayoutConstants.cardRadius),
         border: Border.all(color: AppTheme.borderGray),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Icon Left
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -241,13 +257,34 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
             ),
             child: Icon(icon, color: color, size: 28),
           ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textDark)),
-              Text(title, style: const TextStyle(fontSize: 13, color: AppColors.textLight)),
-            ],
+          const SizedBox(width: 20),
+          // Text Right (Vertical Stack)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // Hug content vertically
+              children: [
+                Text(
+                  value, 
+                  style: const TextStyle(
+                    fontSize: 28, 
+                    fontWeight: FontWeight.w800, 
+                    color: AppColors.textDark,
+                    height: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  title, 
+                  style: const TextStyle(
+                    fontSize: 13, 
+                    color: AppColors.textLight,
+                    fontWeight: FontWeight.w500
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -288,10 +325,11 @@ class _ShiftDataSource extends DataTableSource {
                 backgroundColor: AppColors.royalPurple,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
               ),
               child: const Text('Assign'),
             )
-          : const Text('No Action', style: TextStyle(color: AppColors.textLight, fontSize: 12)),
+          : const Text('No Action', style: TextStyle(color: AppColors.textLight, fontSize: 12, fontStyle: FontStyle.italic)),
       ),
     ]);
   }
@@ -301,6 +339,7 @@ class _ShiftDataSource extends DataTableSource {
     if (status == 'completed') color = AppColors.successGreen;
     if (status == 'pending') color = AppColors.warningOrange;
     if (status == 'request') color = AppColors.errorRed;
+    if (status == 'in_session') color = Colors.blue;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -341,6 +380,7 @@ class _AssignmentDialogState extends State<_AssignmentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       title: const Text('Assign Caregiver'),
       content: SizedBox(
         width: 400,
