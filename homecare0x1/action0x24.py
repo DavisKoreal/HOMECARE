@@ -1,4 +1,20 @@
-import 'package:flutter/material.dart';
+import os
+
+def fix_schedule_header_overflow():
+    target_dir = os.path.expanduser("~/Desktop/HOMECARE/homecare0x1")
+    
+    if not os.path.exists(target_dir):
+        print(f"Error: Directory {target_dir} not found.")
+        return
+
+    print(f"Changing directory to: {target_dir}")
+    os.chdir(target_dir)
+
+    print("\n--- Fixing Overflow in lib/screens/schedule/day_schedule_screen.dart ---")
+    screen_path = os.path.join("lib", "screens", "schedule", "day_schedule_screen.dart")
+    
+    # Preserving the scrolling logic, updating only the build and header methods
+    screen_code = """import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/constants.dart';
@@ -472,3 +488,11 @@ class _DayScheduleScreenState extends State<DayScheduleScreen> {
     );
   }
 }
+"""
+    
+    with open(screen_path, "w", encoding="utf-8") as f:
+        f.write(screen_code)
+    print("Fixed Overflow in Day Schedule Header (Responsive).")
+
+if __name__ == "__main__":
+    fix_schedule_header_overflow()
