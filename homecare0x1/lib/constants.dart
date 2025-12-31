@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 class Routes {
   static const String login = '/login';
   static const String adminDashboard = '/admin_dashboard';
@@ -33,4 +34,42 @@ class Routes {
   static const String adminInitiateShift = '/admin_initiate_shift';
   static const String adminAddClient = '/admin_add_client';
   static const String adminAddCaregiver = '/admin_add_caregiver';
+}
+
+import 'package:flutter/material.dart';
+
+// Centralized Navigation Configuration to avoid repetition
+class NavigationConfig {
+  static const List<Map<String, dynamic>> sidebarItems = [
+    {
+      'title': 'Dashboard',
+      'icon': Icons.dashboard_outlined,
+      'route': Routes.adminDashboard,
+    },
+    {
+      'title': 'Calendar',
+      'icon': Icons.calendar_today_outlined,
+      'route': Routes.adminCalendar,
+    },
+    {
+      'title': 'Shifts',
+      'icon': Icons.schedule_outlined,
+      'route': Routes.shiftAssignment,
+    },
+    {
+      'title': 'Recipients',
+      'icon': Icons.people_outline,
+      'route': Routes.clientList,
+    },
+    {
+      'title': 'Care Notes',
+      'icon': Icons.event_note_outlined,
+      'route': Routes.adminNotesManagement,
+    },
+    {
+      'title': 'System',
+      'icon': Icons.settings_outlined, // Changed to settings/system icon
+      'route': Routes.auditLog,
+    },
+  ];
 }
