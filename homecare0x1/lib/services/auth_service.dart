@@ -128,4 +128,12 @@ Future<User?> register({
     throw Exception('Failed to register: $e');
   }
 }
+
+  // Helper to get current user (mock or from provider)
+  Future<User?> getCurrentUser() async {
+    // This should ideally return the user from FirebaseAuth or UserProvider
+    // For now, returning a mock or the cached user
+    return _currentUser;
+  }
+
 }

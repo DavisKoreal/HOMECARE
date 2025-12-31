@@ -7,14 +7,14 @@ import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/widgets/common/modern_button.dart';
 import 'package:homecare0x1/widgets/common/modern_screen_layout.dart';
 
-class CaregiverDashboard extends StatefulWidget {
+class CaregiverDashboardScreen extends StatefulWidget {
   const CaregiverDashboard({super.key});
 
   @override
-  State<CaregiverDashboard> createState() => _CaregiverDashboardState();
+  State<CaregiverDashboardScreen> createState() => _CaregiverDashboardState();
 }
 
-class _CaregiverDashboardState extends State<CaregiverDashboard> {
+class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen> {
   final FirebaseCaregiverService _caregiverService = FirebaseCaregiverService.instance;
   final AuthService _authService = AuthService();
   

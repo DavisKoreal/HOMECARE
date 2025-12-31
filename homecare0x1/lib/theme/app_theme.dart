@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
+  static const Color warningOrange = Color(0xFFFFAB00);
+  static const Color errorRed = Color(0xFFD50000);
+  static const Color successGreen = Color(0xFF00C853);
   // ---------------------------------------------------------------------------
   // NEW SaaS DESIGN SYSTEM (Homebase Style)
   // ---------------------------------------------------------------------------

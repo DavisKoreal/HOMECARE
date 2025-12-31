@@ -127,6 +127,7 @@ class _CaregiverCompleteProfileScreenState extends State<CaregiverCompleteProfil
               const SizedBox(height: 32),
               ModernButton(
                 text: 'Save Profile',
+                icon: Icons.save,
                 onPressed: _saveProfile,
                 isLoading: _isLoading,
                 color: AppTheme.primaryBlue,
