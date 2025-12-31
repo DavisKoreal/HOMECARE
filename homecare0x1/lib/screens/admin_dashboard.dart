@@ -3,7 +3,7 @@ import 'package:homecare0x1/constants.dart';
 import 'package:homecare0x1/widgets/dashboard_shell.dart';
 import 'package:homecare0x1/theme/app_theme.dart';
 
-// Import All Screens that need to be shown in the content area
+// Import All Screens
 import 'package:homecare0x1/screens/admin_overview_view.dart';
 import 'package:homecare0x1/screens/admin_calendar_screen.dart';
 import 'package:homecare0x1/screens/shift_assignment_screen.dart';
@@ -28,31 +28,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   // State: The currently active route in the content area
   String _currentRoute = Routes.adminDashboard;
 
-  // Method to switch views (passed down to children)
+  // Method to switch views
   void _navigateTo(String route) {
     setState(() {
       _currentRoute = route;
     });
   }
 
+  // Handle Android/Browser Back Button
+  Future<bool> _onWillPop() async {
+    if (_currentRoute != Routes.adminDashboard) {
+      // If not on Overview, go back to Overview
+      _navigateTo(Routes.adminDashboard);
+      return false; // Prevent app exit
+    }
+    return true; // Allow app exit (or return to login if it was previous)
+  }
+
   @override
   Widget build(BuildContext context) {
-    return DashboardShell(
-      title: _getTitleForRoute(_currentRoute),
-      activeRoute: _currentRoute,
-      onNavigate: _navigateTo, // Pass the callback to the Shell
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.person_outline, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pushNamed(context, Routes.userProfile),
-        ),
-      ],
-      // The body of the Shell is now dynamic based on _currentRoute
-      content: _getViewForRoute(_currentRoute),
+    // Using WillPopScope to intercept the back button
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: DashboardShell(
+        title: _getTitleForRoute(_currentRoute),
+        activeRoute: _currentRoute,
+        onNavigate: _navigateTo, 
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline, color: AppTheme.textSecondary),
+            onPressed: () => Navigator.pushNamed(context, Routes.userProfile),
+          ),
+        ],
+        content: _getViewForRoute(_currentRoute),
+      ),
     );
   }
 
-  // Helper to determine the Page Title
   String _getTitleForRoute(String route) {
     switch (route) {
       case Routes.adminDashboard: return 'Overview';
@@ -69,10 +81,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
-  // Helper to return the correct Widget
   Widget _getViewForRoute(String route) {
-    // Note: We wrap secondary screens in a ClipRect or similar if needed, 
-    // but standard widgets work fine in the Expanded content area.
     switch (route) {
       case Routes.adminDashboard:
         return AdminOverviewView(onNavigate: _navigateTo);
@@ -93,7 +102,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return const AuditLogScreen();
 
       case Routes.adminInitiateShift:
-        // Pass the callback so the form can close itself properly
         return AdminInitiateShift(onBack: () => _navigateTo(Routes.adminDashboard));
 
       case Routes.adminAddClient:
@@ -107,7 +115,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return AdminCaregiverApprovalPage(adminId: adminId);
 
       default:
-        return Center(child: Text("Page not found for $route"));
+        // Fallback to Overview if route is unknown, solving "Page not found"
+        return AdminOverviewView(onNavigate: _navigateTo);
     }
   }
 }
