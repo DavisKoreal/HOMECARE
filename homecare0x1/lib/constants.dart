@@ -73,3 +73,25 @@ class NavigationConfig {
     },
   ];
 }
+
+
+// UI Layout Breakpoints & Spacing
+class LayoutConstants {
+  static const double desktopBreakpoint = 1200.0;
+  static const double tabletBreakpoint = 800.0;
+  
+  static const double defaultPadding = 24.0;
+  static const double cardRadius = 16.0;
+  static const double smallRadius = 8.0;
+}
+
+// Brand Color Palette
+class AppColors {
+  static const Color royalPurple = Color(0xFF5C42BD); // Primary Brand
+  static const Color softLavender = Color(0xFFE8EAF6); // Secondary Bg
+  static const Color successGreen = Color(0xFF00C853);
+  static const Color warningOrange = Color(0xFFFFAB00);
+  static const Color errorRed = Color(0xFFD50000);
+  static const Color textDark = Color(0xFF2D3436);
+  static const Color textLight = Color(0xFF636E72);
+}

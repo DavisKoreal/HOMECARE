@@ -4,7 +4,6 @@ import 'package:homecare0x1/theme/app_theme.dart';
 import 'package:homecare0x1/providers/user_provider.dart';
 import 'package:homecare0x1/providers/shift_assignment_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:homecare0x1/screens/admin_caregiver_approval.dart';
 
 class AdminOverviewView extends StatefulWidget {
   final Function(String) onNavigate;
@@ -60,38 +59,39 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
     final user = Provider.of<UserProvider>(context).user;
 
     if (_isLoading) return const Center(child: CircularProgressIndicator());
-    if (_errorMessage != null) return Center(child: Text(_errorMessage!, style: const TextStyle(color: AppTheme.errorRed)));
+    if (_errorMessage != null) return Center(child: Text(_errorMessage!, style: const TextStyle(color: AppColors.errorRed)));
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(LayoutConstants.defaultPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Section
+          // Header
           Text(
             'Welcome back, ${user?.name ?? "Admin"}',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textDark,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Here is what is happening with your care team today.',
+            'Here is the latest activity for your team.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
+              color: AppColors.textLight,
             ),
           ),
           
           const SizedBox(height: 32),
           
-          // Metrics Grid (Refactored)
+          // --- Key Metrics Grid ---
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              // Responsive columns: 3 on wide, 2 on medium, 1 on small
-              int columns = width > 900 ? 3 : (width > 600 ? 2 : 1);
-              double aspectRatio = width > 900 ? 2.5 : 2.0; 
+              // Responsive: 3 cols on large, 2 on medium, 1 on small
+              int columns = width > 1000 ? 3 : (width > 600 ? 2 : 1);
+              // Aspect Ratio: Lower ratio = Taller card (Fixes overflow)
+              double aspectRatio = width > 1000 ? 1.6 : (width > 600 ? 1.4 : 1.8);
               
               return GridView.count(
                 crossAxisCount: columns,
@@ -101,26 +101,27 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
                 mainAxisSpacing: 24,
                 childAspectRatio: aspectRatio,
                 children: [
-                  _buildMetricCard(
-                    title: 'Total Recipients', 
-                    value: _activeClients.toString(), 
-                    icon: Icons.people_outline, 
-                    color: AppTheme.successGreen,
-                    trend: '+2 this week'
+                  _buildStatCard(
+                    title: 'Active Recipients',
+                    value: _activeClients.toString(),
+                    icon: Icons.people_alt_rounded,
+                    color: AppColors.royalPurple,
+                    trend: '+ New this week',
                   ),
-                  _buildMetricCard(
-                    title: 'Active Care Staff', 
-                    value: _activeCaregivers.toString(), 
-                    icon: Icons.medical_services_outlined, 
-                    color: AppTheme.primaryPurple,
-                    trend: 'All active'
+                  _buildStatCard(
+                    title: 'Care Staff',
+                    value: _activeCaregivers.toString(),
+                    icon: Icons.medical_services_rounded,
+                    color: Colors.blueAccent,
+                    trend: 'Fully staffed',
                   ),
-                  _buildMetricCard(
-                    title: 'Pending Requests', 
-                    value: _pendingTasks.toString(), 
-                    icon: Icons.assignment_late_outlined, 
-                    color: AppTheme.accentOrange,
-                    trend: 'Action needed'
+                  _buildStatCard(
+                    title: 'Pending Requests',
+                    value: _pendingTasks.toString(),
+                    icon: Icons.pending_actions_rounded,
+                    color: AppColors.warningOrange,
+                    trend: 'Requires attention',
+                    isAlert: _pendingTasks > 0,
                   ),
                 ],
               );
@@ -129,21 +130,21 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
           
           const SizedBox(height: 48),
           
-          // Quick Actions Header
+          // --- Quick Actions Header ---
           Text(
             'Quick Actions',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
+              color: AppColors.textDark,
             ),
           ),
           const SizedBox(height: 16),
           
-          // Quick Actions Grid
+          // --- Quick Actions Grid ---
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              int columns = width > 1200 ? 4 : (width > 800 ? 3 : (width > 600 ? 2 : 1));
+              int columns = width > 1100 ? 4 : (width > 800 ? 3 : (width > 500 ? 2 : 1));
               
               return GridView.count(
                 crossAxisCount: columns,
@@ -151,32 +152,14 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 2.5,
+                childAspectRatio: 2.2, // Wide button style
                 children: [
-                  _buildActionCard(
-                    'New Shift', 'Create assignment', Icons.add_task, 
-                    () => widget.onNavigate(Routes.adminInitiateShift)
-                  ),
-                  _buildActionCard(
-                    'Add Client', 'New recipient', Icons.person_add_outlined, 
-                    () => widget.onNavigate(Routes.adminAddClient)
-                  ),
-                  _buildActionCard(
-                    'Add Caregiver', 'New staff member', Icons.person_add_alt, 
-                    () => widget.onNavigate(Routes.adminAddCaregiver)
-                  ),
-                  _buildActionCard(
-                    'Approve Staff', 'Review applications', Icons.verified_user_outlined, 
-                    () => widget.onNavigate(Routes.adminCaregiverApproval)
-                  ),
-                  _buildActionCard(
-                    'Calendar', 'View schedule', Icons.calendar_today, 
-                    () => widget.onNavigate(Routes.adminCalendar)
-                  ),
-                  _buildActionCard(
-                    'System Logs', 'View audit trail', Icons.security, 
-                    () => widget.onNavigate(Routes.auditLog)
-                  ),
+                  _buildActionCard('New Shift', Icons.add_circle_outline, () => widget.onNavigate(Routes.adminInitiateShift)),
+                  _buildActionCard('Add Client', Icons.person_add_outlined, () => widget.onNavigate(Routes.adminAddClient)),
+                  _buildActionCard('Add Staff', Icons.group_add_outlined, () => widget.onNavigate(Routes.adminAddCaregiver)),
+                  _buildActionCard('Approvals', Icons.verified_user_outlined, () => widget.onNavigate(Routes.adminCaregiverApproval)),
+                  _buildActionCard('Schedule', Icons.calendar_month_outlined, () => widget.onNavigate(Routes.adminCalendar)),
+                  _buildActionCard('Audit Logs', Icons.security_outlined, () => widget.onNavigate(Routes.auditLog)),
                 ],
               );
             }
@@ -186,19 +169,31 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
     );
   }
 
-  Widget _buildMetricCard({required String title, required String value, required IconData icon, required Color color, String? trend}) {
+  // --- Widgets ---
+
+  Widget _buildStatCard({
+    required String title, 
+    required String value, 
+    required IconData icon, 
+    required Color color, 
+    String? trend,
+    bool isAlert = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.borderGray),
+        borderRadius: BorderRadius.circular(LayoutConstants.cardRadius),
+        border: Border.all(
+          color: isAlert ? color.withOpacity(0.5) : AppTheme.borderGray, 
+          width: isAlert ? 2 : 1
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 12,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -209,93 +204,88 @@ class _AdminOverviewViewState extends State<AdminOverviewView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: Icon(icon, color: color, size: 28),
               ),
-              if (trend != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.neutral100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(trend, style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
-                )
+              if (isAlert)
+                Icon(Icons.circle, color: color, size: 12),
             ],
           ),
+          const SizedBox(height: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 value,
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                style: const TextStyle(
+                  fontSize: 36, 
+                  fontWeight: FontWeight.w800, 
+                  color: AppColors.textDark
+                ),
               ),
               const SizedBox(height: 4),
-              Text(title, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14, 
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textLight
+                ),
+              ),
             ],
           ),
+          if (trend != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.backgroundCanvas,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                trend,
+                style: TextStyle(
+                  fontSize: 12, 
+                  color: color, 
+                  fontWeight: FontWeight.w600
+                ),
+              ),
+            )
+          ]
         ],
       ),
     );
   }
 
-  Widget _buildActionCard(String title, String subtitle, IconData icon, VoidCallback onTap) {
+  Widget _buildActionCard(String title, IconData icon, VoidCallback onTap) {
     return Material(
       color: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(LayoutConstants.smallRadius),
         side: const BorderSide(color: AppTheme.borderGray),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        hoverColor: AppTheme.backgroundCanvas,
+        borderRadius: BorderRadius.circular(LayoutConstants.smallRadius),
+        hoverColor: AppColors.royalPurple.withOpacity(0.05),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryPurple.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: AppTheme.primaryPurple, size: 22),
-              ),
+              Icon(icon, color: AppColors.textLight, size: 24),
               const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: AppTheme.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  color: AppColors.textDark,
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, size: 12, color: AppTheme.borderGray),
             ],
           ),
         ),
