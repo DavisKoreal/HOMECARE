@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 class AppTheme {
   // Primary Brand Colors
   static const Color primaryPurple = Color(0xFF5C42BD);
-  static const Color primaryBlue = Color(0xFF5C42BD); // Mapping Blue to Purple for consistency if needed, or keep distinct
+  static const Color primaryBlue = Color(0xFF5C42BD); 
   static const Color primaryBlueLight = Color(0xFF7E60E8);
 
   // Status Colors
   static const Color successGreen = Color(0xFF00C853);
   static const Color warningOrange = Color(0xFFFFAB00);
   static const Color errorRed = Color(0xFFD50000);
+  
+  // Legacy/Other Colors (Restored)
+  static const Color secondaryTeal = Color(0xFF00BFA5); 
 
   // Backgrounds & Neutrals
   static const Color backgroundCanvas = Color(0xFFF8F9FA);
@@ -48,5 +51,28 @@ class AppTheme {
         ),
       ),
     );
+  }
+
+  // Helper method to get color based on status string (Restored)
+  static Color getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+      case 'approved':
+      case 'active':
+        return successGreen;
+      case 'pending':
+      case 'in_progress':
+      case 'in_session':
+        return warningOrange;
+      case 'cancelled':
+      case 'rejected':
+      case 'error':
+      case 'critical':
+        return errorRed;
+      case 'request':
+        return secondaryTeal;
+      default:
+        return neutral600;
+    }
   }
 }

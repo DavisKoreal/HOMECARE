@@ -11,13 +11,11 @@ class AuthService {
   Future<User?> getCurrentUser() async {
     final fbUser = _firebaseAuth.currentUser;
     if (fbUser != null) {
-      // In a real app, you'd fetch the role from Firestore here.
-      // For now, returning a basic User object.
       return User(
         id: fbUser.uid,
         name: fbUser.displayName ?? 'User',
         email: fbUser.email ?? '',
-        role: 'caregiver', // Default role if unknown
+        role: 'caregiver', // Default role logic should ideally fetch from DB
       );
     }
     return _mockUser;
@@ -28,6 +26,33 @@ class AuthService {
     await _firebaseAuth.signOut();
     _mockUser = null;
   }
-  
-  // ... (Other auth methods would go here)
+
+  // Login
+  Future<User?> login(String email, String password) async {
+    try {
+      final result = await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
+      if (result.user != null) {
+        return await getCurrentUser();
+      }
+    } catch (e) {
+      print("Login failed: $e");
+      // Fallback for dev mode if needed, or rethrow
+    }
+    return null;
+  }
+
+  // Register
+  Future<User?> register(String email, String password, String name, String role) async {
+    try {
+      final result = await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
+      if (result.user != null) {
+        await result.user!.updateDisplayName(name);
+        // Here you would typically also create a User document in Firestore
+        return User(id: result.user!.uid, name: name, email: email, role: role);
+      }
+    } catch (e) {
+      print("Registration failed: $e");
+    }
+    return null;
+  }
 }
