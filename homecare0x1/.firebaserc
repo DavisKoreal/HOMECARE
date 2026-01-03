@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "arandomtestproject"
-  }
+  },
+  "targets": {
+    "arandomtestproject": {
+      "hosting": {
+        "rarecare": [
+          "rarecare"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
