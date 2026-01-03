@@ -1,0 +1,8 @@
+1. take MAC adress to map phone to nurse
+2. in case of an emergency, a way to report to admin so that they can reassign the shift
+3. location tracking for nurse 
+4. facial recognition for nurse to ensure the right nurse is on the patient's home 
+5. AI agent to suggest some ideas for the nurse as they go on their caregiving business 
+6. notification to admin if shift is not clocked in within 10 minutes of start time 
+7. notes at the checkout by the nurse 
+8. when a shift is assigned, the adminID of the admin asiigning the shift is recorded in the database 

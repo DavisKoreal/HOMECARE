@@ -287,7 +287,7 @@ class FirebaseShiftService {
     } catch (e) {
       // Log error and return error status
       print('Error requesting shift: $e');
-      return "error";
+      return e.toString();
     }
   }
 
@@ -387,7 +387,7 @@ class FirebaseShiftService {
     } catch (e) {
       // Log error and return error status
       print('Error adding shift: $e');
-      return "error";
+      return e.toString();
     }
   }
 
@@ -449,7 +449,7 @@ class FirebaseShiftService {
     } catch (e) {
       // Log error and return error status
       print('Error updating shift: $e');
-      return "error";
+      return e.toString();
     }
   }
 
@@ -499,7 +499,7 @@ class FirebaseShiftService {
     } catch (e) {
       // Log error and return error status
       print('Error updating shift status: $e');
-      return "error";
+      return e.toString();
     }
   }
 
@@ -555,7 +555,7 @@ class FirebaseShiftService {
     } catch (e) {
       // Log error and return error status
       print('Error assigning shift: $e');
-      return "error";
+      return e.toString();
     }
   }
 }

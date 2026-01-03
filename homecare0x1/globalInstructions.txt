@@ -34,3 +34,4 @@ Interactive Elements: Hover states on buttons and cards are subtle but provide c
 
 5. Mobile-First Responsiveness
 The UI is clearly designed with a mobile-first mindset. Elements are "stacked" vertically on smaller screens, and buttons are large enough to be easily "thumb-friendly," reflecting the fact that many of their users (managers and employees) will access the tool via the Homebase mobile app.ask for permission to touch backend code 
+6. use try catch blocks when doing database insertions or reads. This typically happens when a part of the user interface is importing a service function and using it to either get the database state or update the database state and communicate any errors explicitly to the user interface through the snackbar. it is important to communicate to the user 
