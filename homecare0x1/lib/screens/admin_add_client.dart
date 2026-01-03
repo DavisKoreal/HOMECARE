@@ -1,14 +1,12 @@
-// lib/screens/admin_add_client.dart
-// Screen for adding new clients to the system.
-// Provides a form with validation for client information entry.
-
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/models/client.dart';
 import 'package:homecare0x1/services/client_service.dart';
+import 'package:homecare0x1/theme/app_theme.dart';
+import 'package:homecare0x1/constants.dart';
 
 class AdminAddClientScreen extends StatefulWidget {
-  const AdminAddClientScreen({Key? key}) : super(key: key);
+  final VoidCallback? onBack;
+  const AdminAddClientScreen({Key? key, this.onBack}) : super(key: key);
 
   @override
   State<AdminAddClientScreen> createState() => _AdminAddClientScreenState();
@@ -32,22 +30,21 @@ class _AdminAddClientScreenState extends State<AdminAddClientScreen> {
     super.dispose();
   }
 
-  /// Validates and submits the form to create a new client.
-  Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
+  void _handleBack() {
+    if (widget.onBack != null) {
+      widget.onBack!();
+    } else {
+      Navigator.maybePop(context);
     }
+  }
 
-    // Show confirmation dialog before creating
-    final confirmed = await _showConfirmationDialog();
-    if (confirmed != true) {
-      return;
-    }
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     final client = Client(
-      id: '', // Will be assigned by Firestore
+      id: '',
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
       address: _addressController.text.trim(),
@@ -60,258 +57,129 @@ class _AdminAddClientScreenState extends State<AdminAddClientScreen> {
       if (!mounted) return;
 
       if (result.startsWith('Error')) {
-        _showMessage('Failed to create client: $result', isError: true);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result), backgroundColor: AppTheme.errorRed));
       } else {
-        _showMessage('Client created successfully!');
-        Navigator.pop(context, true); // Return true to indicate success
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Client added successfully'), backgroundColor: AppTheme.successGreen));
+        _handleBack();
       }
     } catch (e) {
-      if (!mounted) return;
-      _showMessage('An error occurred: $e', isError: true);
-    } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.errorRed));
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  /// Shows a confirmation dialog with client details and a random message.
-  Future<bool?> _showConfirmationDialog() async {
-    final random = Random();
-    List<String> messages = [
-      'Great choice! This client is in good hands.',
-      'Ready to make a difference in their care journey?',
-      'Every client deserves exceptional care. Let\'s do this!',
-      'Another step towards better healthcare. Confirm?',
-      'Quality care starts here. Proceed with creation?',
-      'Your dedication makes all the difference!',
-      'Building trust, one client at a time.',
-      'Excellence in care begins with you!',
-    ];
-    String randomMessage = messages[random.nextInt(messages.length)];
-
-    return showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Client Creation'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue[200]!),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.lightbulb_outline, color: Colors.blue[700]),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          randomMessage,
-                          style: TextStyle(
-                            color: Colors.blue[900],
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Please review the details:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 12),
-                _buildDetailRow('Name', _nameController.text.trim()),
-                _buildDetailRow('Email', _emailController.text.trim()),
-                _buildDetailRow('Address', _addressController.text.trim()),
-                _buildDetailRow('Care Plan', _carePlanController.text.trim()),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Confirm & Create'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// Builds a row displaying a detail label and value.
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 90,
-            child: Text(
-              '$label:',
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(color: Colors.black54),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Shows a snackbar message to the user.
-  void _showMessage(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
-        duration: const Duration(seconds: 3),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add New Client'),
-        elevation: 2,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildTextField(
-                controller: _nameController,
-                label: 'Full Name',
-                icon: Icons.person,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter client name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _emailController,
-                label: 'Email Address',
-                icon: Icons.email,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter email address';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _addressController,
-                label: 'Address',
-                icon: Icons.home,
-                maxLines: 2,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter address';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _carePlanController,
-                label: 'Care Plan',
-                icon: Icons.medical_services,
-                maxLines: 4,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter care plan';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitForm,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(
-                        'Create Client',
-                        style: TextStyle(fontSize: 16),
+    // Centered Form Container for Desktop Aesthetics
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(32),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 800),
+          padding: const EdgeInsets.all(40),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.borderGray),
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Add New Client',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
                       ),
-              ),
-            ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: _handleBack,
+                    )
+                  ],
+                ),
+                const Divider(height: 48),
+
+                // Form Fields
+                _buildLabel('Full Name'),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(hintText: 'e.g. John Doe'),
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 24),
+
+                _buildLabel('Email Address'),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(hintText: 'e.g. john@example.com'),
+                  validator: (v) => !v!.contains('@') ? 'Invalid email' : null,
+                ),
+                const SizedBox(height: 24),
+
+                _buildLabel('Physical Address'),
+                TextFormField(
+                  controller: _addressController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(hintText: 'Enter full address'),
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 24),
+
+                _buildLabel('Care Plan Details'),
+                TextFormField(
+                  controller: _carePlanController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(hintText: 'Describe needs, medication, schedule...'),
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 40),
+
+                // Action Bar
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: _handleBack,
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _submitForm,
+                      child: _isLoading 
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text('Save Client'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  /// Builds a styled text field with consistent appearance.
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    String? Function(String?)? validator,
-    TextInputType? keyboardType,
-    int maxLines = 1,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: AppTheme.textPrimary,
+          fontSize: 14,
         ),
-        filled: true,
-        fillColor: Colors.grey[50],
       ),
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      validator: validator,
-      enabled: !_isLoading,
     );
   }
 }

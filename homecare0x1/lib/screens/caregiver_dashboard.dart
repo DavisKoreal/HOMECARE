@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:homecare0x1/constants.dart';
-import 'package:homecare0x1/providers/user_provider.dart';
-import 'package:homecare0x1/models/care_note.dart';
-import 'package:homecare0x1/models/medication_record.dart';
-import 'package:homecare0x1/providers/medication_record_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:homecare0x1/models/shift.dart';
-import 'package:homecare0x1/providers/shift_assignment_provider.dart';
-import 'package:homecare0x1/actions/overlay.dart';
-import 'package:uuid/uuid.dart';
-import 'package:homecare0x1/services/firebase_care_note_service.dart';
-import 'package:homecare0x1/services/firebase_caregiver_service.dart';
 import 'package:homecare0x1/models/caregiver_profile.dart';
-import 'package:homecare0x1/models/user.dart';
-// Caregiver Dashboard Screen
-// Displays a dashboard for caregivers with stats, quick actions, and recent activities.
-// Includes functionality to add care notes via a comprehensive tabbed dialog.
+import 'package:homecare0x1/models/shift.dart';
+import 'package:homecare0x1/models/location.dart'; 
+import 'package:homecare0x1/services/auth_service.dart';
+import 'package:homecare0x1/services/firebase_caregiver_service.dart';
+import 'package:homecare0x1/services/firebase_shift_service.dart';
+import 'package:homecare0x1/providers/location_provider.dart';
+import 'package:homecare0x1/theme/app_theme.dart';
+import 'package:homecare0x1/widgets/common/modern_button.dart';
+import 'package:homecare0x1/screens/care_notes_screen.dart';
+import 'package:intl/intl.dart';
+
 class CaregiverDashboardScreen extends StatefulWidget {
   const CaregiverDashboardScreen({super.key});
 
@@ -24,2011 +19,537 @@ class CaregiverDashboardScreen extends StatefulWidget {
   State<CaregiverDashboardScreen> createState() => _CaregiverDashboardScreenState();
 }
 
-class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late AnimationController _statsAnimationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  late List<Animation<double>> _statsAnimations;
-  List<Shift> caregivershifts = [];
-  late OverlayUtils _overlayUtils;
-  bool isProfileComplete = true;
+class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen> {
+  // Services
+  final FirebaseCaregiverService _caregiverService = FirebaseCaregiverService.instance;
+  final FirebaseShiftService _shiftService = FirebaseShiftService.instance;
+  final AuthService _authService = AuthService();
+  final LocationProvider _locationProvider = LocationProvider();
+  
+  // State
+  CaregiverProfile? _profile;
+  List<Shift> _myShifts = [];
+  bool _isLoading = true;
+  int _selectedIndex = 0; 
+  bool _isClockedIn = false;
+  String? _activeShiftId; 
 
   @override
   void initState() {
     super.initState();
-    // Initialize OverlayUtils for notifications
-    _overlayUtils = OverlayUtils();
-    // Set up animation controller for fade and slide effects
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    // Set up animation controller for stats animations
-    _statsAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-
-    // Define fade animation
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
-    );
-    // Define slide animation
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-        parent: _animationController, curve: Curves.easeOutCubic));
-
-    // Generate animations for stats cards
-    _statsAnimations = List.generate(3, (index) {
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _statsAnimationController,
-          curve: Interval(
-            index * 0.2,
-            0.6 + (index * 0.2),
-            curve: Curves.elasticOut,
-          ),
-        ),
-      );
-    });
-
-    // Start animations
-    _animationController.forward();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _statsAnimationController.forward();
-    });
-    // Load caregiver shifts
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final shiftProvider = Provider.of<ShiftAssignmentProvider>(context, listen: false);
-    if (userProvider.user != null) {
-      caregivershifts = shiftProvider.getShiftsForCaregiver(userProvider.user!.id);
-    }
-    _fetchProfileCompleteness();
+    _loadDashboardData();
   }
 
-  Future<void> _fetchProfileCompleteness() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final caregiverService = FirebaseCaregiverService.instance;
-    final profile = await caregiverService.getCaregiverProfile(userProvider.user!.id);
-    if (mounted) {
-      setState(() {
-        isProfileComplete = ((profile != null) && (_isProfileFullyFilled(profile))&&(_isProfileApproved(profile)));
-        _overlayUtils.showOverlay(
-          context,
-          isProfileComplete
-              ? 'Profile is complete.'
-              : 'Please complete your profile for better opportunities.',
-          isError: !isProfileComplete,
-        );
-      });
-    }
-  }
-
-  bool _isProfileFullyFilled(CaregiverProfile profile) {
-    return profile.name.isNotEmpty &&
-           profile.role.isNotEmpty &&
-           profile.experience.isNotEmpty &&
-           profile.certifications.isNotEmpty &&
-           profile.phone.isNotEmpty &&
-           profile.email.isNotEmpty &&
-           profile.bio.isNotEmpty &&
-           profile.availability.isNotEmpty;
-  }
-
-  bool _isProfileApproved(CaregiverProfile profile) {
-    return profile.approved;
-  }
-
-  @override
-  void dispose() {
-    // Clean up animation controllers and overlay
-    _animationController.dispose();
-    _statsAnimationController.dispose();
-    _overlayUtils.dispose();
-    super.dispose();
-  }
-
-  // Builds a stat card with animated progress indicator
-  Widget _buildModernStat({
-    required String title,
-    required String value,
-    required double percent,
-    required Color color,
-    required IconData icon,
-    required Animation<double> animation,
-  }) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: animation.value,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.15),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-              border: Border.all(
-                color: color.withOpacity(0.1),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      height: 70,
-                      width: 70,
-                      child: TweenAnimationBuilder<double>(
-                        duration: Duration(
-                            milliseconds: 1000 + (animation.value * 500).round()),
-                        tween: Tween(begin: 0.0, end: percent * animation.value),
-                        builder: (context, value, child) {
-                          return CircularProgressIndicator(
-                            value: value,
-                            backgroundColor: color.withOpacity(0.1),
-                            strokeWidth: 5,
-                            valueColor: AlwaysStoppedAnimation(color),
-                            strokeCap: StrokeCap.round,
-                          );
-                        },
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: color, size: 24),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TweenAnimationBuilder<int>(
-                  duration: Duration(
-                      milliseconds: 1000 + (animation.value * 500).round()),
-                  tween: IntTween(begin: 0, end: int.parse(value)),
-                  builder: (context, value, child) {
-                    return Text(
-                      value.toString(),
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF7F8C8D),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // Builds an action card for quick actions
-  Widget _buildModernActionCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-    String? badge,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: color,
-                        size: 28,
-                      ),
-                    ),
-                    if (badge != null) ...[
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          badge,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Builds the list of quick action cards
-  List<Widget> _buildDashboardActions(BuildContext context) {
-    return [
-      _buildModernActionCard(
-        title: 'Your Calendar',
-        subtitle: 'View your assigned shifts',
-        icon: Icons.calendar_today,
-        color: const Color(0xFF1E88E5),
-        onTap: () => Navigator.pushNamed(context, Routes.caregiverCalendar),
-      ),
-      _buildModernActionCard(
-        title: 'Clock In',
-        subtitle: 'Start your visit with location tracking',
-        icon: Icons.login,
-        color: const Color(0xFF00A86B),
-        onTap: () => _handleCheckIn(context),
-      ),
-      _buildModernActionCard(
-        title: 'Clock Out',
-        subtitle: 'End your visit and save time logs',
-        icon: Icons.logout,
-        color: const Color(0xFFE67E22),
-        onTap: () => _handleCheckOut(context),
-      ),
-      _buildModernActionCard(
-        title: 'Care Notes',
-        subtitle: 'Add observations and care updates',
-        icon: Icons.note_add,
-        color: const Color(0xFF3498DB),
-        onTap: () => _handleAddCareNote(context),
-        // badge: '2',
-      ),
-      // _buildModernActionCard(
-      //   title: 'Add Medication',
-      //   subtitle: 'Log medication administration',
-      //   icon: Icons.medical_services,
-      //   color: const Color(0xFF9B59B6),
-      //   onTap: () => _handleLogMedication(context),
-      //   // badge: '1',
-      // ),
-    ];
-  }
-
-  // Shows a confirmation dialog for logout
-  Future<bool> _confirmLogout(BuildContext context) async {
-    return await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.logout,
-                    color: Colors.red,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text('Confirm'),
-              ],
-            ),
-            content: const Text(
-              'Are you sure you want to logout and return to the login screen?',
-              style: TextStyle(height: 1.4),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Logout'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-  // Requests location permission from the user
-  Future<bool> _requestLocationPermission(BuildContext context) async {
+  Future<void> _loadDashboardData() async {
+    setState(() => _isLoading = true);
     try {
-      var status = await Permission.location.status;
-      if (status.isDenied || status.isPermanentlyDenied) {
-        status = await Permission.location.request();
-      }
-      if (status.isGranted) {
-        return true;
-      } else {
-        // the line below has been commented out as it was repetitive
-        // status = await Permission.location.request();
-        if (context.mounted) {
-          _overlayUtils.showOverlay(
-            context,
-            'Location permission is required to check-in.',
-            isError: true,
-          );
+      final user = await _authService.getCurrentUser();
+      if (user != null) {
+        final profile = await _caregiverService.getCaregiverProfile(user.id);
+        final allShifts = await _shiftService.getAllShifts();
+        
+        final myShifts = allShifts.where((s) => s.caregiverId == user.id).toList();
+        myShifts.sort((a, b) => a.startTime.compareTo(b.startTime));
+
+        final activeShift = myShifts.firstWhere(
+          (s) => s.status == 'in_session', 
+          orElse: () => Shift(id: 'none', clientId: '', clientName: '', startTime: DateTime.now(), endTime: DateTime.now(), status: 'none')
+        );
+
+        if (mounted) {
+          setState(() {
+            _profile = profile;
+            _myShifts = myShifts;
+            _isClockedIn = activeShift.status == 'in_session';
+            _activeShiftId = activeShift.status == 'in_session' ? activeShift.id : null;
+            _isLoading = false;
+          });
         }
-        return false;
       }
     } catch (e) {
-      if (context.mounted) {
-        _overlayUtils.showOverlay(
-          context,
-          'Error accessing location permissions: $e',
-          isError: true,
-        );
-      }
-      return false;
+      print("Error loading dashboard: $e");
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // Shows a confirmation dialog for check-in
-  Future<bool> _confirmCheckIn(BuildContext context) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF00A86B).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.login,
-                    color: Color(0xFF00A86B),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text('Confirmation'),
-              ],
-            ),
-            content: const Text(
-              'Do you want to check in for your visit?',
-              style: TextStyle(height: 1.4),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00A86B),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Check-In'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+  // --- Auth Logic (Logout) ---
+  Future<void> _handleLogout() async {
+    await _authService.signOut();
+    if (mounted) {
+      // Navigate to login and remove all previous routes
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    }
   }
 
-  // Shows a confirmation dialog for check-out
-  Future<bool> _confirmCheckOut(BuildContext context) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE67E22).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.logout,
-                    color: Color(0xFFE67E22),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text('Check-Out Confirmation'),
-              ],
-            ),
-            content: const Text(
-              'Do you want to check out from your visit?',
-              style: TextStyle(height: 1.4),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE67E22),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Check-Out'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-// Shows an improved dialog to collect all CareNote fields
-Future<Map<String, dynamic>?> _showAddCareNoteDialog(BuildContext context) async {
-  // Controllers for text fields
-  final healthStatusController = TextEditingController();
-  final activitiesController = TextEditingController();
-  final observationsController = TextEditingController();
-  final medicationAdherenceController = TextEditingController();
-  final moodController = TextEditingController();
-  final noteController = TextEditingController();
-  final clientIdController = TextEditingController();
-  final shiftIdController = TextEditingController();
-  final foodAndDrinksController = TextEditingController();
-  final bowelMovementDescriptionController = TextEditingController();
-  final mobilityAndShowerController = TextEditingController();
-
-  // State for numeric and boolean fields
-  int mealQuantityPercentage = 0;
-  int hydrationMl = 0;
-  bool hasBowelMovement = false;
-  int bowelMovementFrequency = 0;
-  bool isVisibleToClient = false;
-  bool isLate = false;
-
-  // Page controller for tabs
-  final PageController pageController = PageController();
-  int currentPage = 0;
-
-  return await showDialog<Map<String, dynamic>>(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setState) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        contentPadding: EdgeInsets.zero,
-        title: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF3498DB), Color(0xFF5DADE2)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.note_add,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Add Care Note',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        content: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.7,
-          child: Column(
-            children: [
-              // Tab indicator
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: currentPage >= 0 ? const Color(0xFF3498DB) : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: currentPage >= 1 ? const Color(0xFF3498DB) : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: currentPage >= 2 ? const Color(0xFF3498DB) : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: currentPage >= 3 ? const Color(0xFF3498DB) : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Page content
-              Expanded(
-                child: PageView(
-                  controller: pageController,
-                  onPageChanged: (page) => setState(() => currentPage = page),
-                  children: [
-                    // Page 1: Basic Information
-                    _buildCareNotePage1(
-                      clientIdController,
-                      shiftIdController,
-                      healthStatusController,
-                      moodController,
-                    ),
-                    // Page 2: Activities and Observations
-                    _buildCareNotePage2(
-                      activitiesController,
-                      observationsController,
-                      medicationAdherenceController,
-                    ),
-                    // Page 3: Notes and Settings
-                    _buildCareNotePage3(
-                      noteController,
-                      isVisibleToClient,
-                      isLate,
-                      setState,
-                    ),
-                    // Page 4: Additional Information (New Fields)
-                    _buildCareNotePage4(
-                      foodAndDrinksController,
-                      mealQuantityPercentage,
-                      hydrationMl,
-                      hasBowelMovement,
-                      bowelMovementDescriptionController,
-                      bowelMovementFrequency,
-                      mobilityAndShowerController,
-                      setState,
-                    ),
-                  ],
-                ),
-              ),
-              // Navigation buttons
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    if (currentPage > 0)
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            pageController.previousPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: const BorderSide(color: Color(0xFF3498DB)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Previous',
-                            style: TextStyle(color: Color(0xFF3498DB)),
-                          ),
-                        ),
-                      ),
-                    if (currentPage > 0) const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (currentPage < 3) {
-                            // Proceed to next page
-                            pageController.nextPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          } else {
-                            // Final submission
-                            if (_validateAllCareNoteFields([
-                              healthStatusController.text,
-                              activitiesController.text,
-                              observationsController.text,
-                              medicationAdherenceController.text,
-                              moodController.text,
-                              noteController.text,
-                              clientIdController.text,
-                              shiftIdController.text,
-                              foodAndDrinksController.text,
-                              mobilityAndShowerController.text,
-                            ])) {
-                              Navigator.pop(context, {
-                                'healthStatus': healthStatusController.text.trim(),
-                                'activities': activitiesController.text.trim(),
-                                'observations': observationsController.text.trim(),
-                                'medicationAdherence': medicationAdherenceController.text.trim(),
-                                'mood': moodController.text.trim(),
-                                'note': noteController.text.trim(),
-                                'clientId': clientIdController.text.trim(),
-                                'shiftId': shiftIdController.text.trim(),
-                                'isVisibleToClient': isVisibleToClient,
-                                'isLate': isLate,
-                                'foodAndDrinks': foodAndDrinksController.text.trim(),
-                                'mealQuantityPercentage': mealQuantityPercentage,
-                                'hydrationMl': hydrationMl,
-                                'hasBowelMovement': hasBowelMovement,
-                                'bowelMovementDescription': hasBowelMovement
-                                    ? bowelMovementDescriptionController.text.trim()
-                                    : null,
-                                'bowelMovementFrequency': bowelMovementFrequency,
-                                'mobilityAndShower': mobilityAndShowerController.text.trim(),
-                              });
-                            } else {
-                              _overlayUtils.showOverlay(
-                                context,
-                                'Please fill in all required fields.',
-                                isError: true,
-                              );
-                            }
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3498DB),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Text(currentPage < 3 ? 'Next' : 'Submit'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: const BorderSide(color: Colors.red),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ), 
+  // --- Clock In/Out Logic ---
+  Future<void> _handleClockIn() async {
+    final now = DateTime.now();
+    final shiftToStart = _myShifts.firstWhere(
+      (s) => s.status == 'pending' && s.startTime.difference(now).inHours.abs() < 24, 
+      orElse: () => Shift(id: 'none', clientId: '', clientName: '', startTime: DateTime.now(), endTime: DateTime.now(), status: 'none')
     );
-  }
 
-// Page 4: Additional Information (New Fields)
-Widget _buildCareNotePage4(
-  TextEditingController foodAndDrinksController,
-  int mealQuantityPercentage,
-  int hydrationMl,
-  bool hasBowelMovement,
-  TextEditingController bowelMovementDescriptionController,
-  int bowelMovementFrequency,
-  TextEditingController mobilityAndShowerController,
-  StateSetter setState,
-) {
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(20),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Nutrition, Bowel, and Mobility',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2C3E50),
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Record details about food, hydration, bowel movements, and mobility.',
-          style: TextStyle(
-            color: Color(0xFF7F8C8D),
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(height: 24),
-        _buildImprovedTextField(
-          controller: foodAndDrinksController,
-          label: 'Food and Drinks',
-          icon: Icons.fastfood,
-          hint: 'E.g., Breakfast: Oatmeal and juice',
-          maxLines: 2,
-          isRequired: true,
-        ),
-        const SizedBox(height: 24),
-        _buildImprovedTextField(
-          controller: TextEditingController(text: mealQuantityPercentage.toString()),
-          label: 'Meal Quantity (%)',
-          icon: Icons.percent,
-          hint: 'Describe percentage (0-100) of meals consumed and general feeding habits',
-          isRequired: true,
-          // onChanged: (value) {
-          //   setState(() {
-          //     mealQuantityPercentage = int.tryParse(value) ?? 0;
-          //   });
-          // },
-          // keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: 24),
-        _buildImprovedTextField(
-          controller: TextEditingController(text: hydrationMl.toString()),
-          label: 'Hydration (ml)',
-          icon: Icons.local_drink,
-          hint: 'Enter milliliters of water taken',
-          isRequired: true,
-          // onChanged: (value) {
-          //   setState(() {
-          //     hydrationMl = int.tryParse(value) ?? 0;
-          //   });
-          // },
-          // keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: 24),
-        const Text(
-          'Bowel Movement',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF2C3E50),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!),
-          ),
-          child: SwitchListTile(
-            title: const Text(
-              'Had Bowel Movement',
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-            subtitle: const Text(
-              'Indicate if the client had a bowel movement',
-              style: TextStyle(fontSize: 12),
-            ),
-            value: hasBowelMovement,
-            onChanged: (value) {
-              setState(() {
-                hasBowelMovement = value ?? false;
-                if (!hasBowelMovement) {
-                  bowelMovementDescriptionController.clear();
-                }
-              });
-            },
-            activeColor: const Color(0xFF3498DB),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          ),
-        ),
-        if (hasBowelMovement) ...[
-          const SizedBox(height: 24),
-          _buildImprovedTextField(
-            controller: bowelMovementDescriptionController,
-            label: 'Bowel Movement Description',
-            icon: Icons.description,
-            hint: 'E.g., Normal, Bristol scale type 4',
-            maxLines: 2,
-            isRequired: false,
-          ),
-        ],
-        const SizedBox(height: 24),
-        _buildImprovedTextField(
-          controller: TextEditingController(text: bowelMovementFrequency.toString()),
-          label: 'Days Without Bowel Movement',
-          icon: Icons.timer,
-          hint: 'Enter days without bowel movement',
-          isRequired: true,
-          // onChanged: (value) {
-          //   setState(() {
-          //     bowelMovementFrequency = int.tryParse(value) ?? 0;
-          //   });
-          // },
-          // keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: 24),
-        _buildImprovedTextField(
-          controller: mobilityAndShowerController,
-          label: 'Mobility and Shower',
-          icon: Icons.directions_walk,
-          hint: 'E.g., Walked 100m with walker, showered with assistance',
-          maxLines: 2,
-          isRequired: true,
-        ),
-      ],
-    ),
-  );
-}
+    if (shiftToStart.status == 'none') {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No relevant shift found to clock into."), backgroundColor: AppTheme.warningOrange));
+      return;
+    }
 
-  // Page 1: Basic Information
-  Widget _buildCareNotePage1(
-    TextEditingController clientIdController,
-    TextEditingController shiftIdController,
-    TextEditingController healthStatusController,
-    TextEditingController moodController,
-  ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Basic Information',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Please provide the essential details for this care note.',
-            style: TextStyle(
-              color: Color(0xFF7F8C8D),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildImprovedTextField(
-            controller: clientIdController,
-            label: 'Client ID',
-            icon: Icons.person_outline,
-            hint: 'Enter client identifier',
-            isRequired: true,
-          ),
-          const SizedBox(height: 16),
-          _buildImprovedTextField(
-            controller: shiftIdController,
-            label: 'Shift ID',
-            icon: Icons.schedule,
-            hint: 'Enter shift identifier',
-            isRequired: true,
-          ),
-          const SizedBox(height: 16),
-          _buildImprovedTextField(
-            controller: healthStatusController,
-            label: 'Health Status',
-            icon: Icons.favorite_outline,
-            hint: 'Describe current health status',
-            maxLines: 2,
-            isRequired: true,
-          ),
-          const SizedBox(height: 16),
-          _buildImprovedTextField(
-            controller: moodController,
-            label: 'Mood Assessment',
-            icon: Icons.mood,
-            hint: 'Describe patient mood and demeanor',
-            isRequired: true,
-          ),
-        ],
-      ),
-    );
-  }
+    setState(() => _isLoading = true);
 
-  // Page 2: Activities and Observations
-  Widget _buildCareNotePage2(
-    TextEditingController activitiesController,
-    TextEditingController observationsController,
-    TextEditingController medicationAdherenceController,
-  ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Activities & Observations',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Document activities performed and important observations.',
-            style: TextStyle(
-              color: Color(0xFF7F8C8D),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildImprovedTextField(
-            controller: activitiesController,
-            label: 'Activities Performed',
-            icon: Icons.directions_run,
-            hint: 'List activities completed during visit',
-            maxLines: 3,
-            isRequired: true,
-          ),
-          const SizedBox(height: 16),
-          _buildImprovedTextField(
-            controller: observationsController,
-            label: 'Clinical Observations',
-            icon: Icons.visibility_outlined,
-            hint: 'Note any important observations',
-            maxLines: 3,
-            isRequired: true,
-          ),
-          const SizedBox(height: 16),
-          _buildImprovedTextField(
-            controller: medicationAdherenceController,
-            label: 'Medication Adherence',
-            icon: Icons.medication_liquid,
-            hint: 'Document medication compliance',
-            maxLines: 2,
-            isRequired: true,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Page 3: Notes and Settings
-  Widget _buildCareNotePage3(
-    TextEditingController noteController,
-    bool isVisibleToClient,
-    bool isLate,
-    StateSetter setState,
-  ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Additional Notes & Settings',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Add any additional notes and configure visibility settings.',
-            style: TextStyle(
-              color: Color(0xFF7F8C8D),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildImprovedTextField(
-            controller: noteController,
-            label: 'Additional Notes',
-            icon: Icons.note,
-            hint: 'Any additional observations or comments',
-            maxLines: 4,
-            isRequired: true,
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Settings',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2C3E50),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: Column(
-              children: [
-                SwitchListTile(
-                  title: const Text(
-                    'Visible to Client',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text(
-                    'Allow client to view this care note',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: isVisibleToClient,
-                  onChanged: (value) => setState(() => isVisibleToClient = value),
-                  activeColor: const Color(0xFF3498DB),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  title: const Text(
-                    'Late Entry',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text(
-                    'Mark this as a late entry',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: isLate,
-                  onChanged: (value) => setState(() => isLate = value),
-                  activeColor: const Color(0xFFE67E22),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Builds an improved TextField widget with better styling
-  Widget _buildImprovedTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    required String hint,
-    int maxLines = 1,
-    bool isRequired = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        RichText(
-          text: TextSpan(
-            text: label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2C3E50),
-            ),
-            children: isRequired
-                ? [
-                    const TextSpan(
-                      text: ' *',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ]
-                : [],
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(
-              color: Color(0xFFBDC3C7),
-              fontSize: 14,
-            ),
-            prefixIcon: Icon(
-              icon,
-              color: const Color(0xFF7F8C8D),
-              size: 20,
-            ),
-            filled: true,
-            fillColor: Colors.grey[50],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF3498DB), width: 2),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Validates all care note fields
-  bool _validateAllCareNoteFields(List<String> fields) {
-    return fields.every((field) => field.trim().isNotEmpty);
-  }
-
-  // Creates a CareNote object from dialog data
-  CareNote _createCareNoteFromData(Map<String, dynamic> data) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    return CareNote(
-      id: const Uuid().v4(),
-      clientId: data['clientId'],
-      caregiverId: userProvider.user?.id ?? 'unknown',
-      shiftId: data['shiftId'],
-      healthStatus: data['healthStatus'],
-      activities: data['activities'],
-      observations: data['observations'],
-      medicationAdherence: data['medicationAdherence'],
-      mood: data['mood'],
-      note: data['note'],
-      timestamp: DateTime.now(),
-      isVisibleToClient: data['isVisibleToClient'],
-      isLate: data['isLate'],
-      foodAndDrinks: data['foodAndDrinks'] ?? '',
-      mealQuantityPercentage: data['mealQuantityPercentage'] ?? 0,
-      hydrationMl: data['hydrationMl'] ?? 0,
-      hasBowelMovement: data['hasBowelMovement'] ?? false,
-      mobilityAndShower: data['mobilityAndShower'] ?? '',
-    );
-  }
-
-  // Saves the CareNote to Firebase
-  Future<void> _saveCareNote(BuildContext context, CareNote careNote) async {
-    final service = FirebaseCareNotesService();
     try {
-      final User user = Provider.of<UserProvider>(context, listen: false).user!;
-      await service.addCareNote(careNote, user);
-      _overlayUtils.showOverlay(context, 'Care note added successfully');
-    } catch (e) {
-      _overlayUtils.showOverlay(context, 'Failed to add care note: $e', isError: true);
-    }
-  }
-
-  // Handles the Care Note action
-  void _handleAddCareNote(BuildContext context) async {
-    final careNoteData = await _showAddCareNoteDialog(context);
-    if (careNoteData != null && context.mounted) {
-      final careNote = _createCareNoteFromData(careNoteData);
-      await _saveCareNote(context, careNote);
-      if (context.mounted) {
-        // Navigator.pushNamed(context, Routes.careNotes);
-        // pop the dialog box and show an overlay that the care note was added successfully
-        _overlayUtils.showOverlay(context, 'Care note added successfully');
-        // dismiss the dialog box overlaying 
-        // Navigator.of(context, rootNavigator: true).pop();
-        // Navigate to Care Notes screen
-
-
+      Location? location;
+      try {
+         final locData = await _locationProvider.getLocation();
+         if (locData != null && locData['Location'] != null) {
+            location = Location(
+              latitude: locData['Location']['Latitude'] ?? 0.0, 
+              longitude: locData['Location']['Longitude'] ?? 0.0
+            );
+         }
+      } catch (e) {
+        print("Location error: $e");
+        location = Location(latitude: 0.0, longitude: 0.0); 
       }
+
+      await _shiftService.updateShiftStatus(
+        shiftId: shiftToStart.id, 
+        status: 'in_session', 
+        location: location
+      );
+
+      setState(() {
+        _isClockedIn = true;
+        _activeShiftId = shiftToStart.id;
+        _isLoading = false;
+      });
+      _loadDashboardData();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Clocked In Successfully"), backgroundColor: AppTheme.successGreen));
+
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Clock In Failed: $e"), backgroundColor: AppTheme.errorRed));
     }
   }
 
-  // Shows a dialog to log medication
-  Future<Map<String, String>?> _logMedication(BuildContext context) async {
-    final TextEditingController medController = TextEditingController();
-    final TextEditingController doseController = TextEditingController();
-    final TextEditingController notesController = TextEditingController();
-    return await showDialog<Map<String, String>>(
+  void _handleClockOut() {
+    if (_activeShiftId == null) return;
+    final notesController = TextEditingController();
+
+    showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF9B59B6).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.medical_services,
-                color: Color(0xFF9B59B6),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text('Log Medication'),
-          ],
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Column(children: [Icon(Icons.check_circle_outline, size: 48, color: AppTheme.primaryPurple), SizedBox(height: 12), Text("Clock Out & Report")]),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: medController,
-              decoration: const InputDecoration(
-                labelText: 'Medication Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: doseController,
-              decoration: const InputDecoration(
-                labelText: 'Dosage',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
+            const Text("Shift Summary / Notes:", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
             TextField(
               controller: notesController,
-              decoration: const InputDecoration(
-                labelText: 'Notes',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
+              maxLines: 4,
+              decoration: InputDecoration(hintText: "Summary of activities...", border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)), filled: true, fillColor: AppTheme.neutral100),
             ),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel", style: TextStyle(color: AppTheme.textSecondary))),
           ElevatedButton(
-            onPressed: () {
-              if (medController.text.trim().isNotEmpty &&
-                  doseController.text.trim().isNotEmpty) {
-                Navigator.pop(context, {
-                  'medication': medController.text.trim(),
-                  'dosage': doseController.text.trim(),
-                  'notes': notesController.text.trim(),
-                });
-              } else {
-                _overlayUtils.showOverlay(
-                  context,
-                  'Medication name and dosage are required.',
-                  isError: true,
-                );
-              }
+            onPressed: () async {
+              Navigator.pop(context);
+              await _performClockOut(_activeShiftId!, notesController.text);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9B59B6),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Submit'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryPurple),
+            child: const Text("Confirm Clock Out"),
           ),
         ],
       ),
     );
   }
 
-  // Handles check-in action
-  void _handleCheckIn(BuildContext context) async {
-    final hasPermission = await _requestLocationPermission(context);
-    if (!hasPermission || !context.mounted) return;
-
-    final confirmed = await _confirmCheckIn(context);
-    if (confirmed && context.mounted) {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      _overlayUtils.showOverlay(
-        context,
-        "${userProvider.user?.name}, you have successfully checked in to your shift.",
-      );
-      Navigator.pushNamed(context, Routes.visitCheckIn);
+  Future<void> _performClockOut(String shiftId, String notes) async {
+    setState(() => _isLoading = true);
+    try {
+      await _shiftService.updateShiftStatus(shiftId: shiftId, status: 'completed');
+      setState(() {
+        _isClockedIn = false;
+        _activeShiftId = null;
+        _isLoading = false;
+      });
+      _loadDashboardData();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Shift Completed"), backgroundColor: AppTheme.successGreen));
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: AppTheme.errorRed));
     }
   }
 
-  // Handles check-out action
-  void _handleCheckOut(BuildContext context) async {
-    final confirmed = await _confirmCheckOut(context);
-    if (confirmed && context.mounted) {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      _overlayUtils.showOverlay(
-        context,
-        "${userProvider.user?.name}, you have successfully checked out from your shift.",
-      );
-      Navigator.pushNamed(context, Routes.visitCheckOut);
-    }
-  }
-
-  // Handles medication logging
-  // void _handleLogMedication(BuildContext context) async {
-  //   final medication = await _logMedication(context);
-  //   if (medication != null && context.mounted) {
-  //     final medicationProvider =
-  //         Provider.of<MedicationRecordProvider>(context, listen: false);
-  //     medicationProvider.addRecord(
-  //       MedicationRecord(
-  //         id: (medicationProvider.records.length + 1).toString(),
-  //         clientId: '1',
-  //         medicationName: medication['medication']!,
-  //         dosage: medication['dosage']!,
-  //         administrationTime: DateTime.now(),
-  //         notes: medication['notes'] ?? '',
-  //       ),
-  //     );
-  //     _overlayUtils.showOverlay(context, 'Medication logged successfully');
-  //     Navigator.pushNamed(context, Routes.emar);
-  //   }
-  // }
-
-  // Builds a profile completion card
-  Widget _buildProfileCompletionCard({bool isSecondary = false}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(isSecondary ? 0.05 : 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.orange.withOpacity(isSecondary ? 0.2 : 0.3),
-          width: 1,
+  // --- Details Dialog ---
+  void _showShiftDetails(Shift shift) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Shift Details", style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                ],
+              ),
+              const Divider(height: 32),
+              _buildDetailItem(Icons.person, "Client", shift.clientName),
+              const SizedBox(height: 16),
+              _buildDetailItem(Icons.access_time, "Time", "${DateFormat('MMM d, y').format(shift.startTime)} • ${DateFormat('h:mm a').format(shift.startTime)} - ${DateFormat('h:mm a').format(shift.endTime)}"),
+              const SizedBox(height: 16),
+              _buildDetailItem(Icons.location_on, "Address", "123 Mockingbird Lane, Suite 100"), 
+              const SizedBox(height: 16),
+              _buildDetailItem(Icons.info_outline, "Status", shift.status.toUpperCase(), 
+                color: AppTheme.getStatusColor(shift.status)
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {}, 
+                      icon: const Icon(Icons.phone), 
+                      label: const Text("Call"),
+                      style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {}, 
+                      icon: const Icon(Icons.map), 
+                      label: const Text("Directions"),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryPurple, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(isSecondary ? 0.15 : 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.warning,
-              color: Colors.orange,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isSecondary ? 'Reminder: Complete Your Profile' : 'Complete Your Profile',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  isSecondary
-                      ? 'Complete your profile to ensure you can be assigned shifts.'
-                      : 'Please fill your profile so that you can be assigned care shifts.',
-                  style: const TextStyle(
-                    color: Colors.orange,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.orange,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, Routes.caregiverCompleteProfile);
-              },
-              child: const Text(
-                'Complete Now',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
+
+  Widget _buildDetailItem(IconData icon, String label, String value, {Color? color}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: AppTheme.textSecondary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+              const SizedBox(height: 2),
+              Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: color ?? AppTheme.textPrimary)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- Layout ---
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final userName = userProvider.user?.name ?? 'Caregiver';
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldLogout = await _confirmLogout(context);
-        if (shouldLogout && context.mounted) {
-          userProvider.clearUser();
-          Navigator.pushReplacementNamed(context, Routes.login);
-        }
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3498DB).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.medical_services_outlined,
-                  color: Color(0xFF3498DB),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Caregiver Portal',
-                style: TextStyle(
-                  color: Color(0xFF2C3E50),
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            // Container(
-            //   margin: const EdgeInsets.only(right: 8),
-            //   decoration: BoxDecoration(
-            //     color: const Color(0xFFF8F9FA),
-            //     borderRadius: BorderRadius.circular(12),
-            //   ),
-            //   child: IconButton(
-            //     icon: Stack(
-            //       children: [
-            //         const Icon(
-            //           Icons.notifications_outlined,
-            //           color: Color(0xFF7F8C8D),
-            //         ),
-            //         Positioned(
-            //           right: 0,
-            //           top: 0,
-            //           child: Container(
-            //             padding: const EdgeInsets.all(2),
-            //             decoration: const BoxDecoration(
-            //               color: Colors.red,
-            //               shape: BoxShape.circle,
-            //             ),
-            //             constraints: const BoxConstraints(
-            //               minWidth: 12,
-            //               minHeight: 12,
-            //             ),
-            //             child: const Text(
-            //               '3',
-            //               style: TextStyle(
-            //                 color: Colors.white,
-            //                 fontSize: 8,
-            //                 fontWeight: FontWeight.bold,
-            //               ),
-            //               textAlign: TextAlign.center,
-            //             ),
-            //           ),
-            //         ),
-            //       ],
-            //     ),
-            //     onPressed: () => Navigator.pushNamed(context, Routes.messages),
-            //   ),
-            // ),
-            Container(
-              margin: const EdgeInsets.only(right: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8F9FA),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.person_outline,
-                  color: Color(0xFF7F8C8D),
-                ),
-                onPressed: () => Navigator.pushNamed(context, Routes.userProfile),
-              ),
-            ),
-          ],
-        ),
-        body: RefreshIndicator(
-          onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF3498DB),
-                            Color(0xFF5DADE2),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF3498DB).withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Welcome Back, $userName!",
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      "Your compassionate care makes all the difference",
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.9),
-                                        fontSize: 16,
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Icon(
-                                  Icons.favorite_outline,
-                                  color: Colors.white,
-                                  size: 32,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.schedule,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Today\'s shift: 8:00 AM - 4:00 PM',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!isProfileComplete) ...[
-                      const SizedBox(height: 20),
-                      _buildProfileCompletionCard(),
-                    ],
-                    const SizedBox(height: 32),
-                    const Text(
-                      'Today\'s Overview',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          _buildModernStat(
-                            title: 'Assigned Clients',
-                            value: '5',
-                            percent: 0.83,
-                            color: const Color(0xFF3498DB),
-                            icon: Icons.people_outline,
-                            animation: _statsAnimations[0],
-                          ),
-                          const SizedBox(width: 16),
-                          _buildModernStat(
-                            title: 'Pending Tasks',
-                            value: '3',
-                            percent: 0.4,
-                            color: const Color(0xFFE67E22),
-                            icon: Icons.task_outlined,
-                            animation: _statsAnimations[1],
-                          ),
-                          const SizedBox(width: 16),
-                          _buildModernStat(
-                            title: 'Completed Tasks',
-                            value: '12',
-                            percent: 0.8,
-                            color: const Color(0xFF00A86B),
-                            icon: Icons.check_circle_outline,
-                            animation: _statsAnimations[2],
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!isProfileComplete) ...[
-                      const SizedBox(height: 20),
-                      _buildProfileCompletionCard(isSecondary: true),
-                    ],
-                    const SizedBox(height: 32),
-                    const Text(
-                      'Quick Actions',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 0.85,
-                      children: _buildDashboardActions(context),
-                    ),
-                    const SizedBox(height: 32),
-                    const Text(
-                      'Recent Activity',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _buildActivityItem(
-                            title: 'Medication administered',
-                            subtitle: 'Lisinopril 10mg - Mrs. Johnson',
-                            time: '2 hours ago',
-                            icon: Icons.medication,
-                            color: const Color(0xFF9B59B6),
-                          ),
-                          const Divider(height: 1),
-                          _buildActivityItem(
-                            title: 'Care note added',
-                            subtitle: 'Patient mobility assessment completed',
-                            time: '4 hours ago',
-                            icon: Icons.note_add,
-                            color: const Color(0xFF3498DB),
-                          ),
-                          const Divider(height: 1),
-                          _buildActivityItem(
-                            title: 'Visit completed',
-                            subtitle: 'Mr. Smith - 2.5 hour visit',
-                            time: 'Yesterday',
-                            icon: Icons.check_circle,
-                            color: const Color(0xFF00A86B),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.red.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.emergency,
-                              color: Colors.red,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Emergency Support',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Need immediate assistance? Contact support.',
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: TextButton(
-                              onPressed: () {
-                                _overlayUtils.showOverlay(
-                                  context,
-                                  'Contacting emergency support...',
-                                  isError: true,
-                                );
-                              },
-                              child: const Text(
-                                'Call Now',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 800;
+
+        return Scaffold(
+          backgroundColor: AppTheme.backgroundCanvas,
+          appBar: isDesktop 
+              ? null 
+              : AppBar(
+                  title: Text(_getTitleForIndex(_selectedIndex)),
+                  backgroundColor: Colors.white,
+                  elevation: 0,
+                  actions: [
+                    ..._buildAppBarActions(),
+                    // Mobile Logout
+                    IconButton(icon: const Icon(Icons.logout, color: AppTheme.errorRed), onPressed: _handleLogout),
                   ],
                 ),
-              ),
-            ),
+          
+          body: Row(
+            children: [
+              if (isDesktop)
+                Column(
+                  children: [
+                    Expanded(
+                      child: NavigationRail(
+                        selectedIndex: _selectedIndex,
+                        onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+                        extended: constraints.maxWidth >= 1000,
+                        backgroundColor: Colors.white,
+                        selectedIconTheme: const IconThemeData(color: AppTheme.primaryPurple),
+                        unselectedIconTheme: const IconThemeData(color: AppTheme.neutral600),
+                        leading: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: FloatingActionButton.extended(
+                            onPressed: _isClockedIn ? _handleClockOut : _handleClockIn,
+                            backgroundColor: _isClockedIn ? AppTheme.errorRed : AppTheme.successGreen,
+                            icon: Icon(_isClockedIn ? Icons.stop : Icons.play_arrow),
+                            label: Text(constraints.maxWidth >= 1000 ? (_isClockedIn ? "Clock Out" : "Clock In") : ""),
+                            isExtended: constraints.maxWidth >= 1000,
+                          ),
+                        ),
+                        destinations: const [
+                          NavigationRailDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: Text('Dashboard')),
+                          NavigationRailDestination(icon: Icon(Icons.calendar_today_outlined), selectedIcon: Icon(Icons.calendar_today), label: Text('Schedule')),
+                          NavigationRailDestination(icon: Icon(Icons.note_add_outlined), selectedIcon: Icon(Icons.note_add), label: Text('Care Notes')),
+                          NavigationRailDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: Text('Profile')),
+                        ],
+                      ),
+                    ),
+                    // Desktop Logout Button at bottom of rail
+                    Container(
+                      width: constraints.maxWidth >= 1000 ? 200 : 72,
+                      color: Colors.white,
+                      padding: const EdgeInsets.only(bottom: 24, top: 12),
+                      child: constraints.maxWidth >= 1000 
+                        ? TextButton.icon(
+                            onPressed: _handleLogout,
+                            icon: const Icon(Icons.logout, color: AppTheme.errorRed),
+                            label: const Text("Log Out", style: TextStyle(color: AppTheme.errorRed, fontWeight: FontWeight.bold)),
+                          )
+                        : IconButton(
+                            onPressed: _handleLogout,
+                            icon: const Icon(Icons.logout, color: AppTheme.errorRed),
+                            tooltip: "Log Out",
+                          ),
+                    ),
+                  ],
+                ),
+              
+              if (isDesktop) const VerticalDivider(thickness: 1, width: 1),
+
+              Expanded(child: _buildBody()),
+            ],
           ),
-        ),
+
+          floatingActionButton: (!isDesktop && _selectedIndex == 0)
+              ? FloatingActionButton.extended(
+                  onPressed: _isClockedIn ? _handleClockOut : _handleClockIn,
+                  backgroundColor: _isClockedIn ? AppTheme.errorRed : AppTheme.successGreen,
+                  icon: Icon(_isClockedIn ? Icons.stop : Icons.play_arrow),
+                  label: Text(_isClockedIn ? "Clock Out" : "Clock In"),
+                ) 
+              : null,
+          bottomNavigationBar: isDesktop 
+              ? null 
+              : BottomNavigationBar(
+                  currentIndex: _selectedIndex,
+                  selectedItemColor: AppTheme.primaryPurple,
+                  unselectedItemColor: AppTheme.neutral600,
+                  type: BottomNavigationBarType.fixed,
+                  onTap: (index) => setState(() => _selectedIndex = index),
+                  items: const [
+                    BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), label: 'Dashboard'),
+                    BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Schedule'),
+                    BottomNavigationBarItem(icon: Icon(Icons.note_add_outlined), label: 'Care Notes'),
+                    BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+                  ],
+                ),
+        );
+      }
+    );
+  }
+
+  // --- Helper Methods ---
+  
+  List<Widget> _buildAppBarActions() {
+    return [
+      IconButton(icon: const Icon(Icons.notifications_none, color: AppTheme.textPrimary), onPressed: () {}),
+      IconButton(icon: const Icon(Icons.person_outline, color: AppTheme.textPrimary), onPressed: () => Navigator.pushNamed(context, Routes.caregiverProfile)),
+    ];
+  }
+
+  String _getTitleForIndex(int index) {
+    switch(index) {
+      case 0: return 'Dashboard';
+      case 1: return 'My Schedule';
+      case 2: return 'Care Notes';
+      case 3: return 'Profile';
+      default: return 'Dashboard';
+    }
+  }
+
+  Widget _buildBody() {
+    switch (_selectedIndex) {
+      case 0: return _buildOverviewTab();
+      case 1: return _buildScheduleTab();
+      case 2: return const CareNotesScreen(); 
+      case 3: return _buildProfileStub();
+      default: return _buildOverviewTab();
+    }
+  }
+
+  Widget _buildOverviewTab() {
+    final nextShift = _myShifts.firstWhere(
+      (s) => s.status == 'in_session' || s.endTime.isAfter(DateTime.now()), 
+      orElse: () => Shift(id: 'none', clientId: '', clientName: '', startTime: DateTime.now(), endTime: DateTime.now(), status: 'none')
+    );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildWelcomeSection(),
+          const SizedBox(height: 24),
+          _buildStatsRow(),
+          const SizedBox(height: 32),
+          
+          Text(_isClockedIn ? "Current Shift" : "Up Next", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          nextShift.status != 'none' ? _buildNextShiftCard(nextShift) : _buildEmptyState("No upcoming shifts scheduled."),
+
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Recent Shifts", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              TextButton(onPressed: () => setState(() => _selectedIndex = 1), child: const Text("View Schedule"))
+            ],
+          ),
+          const SizedBox(height: 8),
+          ..._myShifts.where((s) => s.status == 'completed').take(3).map((s) => _buildShiftCard(s)).toList(),
+        ],
       ),
     );
   }
 
-  // Builds a recent activity item
-  Widget _buildActivityItem({
-    required String title,
-    required String subtitle,
-    required String time,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Row(
+  Widget _buildScheduleTab() {
+    return _myShifts.isEmpty 
+      ? _buildEmptyState("No shifts assigned yet.")
+      : ListView.builder(
+          padding: const EdgeInsets.all(20),
+          itemCount: _myShifts.length,
+          itemBuilder: (context, index) => _buildShiftCard(_myShifts[index]),
+        );
+  }
+
+  Widget _buildProfileStub() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF7F8C8D),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            time,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF95A5A6),
-            ),
-          ),
+          ModernButton(text: "View Full Profile", icon: Icons.person, onPressed: () => Navigator.pushNamed(context, Routes.caregiverProfile)),
+          const SizedBox(height: 16),
+          // Mobile might see this stub if they navigate to index 3
+          ModernButton(text: "Log Out", icon: Icons.logout, color: AppTheme.errorRed, onPressed: _handleLogout),
         ],
+      )
+    );
+  }
+
+  // --- Widgets ---
+
+  Widget _buildWelcomeSection() {
+    return Row(
+      children: [
+        CircleAvatar(radius: 30, backgroundColor: AppTheme.primaryPurple.withOpacity(0.1), child: Text(_profile?.name.isNotEmpty == true ? _profile!.name[0] : 'U', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primaryPurple))),
+        const SizedBox(width: 16),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text("Hello, ${_profile?.name ?? 'Caregiver'}", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+          const Text("Ready to make a difference today?", style: TextStyle(fontSize: 16, color: AppTheme.textSecondary)),
+        ])
+      ],
+    );
+  }
+
+  Widget _buildStatsRow() {
+    double hours = 0;
+    for (var s in _myShifts) { if (s.status == 'completed') hours += s.endTime.difference(s.startTime).inMinutes / 60.0; }
+    return LayoutBuilder(builder: (context, constraints) {
+      return Wrap(spacing: 16, runSpacing: 16, children: [
+        SizedBox(width: constraints.maxWidth > 600 ? 200 : constraints.maxWidth / 2 - 20, child: _buildStatCard("Earnings", "\$${(hours * (_profile?.hourlyRate ?? 15.0)).toStringAsFixed(0)}", Icons.attach_money, AppTheme.successGreen)),
+        SizedBox(width: constraints.maxWidth > 600 ? 200 : constraints.maxWidth / 2 - 20, child: _buildStatCard("Hours", hours.toStringAsFixed(1), Icons.timer, AppTheme.primaryBlue)),
+        SizedBox(width: constraints.maxWidth > 600 ? 200 : constraints.maxWidth, child: _buildStatCard("Rating", "${_profile?.rating ?? 5.0}", Icons.star, AppTheme.warningOrange)),
+      ]);
+    });
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.borderGray)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 12),
+        Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
+      ]),
+    );
+  }
+
+  Widget _buildNextShiftCard(Shift shift) {
+    bool isActive = shift.status == 'in_session';
+    return InkWell(
+      onTap: () => _showShiftDetails(shift),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: isActive ? [AppTheme.successGreen, const Color(0xFF00E676)] : [AppTheme.primaryPurple, const Color(0xFF7E60E8)]),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: (isActive ? AppTheme.successGreen : AppTheme.primaryPurple).withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text(isActive ? "CURRENTLY ACTIVE" : "NEXT SHIFT", style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8)), child: Text(DateFormat('MMM d').format(shift.startTime), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))
+          ]),
+          const SizedBox(height: 16),
+          Text(shift.clientName, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          const Row(children: [Icon(Icons.location_on, color: Colors.white70, size: 16), SizedBox(width: 4), Text("123 Main St (Mock Address)", style: TextStyle(color: Colors.white70))]),
+          const SizedBox(height: 24),
+          Row(children: [const Icon(Icons.access_time, color: Colors.white, size: 20), const SizedBox(width: 8), Text("${DateFormat('h:mm a').format(shift.startTime)} - ${DateFormat('h:mm a').format(shift.endTime)}", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600))]),
+          const SizedBox(height: 24),
+          SizedBox(width: double.infinity, child: ElevatedButton(onPressed: isActive ? _handleClockOut : _handleClockIn, style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: isActive ? AppTheme.successGreen : AppTheme.primaryPurple, elevation: 0), child: Text(isActive ? "Clock Out Now" : "Clock In"))),
+        ]),
       ),
     );
+  }
+
+  Widget _buildShiftCard(Shift shift) {
+    return InkWell(
+      onTap: () => _showShiftDetails(shift),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.borderGray)),
+        child: Row(children: [
+          Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: AppTheme.neutral100, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.medical_services_outlined, color: AppTheme.neutral600)),
+          const SizedBox(width: 16),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(shift.clientName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 4), Text("${DateFormat('MMM d').format(shift.startTime)} • ${DateFormat('h:mm a').format(shift.startTime)}", style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13))])),
+          Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: AppTheme.getStatusColor(shift.status).withOpacity(0.1), borderRadius: BorderRadius.circular(20)), child: Text(shift.status.toUpperCase(), style: TextStyle(color: AppTheme.getStatusColor(shift.status), fontWeight: FontWeight.bold, fontSize: 12))),
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Column(children: [const Icon(Icons.event_busy, size: 40, color: AppTheme.neutral600), const SizedBox(height: 8), Text(message, style: const TextStyle(color: AppTheme.textSecondary))])));
   }
 }

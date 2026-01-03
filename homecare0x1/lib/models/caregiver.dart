@@ -3,12 +3,14 @@ class Caregiver {
   final String id; // Unique identifier for the caregiver
   final String name; // Name of the caregiver
   final bool isAvailable; // Availability status of the caregiver
+  final double hourlyRate; // Hourly rate for cost calculation
   final DateTime? startExperience; // Start date of experience (optional)
 
   Caregiver({
     required this.id,
     required this.name,
     required this.isAvailable,
+    this.hourlyRate = 0.0,
     this.startExperience,
   });
 
@@ -28,6 +30,7 @@ class Caregiver {
       id: id,
       name: map['name'] ?? '', // Default to empty string if null
       isAvailable: map['isAvailable'] ?? false, // Default to false if null
+      hourlyRate: (map['hourlyRate'] ?? 0.0).toDouble(),
       startExperience: experienceDate,
     );
   }
@@ -37,8 +40,8 @@ class Caregiver {
     return {
       'name': name,
       'isAvailable': isAvailable,
-      'startExperience': startExperience
-          ?.toIso8601String(), // Serialize DateTime to ISO string
+      'hourlyRate': hourlyRate,
+      'startExperience': startExperience?.toIso8601String(), // Serialize DateTime to ISO string
     };
   }
 }

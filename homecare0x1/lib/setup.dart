@@ -42,10 +42,11 @@ Future<void> setupMockData() async {
       }
 
       final registeredUser = await authService.register(
-        email: user['email']!,
-        password: user['password']!,
-        role: user['role']!,
-        name: user['name']!,
+        user['email']!,
+        user['password']!,
+        user['name']!, // name is 3rd arg
+        user['role']!, // role is 4th arg
+        
       );
       if (registeredUser != null) {
         userIds[user['email']!] = registeredUser.id;
